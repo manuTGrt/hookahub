@@ -1,0 +1,15 @@
+# Dependencias para el script de gestión de imágenes de tabacos
+
+# Core
+supabase==2.10.0
+python-dotenv==1.0.0
+
+# Image processing
+Pillow==11.0.0
+
+# HTTP async
+aiohttp==3.11.11
+
+# Optional: Para búsquedas avanzadas
+# google-api-python-client==2.154.0  # Descomentar si usas Google Custom Search API
+# requests==2.32.3  # Para otras APIs

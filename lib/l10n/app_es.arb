@@ -1,0 +1,15 @@
+{
+  "@@locale": "es",
+  "appTitle": "Hookahub",
+  "@appTitle": {
+    "description": "Título de la aplicación"
+  },
+  "databaseOfflineMessage": "Conexión perdida",
+  "@databaseOfflineMessage": {
+    "description": "Mensaje mostrado cuando la base de datos está fuera de servicio"
+  },
+  "databaseRetryButton": "Reintentar",
+  "@databaseRetryButton": {
+    "description": "Texto del botón para volver a intentar la conexión"
+  }
+}

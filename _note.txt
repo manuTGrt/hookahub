@@ -1,0 +1,1 @@
+Temporary note: adding open_mail_app fallback for email compose in settings_page.dart to present chooser if mailto cannot open.
