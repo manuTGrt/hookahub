@@ -56,13 +56,13 @@
 		<string>Necesitamos acceder a la cámara para permitirte tomar una foto de perfil.</string>
 		<!-- URL scheme para OAuth de Supabase: io.supabase.flutter://login-callback -->
 		<key>CFBundleURLTypes</key>
-		<Array>
-			<Dict>
-				<Key>CFBundleURLSchemes</Key>
-				<Array>
-					<String>io.supabase.flutter</String>
-				</Array>
-			</Dict>
-		</Array>
-	</dict>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>io.supabase.flutter</string>
+			</array>
+		</dict>
+	</array>
+</dict>
 </plist>
