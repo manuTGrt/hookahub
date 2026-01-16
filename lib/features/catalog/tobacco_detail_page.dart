@@ -8,7 +8,10 @@ import '../../widgets/app_segmented_control.dart';
 import '../../widgets/tobacco_image.dart';
 import '../community/presentation/community_provider.dart'; // Import provider
 import 'presentation/providers/tobacco_mixes_provider.dart';
-import '../community/presentation/mix_detail_page.dart'; // Import necesario para navegar al detalle
+import '../community/presentation/mix_detail_page.dart';
+import 'data/tobacco_reviews_repository.dart';
+import 'presentation/providers/tobacco_reviews_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TobaccoDetailPage extends StatelessWidget {
   const TobaccoDetailPage({super.key, required this.tobacco});
@@ -17,12 +20,19 @@ class TobaccoDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => TobaccoMixesProvider(
-        context
-            .read<CommunityProvider>()
-            .repository, // Acceder al repo a través del provider
-      ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => TobaccoMixesProvider(
+            context.read<CommunityProvider>().repository,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => TobaccoReviewsProvider(
+            TobaccoReviewsRepository(Supabase.instance.client),
+          ),
+        ),
+      ],
       child: _TobaccoDetailView(tobacco: tobacco),
     );
   }
@@ -43,7 +53,6 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
 
   // Datos de ejemplo para reseñas (se mantienen hardcoded por ahora según plan,
   // el foco es arreglar mixes)
-  late final List<Review> _reviews;
 
   // Controladores
   final _reviewController = TextEditingController();
@@ -73,22 +82,10 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
     // Listener para paginación
     _scrollController.addListener(_onScroll);
 
-    _reviews = [
-      Review(
-        id: 'r1',
-        author: 'SmokeWizard',
-        rating: 4.0,
-        comment: 'Sabor limpio y fresco, ideal para mezclar con cítricos.',
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      Review(
-        id: 'r2',
-        author: 'MixMaster',
-        rating: 5.0,
-        comment: 'Mi básico de cabecera. En frío rinde de lujo.',
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-    ];
+    // Cargar reseñas reales
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TobaccoReviewsProvider>().loadReviews(widget.tobacco.id);
+    });
   }
 
   void _onScroll() {
@@ -296,27 +293,67 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
 
   // Reseñas: estadísticas, formulario y lista
   Widget _buildReviewsSliver(BuildContext context) {
-    final avg = _reviews.isEmpty
-        ? widget.tobacco.rating
-        : _reviews.map((e) => e.rating).reduce((a, b) => a + b) /
-              _reviews.length;
+    return Consumer<TobaccoReviewsProvider>(
+      builder: (context, provider, child) {
+        final reviews = provider.reviews;
 
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList(
-        delegate: SliverChildListDelegate([
-          _ReviewStats(average: avg, total: _reviews.length),
-          const SizedBox(height: 16),
-          _ReviewForm(
-            controller: _reviewController,
-            rating: _newRating,
-            onRatingChanged: (v) => setState(() => _newRating = v),
-            onSubmit: _handleSubmitReview,
+        if (provider.isLoading && reviews.isEmpty) {
+          return const SliverToBoxAdapter(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+
+        // Si no hay reviews y no está cargando
+        if (reviews.isEmpty && !provider.isLoading) {
+          return SliverList(
+            delegate: SliverChildListDelegate([
+              _ReviewStats(average: 0, total: 0),
+              const SizedBox(height: 16),
+              _ReviewForm(
+                controller: _reviewController,
+                rating: _newRating,
+                onRatingChanged: (v) => setState(() => _newRating = v),
+                onSubmit: _handleSubmitReview,
+              ),
+              const SizedBox(height: 32),
+              Center(
+                child: Text(
+                  'Sé el primero en valorar este tabaco',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).disabledColor,
+                  ),
+                ),
+              ),
+            ]),
+          );
+        }
+
+        return SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              _ReviewStats(
+                average: provider.averageRating,
+                total: provider.reviewCount,
+              ),
+              const SizedBox(height: 16),
+              _ReviewForm(
+                controller: _reviewController,
+                rating: _newRating,
+                onRatingChanged: (v) => setState(() => _newRating = v),
+                onSubmit: _handleSubmitReview,
+              ),
+              const SizedBox(height: 16),
+              ...reviews.map((r) => _ReviewTile(review: r)),
+            ]),
           ),
-          const SizedBox(height: 16),
-          ..._reviews.map((r) => _ReviewTile(review: r)).toList(),
-        ]),
-      ),
+        );
+      },
     );
   }
 
@@ -326,28 +363,49 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
     Share.share(text);
   }
 
-  void _handleSubmitReview() {
+  void _handleSubmitReview() async {
     if (_reviewController.text.trim().isEmpty || _newRating <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Añade comentario y puntuación')),
       );
       return;
     }
-    final newReview = Review(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      author: 'Tú',
-      rating: _newRating,
-      comment: _reviewController.text.trim(),
-      createdAt: DateTime.now(),
-    );
-    setState(() {
-      _reviews.insert(0, newReview);
-      _reviewController.clear();
-      _newRating = 0;
-    });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Reseña publicada')));
+
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Debes iniciar sesión para reseñar')),
+      );
+      return;
+    }
+
+    try {
+      await context.read<TobaccoReviewsProvider>().addReview(
+        userId: user.id,
+        rating: _newRating,
+        comment: _reviewController.text.trim(),
+      );
+
+      // Limpiar formulario
+      setState(() {
+        _reviewController.clear();
+        _newRating = 0;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Reseña publicada')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al publicar: $e')));
+      }
+    }
   }
 }
 

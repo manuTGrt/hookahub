@@ -24,130 +24,132 @@ class CatalogPage extends StatelessWidget {
         child: CustomScrollView(
           controller: provider.scrollController,
           slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Fila de filtros con dropdowns
-                        SizedBox(
-                          height: scaleFactor > 1.5 ? 50 : (scaleFactor > 1.3 ? 44 : 40),
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: [
-                              // Dropdown de ordenamiento
-                              _buildSortDropdown(context, provider, scaleFactor),
-                              const SizedBox(width: 8),
-                              
-                              // Dropdown de marcas
-                              _buildBrandDropdown(context, provider, scaleFactor),
-                            ],
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 20),
-                        Text(
-                          'Catálogo',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).textTheme.headlineSmall?.color,
-                              ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Fila de filtros con dropdowns
+                    SizedBox(
+                      height: scaleFactor > 1.5
+                          ? 50
+                          : (scaleFactor > 1.3 ? 44 : 40),
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          // Dropdown de ordenamiento
+                          _buildSortDropdown(context, provider, scaleFactor),
+                          const SizedBox(width: 8),
 
-                // Grid de tabacos
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                  sliver: SliverGrid(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: scaleFactor > 1.5
-                          ? 0.65
-                          : (scaleFactor > 1.3 ? 0.7 : 0.8),
+                          // Dropdown de marcas
+                          _buildBrandDropdown(context, provider, scaleFactor),
+                        ],
+                      ),
                     ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        if (index >= provider.items.length) {
-                          return const SizedBox.shrink();
-                        }
-                        final t = provider.items[index];
-                        return _buildTobaccoCard(
+
+                    const SizedBox(height: 20),
+                    Text(
+                      'Catálogo',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.headlineSmall?.color,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+
+            // Grid de tabacos
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              sliver: SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: scaleFactor > 1.5
+                      ? 0.65
+                      : (scaleFactor > 1.3 ? 0.7 : 0.8),
+                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  if (index >= provider.items.length) {
+                    return const SizedBox.shrink();
+                  }
+                  final t = provider.items[index];
+                  return _buildTobaccoCard(
+                    context,
+                    t,
+                    scaleFactor,
+                    primaryColor,
+                  );
+                }, childCount: provider.items.length),
+              ),
+            ),
+
+            // Estado vacío después del primer intento para sincronizarse con el banner
+            if (provider.hasAttemptedLoad &&
+                !provider.isLoading &&
+                provider.error == null &&
+                provider.items.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 32),
+                  child: Center(
+                    child: Text(
+                      'Aún no hay tabacos',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(
                           context,
-                          t,
-                          scaleFactor,
-                          primaryColor,
-                        );
-                      },
-                      childCount: provider.items.length,
-                    ),
-                  ),
-                ),
-
-                // Estado vacío después del primer intento para sincronizarse con el banner
-                if (provider.hasAttemptedLoad && !provider.isLoading && provider.error == null && provider.items.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 32),
-                      child: Center(
-                        child: Text(
-                          'Aún no hay tabacos',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                              ),
-                        ),
+                        ).textTheme.bodyMedium?.color?.withOpacity(0.7),
                       ),
                     ),
                   ),
-
-                // Loader / fin de lista / error
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Center(
-                      child: () {
-                        if (provider.error != null) {
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Error al cargar: ${provider.error}',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              const SizedBox(height: 8),
-                              OutlinedButton(
-                                onPressed: provider.loadMore,
-                                child: const Text('Reintentar'),
-                              )
-                            ],
-                          );
-                        }
-                        if (provider.isLoading) {
-                          return const CircularProgressIndicator();
-                        }
-                        if (!provider.hasMore) {
-                          return Text(
-                            'No hay más resultados',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.color
-                                      ?.withOpacity(0.6),
-                                ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      }(),
-                    ),
-                  ),
                 ),
+              ),
+
+            // Loader / fin de lista / error
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: () {
+                    if (provider.error != null) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Error al cargar: ${provider.error}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton(
+                            onPressed: provider.loadMore,
+                            child: const Text('Reintentar'),
+                          ),
+                        ],
+                      );
+                    }
+                    if (provider.isLoading) {
+                      return const CircularProgressIndicator();
+                    }
+                    if (!provider.hasMore) {
+                      return Text(
+                        'No hay más resultados',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }(),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -206,26 +208,35 @@ class CatalogPage extends StatelessWidget {
                   Text(
                     'Ordenar por',
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ],
               ),
             ),
-            PopupMenuDivider(height: 1, color: Theme.of(context).scaffoldBackgroundColor),
+            PopupMenuDivider(
+              height: 1,
+              color: Theme.of(context).scaffoldBackgroundColor,
+            ),
             // Opciones de ordenamiento
             ...SortOption.values.map((SortOption option) {
               final isSelected = provider.filter.sortOption == option;
               return PopupMenuItem<SortOption>(
                 value: option,
                 height: 52,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeInOut,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? Theme.of(context).primaryColor.withOpacity(0.08)
@@ -238,22 +249,31 @@ class CatalogPage extends StatelessWidget {
                         duration: const Duration(milliseconds: 200),
                         curve: Curves.easeInOut,
                         child: Icon(
-                          isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+                          isSelected
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked,
                           size: 20,
                           color: isSelected
                               ? Theme.of(context).primaryColor
-                              : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.3),
+                              : Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.color?.withOpacity(0.3),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           option.label,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
                                 color: isSelected
                                     ? Theme.of(context).primaryColor
-                                    : Theme.of(context).textTheme.bodyMedium?.color,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                    : Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.color,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
                               ),
                         ),
                       ),
@@ -261,7 +281,9 @@ class CatalogPage extends StatelessWidget {
                         Icon(
                           _getSortIcon(option),
                           size: 16,
-                          color: Theme.of(context).primaryColor.withOpacity(0.6),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.6),
                         ),
                     ],
                   ),
@@ -309,10 +331,10 @@ class CatalogPage extends StatelessWidget {
                 child: Text(
                   provider.filter.sortOption.label,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13.5,
-                      ),
+                    color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.5,
+                  ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
@@ -354,10 +376,7 @@ class CatalogPage extends StatelessWidget {
     CatalogProvider provider,
     double scaleFactor,
   ) {
-    return _BrandFilterDropdown(
-      provider: provider,
-      scaleFactor: scaleFactor,
-    );
+    return _BrandFilterDropdown(provider: provider, scaleFactor: scaleFactor);
   }
 
   Widget _buildTobaccoCard(
@@ -367,30 +386,41 @@ class CatalogPage extends StatelessWidget {
     Color baseColor,
   ) {
     // Ajustar tamaños según el factor de escala del texto
-    final iconSize = scaleFactor > 1.5 ? 32.0 : (scaleFactor > 1.3 ? 36.0 : 40.0);
+    final iconSize = scaleFactor > 1.5
+        ? 32.0
+        : (scaleFactor > 1.3 ? 36.0 : 40.0);
     final cardPadding = scaleFactor > 1.3 ? 10.0 : 12.0;
     final bool tightSpacing = scaleFactor < 1.3;
 
-  final Color color = baseColor; // mismo color para todos, como en Community
+    final Color color = baseColor; // mismo color para todos, como en Community
 
     return Semantics(
-      label: '${tobacco.name} de ${tobacco.brand}, calificación ${tobacco.rating} con ${tobacco.reviews} reseñas',
+      label:
+          '${tobacco.name} de ${tobacco.brand}, calificación ${tobacco.rating} con ${tobacco.reviews} reseñas',
       button: true,
       enabled: true,
       child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
+        onTap: () async {
+          await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) => TobaccoDetailPage(tobacco: tobacco),
             ),
           );
+          // Al volver, refrescar la lista para actualizar ratings/reviews
+          // Idealmente solo actualizaríamos el item específico, pero por simplicidad refrescamos
+          // ya que los datos vienen del servidor.
+          if (context.mounted) {
+            context.read<CatalogProvider>().refresh();
+          }
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
             color: color.withOpacity(0.05), // igual que MixCard
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.2)), // igual que MixCard
+            border: Border.all(
+              color: color.withOpacity(0.2),
+            ), // igual que MixCard
           ),
           child: Padding(
             padding: EdgeInsets.all(cardPadding),
@@ -421,9 +451,12 @@ class CatalogPage extends StatelessWidget {
                     children: [
                       Text(
                         tobacco.name,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
                             ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -433,8 +466,10 @@ class CatalogPage extends StatelessWidget {
                       Text(
                         tobacco.brand,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
@@ -450,7 +485,8 @@ class CatalogPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ...(() {
-                        final hasRating = (tobacco.rating > 0) && (tobacco.reviews > 0);
+                        final hasRating =
+                            (tobacco.rating > 0) && (tobacco.reviews > 0);
                         if (hasRating) {
                           return [
                             Icon(
@@ -461,17 +497,25 @@ class CatalogPage extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text(
                               tobacco.rating.toString(),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge?.color,
                                   ),
                             ),
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
                                 '(${tobacco.reviews})',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.color
+                                          ?.withOpacity(0.5),
                                     ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -488,8 +532,13 @@ class CatalogPage extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 'Sin valoraciones',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.color
+                                          ?.withOpacity(0.5),
                                     ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -544,18 +593,22 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
 
   void _showBrandFilterMenu() async {
     final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
         button.localToGlobal(Offset(0, button.size.height), ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+        button.localToGlobal(
+          button.size.bottomRight(Offset.zero),
+          ancestor: overlay,
+        ),
       ),
       Offset.zero & overlay.size,
     );
 
     // Usar una constante especial para "Todas las marcas"
     const String allBrandsKey = '__ALL_BRANDS__';
-    
+
     await showMenu<String?>(
       context: context,
       position: position,
@@ -578,7 +631,7 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
               final filteredBrands = _getFilteredBrands();
               // Leer el brand seleccionado dentro del StatefulBuilder para que se actualice
               final currentSelectedBrand = widget.provider.filter.brand;
-              
+
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -598,7 +651,9 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                           ? IconButton(
                               icon: Icon(
                                 Icons.clear,
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.color?.withOpacity(0.5),
                                 size: 20,
                               ),
                               onPressed: () {
@@ -610,13 +665,17 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -626,7 +685,10 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                           width: 2,
                         ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
                       isDense: true,
                     ),
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -651,13 +713,15 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                             isAllBrandsOption: true,
                           ),
                           // Marcas filtradas
-                          ...filteredBrands.map((brand) => _buildBrandOption(
-                                context,
-                                brand,
-                                brand,
-                                Icons.business,
-                                currentSelectedBrand: currentSelectedBrand,
-                              )),
+                          ...filteredBrands.map(
+                            (brand) => _buildBrandOption(
+                              context,
+                              brand,
+                              brand,
+                              Icons.business,
+                              currentSelectedBrand: currentSelectedBrand,
+                            ),
+                          ),
                           // Mensaje cuando no hay resultados
                           if (filteredBrands.isEmpty)
                             Padding(
@@ -665,8 +729,13 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                               child: Text(
                                 'No se encontraron marcas',
                                 textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.color
+                                          ?.withOpacity(0.5),
                                     ),
                               ),
                             ),
@@ -705,7 +774,7 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
     final isSelected = isAllBrandsOption
         ? currentSelectedBrand == null
         : currentSelectedBrand == brand;
-    
+
     return InkWell(
       onTap: () {
         Navigator.of(context).pop(brand);
@@ -724,22 +793,26 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
         child: Row(
           children: [
             Icon(
-              isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+              isSelected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked,
               size: 20,
               color: isSelected
                   ? Theme.of(context).primaryColor
-                  : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.3),
+                  : Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.color?.withOpacity(0.3),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 displayText,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: isSelected
-                          ? Theme.of(context).primaryColor
-                          : Theme.of(context).textTheme.bodyMedium?.color,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    ),
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).textTheme.bodyMedium?.color,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
               ),
             ),
             if (isSelected)
@@ -758,11 +831,13 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
   Widget build(BuildContext context) {
     final selectedBrand = widget.provider.filter.brand;
     final displayText = selectedBrand ?? 'Todas las marcas';
-    
+
     return GestureDetector(
       onTap: _showBrandFilterMenu,
       child: Container(
-        height: widget.scaleFactor > 1.5 ? 50 : (widget.scaleFactor > 1.3 ? 44 : 40),
+        height: widget.scaleFactor > 1.5
+            ? 50
+            : (widget.scaleFactor > 1.3 ? 44 : 40),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -800,10 +875,10 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
               child: Text(
                 displayText,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13.5,
-                    ),
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13.5,
+                ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),

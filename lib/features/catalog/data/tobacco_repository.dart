@@ -19,13 +19,17 @@ class TobaccoRepository {
 
     dynamic request = client
         .from('tobaccos')
-        .select('id, name, brand, description, image_url, created_at');
+        .select(
+          'id, name, brand, description, image_url, created_at, rating, reviews',
+        );
 
     // Filtro por búsqueda de texto
     if (query != null && query.trim().isNotEmpty) {
       final q = query.trim();
       // Buscar por nombre, descripción o marca (case-insensitive)
-      request = request.or('name.ilike.%$q%,description.ilike.%$q%,brand.ilike.%$q%');
+      request = request.or(
+        'name.ilike.%$q%,description.ilike.%$q%,brand.ilike.%$q%',
+      );
     }
 
     // Filtro por marca
@@ -35,23 +39,18 @@ class TobaccoRepository {
 
     // Ordenamiento
     final sort = filter?.sortOption ?? SortOption.newest;
-    
+
     // Validar que el campo existe en la tabla
     // TODO: Descomentar cuando se ejecute la migración SQL que añade rating/reviews
-    if (sort == SortOption.mostPopular || sort == SortOption.topRated) {
-      // Temporal: usar created_at mientras no existan rating/reviews
-      request = request.order('created_at', ascending: false);
-      // Cuando se añadan los campos, usar:
-      // if (sort == SortOption.mostPopular) {
-      //   request = request.order('reviews', ascending: false);
-      //   request = request.order('rating', ascending: false);
-      // } else {
-      //   request = request.order('rating', ascending: false);
-      //   request = request.order('reviews', ascending: false);
-      // }
+    if (sort == SortOption.mostPopular) {
+      request = request.order('reviews', ascending: false);
+      request = request.order('rating', ascending: false);
+    } else if (sort == SortOption.topRated) {
+      request = request.order('rating', ascending: false);
+      request = request.order('reviews', ascending: false);
     } else {
       request = request.order(sort.field, ascending: sort.ascending);
-      
+
       // Ordenamiento secundario
       if (sort == SortOption.brandAsc) {
         request = request.order('name', ascending: true);
@@ -70,9 +69,8 @@ class TobaccoRepository {
         brand: map['brand'] as String,
         description: map['description'] as String?,
         flavors: const <String>[],
-        // TODO: Actualizar cuando se ejecute la migración SQL
-        rating: 0.0, // (map['rating'] as num?)?.toDouble() ?? 0.0,
-        reviews: 0, // (map['reviews'] as int?) ?? 0,
+        rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
+        reviews: (map['reviews'] as int?) ?? 0,
         imageUrl: map['image_url'] as String?,
       );
     }).toList();
@@ -86,7 +84,9 @@ class TobaccoRepository {
     final client = _supabase.client;
     final List<dynamic> rows = await client
         .from('tobaccos')
-        .select('id, name, brand, description, image_url, created_at')
+        .select(
+          'id, name, brand, description, image_url, created_at, rating, reviews',
+        )
         .ilike('name', name)
         .ilike('brand', brand)
         .limit(1)
@@ -100,9 +100,8 @@ class TobaccoRepository {
       brand: map['brand'] as String,
       description: map['description'] as String?,
       flavors: const <String>[],
-      // TODO: Actualizar cuando se ejecute la migración SQL
-      rating: 0.0, // (map['rating'] as num?)?.toDouble() ?? 0.0,
-      reviews: 0, // (map['reviews'] as int?) ?? 0,
+      rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
+      reviews: (map['reviews'] as int?) ?? 0,
       imageUrl: map['image_url'] as String?,
     );
   }
@@ -110,7 +109,7 @@ class TobaccoRepository {
   /// Obtiene la lista de marcas únicas disponibles en el catálogo, ordenadas alfabéticamente.
   Future<List<String>> fetchAvailableBrands() async {
     final client = _supabase.client;
-    
+
     // Obtener marcas únicas y ordenarlas
     final List<dynamic> rows = await client
         .from('tobaccos')
@@ -123,7 +122,7 @@ class TobaccoRepository {
         .map((r) => (r as Map<String, dynamic>)['brand'] as String)
         .toSet()
         .toList();
-    
+
     return brands;
   }
 }
