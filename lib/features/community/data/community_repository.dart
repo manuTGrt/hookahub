@@ -39,13 +39,15 @@ class CommunityRepository {
       if (components.isNotEmpty && components[0]['color'] != null) {
         final colorStr = components[0]['color'] as String;
         if (colorStr.startsWith('#') && colorStr.length == 7) {
-          mixColor = Color(int.parse(colorStr.substring(1), radix: 16) + 0xFF000000);
+          mixColor = Color(
+            int.parse(colorStr.substring(1), radix: 16) + 0xFF000000,
+          );
         }
       }
 
       // Extraer autor
       final profile = response['profiles'];
-      final authorName = profile != null 
+      final authorName = profile != null
           ? (profile['username'] as String? ?? 'Anónimo')
           : 'Anónimo';
 
@@ -54,7 +56,12 @@ class CommunityRepository {
         name: response['name'] as String,
         author: authorName,
         rating: (response['rating'] as num?)?.toDouble() ?? 0.0,
-        reviews: (response['reviews'] as num?)?.toInt() ?? 0,
+
+        reviews:
+            (response['reviews_real'] as List?)?.firstOrNull?['count']
+                as int? ??
+            (response['reviews'] as num?)?.toInt() ??
+            0,
         ingredients: ingredients,
         color: mixColor,
       );
@@ -65,12 +72,12 @@ class CommunityRepository {
   }
 
   /// Obtiene las mezclas de la comunidad con filtros opcionales.
-  /// 
+  ///
   /// [orderBy] puede ser:
   /// - 'popular': ordenar por rating descendente
   /// - 'recent': ordenar por fecha de creación descendente
   /// - 'top_rated': ordenar por rating y número de reviews
-  /// 
+  ///
   /// [limit] cantidad de mezclas a obtener
   /// [offset] desde qué posición empezar (para paginación)
   Future<List<Mix>> fetchMixes({
@@ -81,7 +88,8 @@ class CommunityRepository {
     String? tobaccoBrand,
   }) async {
     try {
-      final bool filterByTobacco = (tobaccoName != null && tobaccoName.isNotEmpty);
+      final bool filterByTobacco =
+          (tobaccoName != null && tobaccoName.isNotEmpty);
 
       // Si filtramos por tabaco, primero obtenemos los IDs de mixes que coinciden
       List<dynamic> response;
@@ -112,14 +120,18 @@ class CommunityRepository {
             break;
           case 'popular':
           case 'top_rated':
-            idQuery = idQuery.order('rating', ascending: false).order('reviews', ascending: false);
+            idQuery = idQuery
+                .order('rating', ascending: false)
+                .order('reviews', ascending: false);
             break;
           default:
             idQuery = idQuery.order('created_at', ascending: false);
         }
 
         final List dataIds = await idQuery.range(offset, offset + limit - 1);
-        targetIds = dataIds.map((row) => (row as Map<String, dynamic>)['id'] as String).toList();
+        targetIds = dataIds
+            .map((row) => (row as Map<String, dynamic>)['id'] as String)
+            .toList();
         if (targetIds.isEmpty) {
           return [];
         }
@@ -133,6 +145,7 @@ class CommunityRepository {
               description,
               rating,
               reviews,
+              reviews_real:reviews(count),
               created_at,
               profiles!mixes_author_id_fkey(username, display_name),
               mix_components(tobacco_name, brand, percentage, color)
@@ -155,7 +168,9 @@ class CommunityRepository {
             break;
           case 'popular':
           case 'top_rated':
-            request = request.order('rating', ascending: false).order('reviews', ascending: false);
+            request = request
+                .order('rating', ascending: false)
+                .order('reviews', ascending: false);
             break;
           default:
             request = request.order('created_at', ascending: false);
@@ -164,9 +179,7 @@ class CommunityRepository {
         response = await request;
       } else {
         // Sin filtro por tabaco: consulta directa con todos los componentes
-        dynamic request = _supabase.client
-            .from('mixes')
-            .select('''
+        dynamic request = _supabase.client.from('mixes').select('''
               id,
               name,
               description,
@@ -174,6 +187,7 @@ class CommunityRepository {
               reviews,
               created_at,
               profiles!mixes_author_id_fkey(username, display_name),
+              reviews_real:reviews(count),
               mix_components(tobacco_name, brand, percentage, color)
             ''');
 
@@ -192,7 +206,9 @@ class CommunityRepository {
             break;
           case 'popular':
           case 'top_rated':
-            request = request.order('rating', ascending: false).order('reviews', ascending: false);
+            request = request
+                .order('rating', ascending: false)
+                .order('reviews', ascending: false);
             break;
           default:
             request = request.order('created_at', ascending: false);
@@ -200,8 +216,8 @@ class CommunityRepository {
 
         response = await request.range(offset, offset + limit - 1);
       }
-      
-  return response.map((mixData) {
+
+      return response.map((mixData) {
         // Extraer componentes/ingredientes
         final components = mixData['mix_components'] as List? ?? [];
         final ingredients = components
@@ -214,13 +230,15 @@ class CommunityRepository {
           final colorStr = components[0]['color'] as String;
           // Si es un hex color string (ej: "#RRGGBB"), parsearlo
           if (colorStr.startsWith('#') && colorStr.length == 7) {
-            mixColor = Color(int.parse(colorStr.substring(1), radix: 16) + 0xFF000000);
+            mixColor = Color(
+              int.parse(colorStr.substring(1), radix: 16) + 0xFF000000,
+            );
           }
         }
 
         // Extraer autor (usar username en lugar de display_name)
         final profile = mixData['profiles'];
-        final authorName = profile != null 
+        final authorName = profile != null
             ? (profile['username'] as String? ?? 'Anónimo')
             : 'Anónimo';
 
@@ -229,7 +247,11 @@ class CommunityRepository {
           name: mixData['name'] as String,
           author: authorName,
           rating: (mixData['rating'] as num?)?.toDouble() ?? 0.0,
-          reviews: (mixData['reviews'] as num?)?.toInt() ?? 0,
+          reviews:
+              (mixData['reviews_real'] as List?)?.firstOrNull?['count']
+                  as int? ??
+              (mixData['reviews'] as num?)?.toInt() ??
+              0,
           ingredients: ingredients,
           color: mixColor,
         );
@@ -241,7 +263,10 @@ class CommunityRepository {
   }
 
   /// Devuelve una lista de tabacos disponibles (name, brand) para el buscador.
-  Future<List<Map<String, String>>> fetchAvailableTobaccos({String? query, int? limit}) async {
+  Future<List<Map<String, String>>> fetchAvailableTobaccos({
+    String? query,
+    int? limit,
+  }) async {
     final q = query?.trim();
     final client = _supabase.client;
     final result = <Map<String, String>>[];
@@ -333,13 +358,17 @@ class CommunityRepository {
           .eq('mix_id', mixId);
 
       if (components.isNotEmpty) {
-        final componentsData = components.map((c) => {
-              'mix_id': mixId,
-              'tobacco_name': c['tobacco_name'],
-              'brand': c['brand'],
-              'percentage': c['percentage'],
-              'color': c['color'],
-            }).toList();
+        final componentsData = components
+            .map(
+              (c) => {
+                'mix_id': mixId,
+                'tobacco_name': c['tobacco_name'],
+                'brand': c['brand'],
+                'percentage': c['percentage'],
+                'color': c['color'],
+              },
+            )
+            .toList();
         await _supabase.client.from('mix_components').insert(componentsData);
       }
 
@@ -351,13 +380,17 @@ class CommunityRepository {
           .single();
       final authorName = profileResponse['username'] as String? ?? 'Anónimo';
 
-      final ingredients = components.map((c) => c['tobacco_name'] as String).toList();
+      final ingredients = components
+          .map((c) => c['tobacco_name'] as String)
+          .toList();
 
       Color mixColor = const Color(0xFF72C8C1);
       if (components.isNotEmpty && components[0]['color'] != null) {
         final colorStr = components[0]['color'] as String;
         if (colorStr.startsWith('#') && colorStr.length == 7) {
-          mixColor = Color(int.parse(colorStr.substring(1), radix: 16) + 0xFF000000);
+          mixColor = Color(
+            int.parse(colorStr.substring(1), radix: 16) + 0xFF000000,
+          );
         }
       }
 
@@ -382,6 +415,7 @@ class CommunityRepository {
       return null;
     }
   }
+
   /// Obtiene las mezclas favoritas del usuario autenticado.
   Future<List<Mix>> fetchFavorites() async {
     try {
@@ -398,6 +432,7 @@ class CommunityRepository {
               description,
               rating,
               reviews,
+              reviews_real:reviews(count),
               created_at,
               profiles!mixes_author_id_fkey(username, display_name),
               mix_components(tobacco_name, brand, percentage, color)
@@ -416,13 +451,15 @@ class CommunityRepository {
         if (components.isNotEmpty && components[0]['color'] != null) {
           final colorStr = components[0]['color'] as String;
           if (colorStr.startsWith('#') && colorStr.length == 7) {
-            mixColor = Color(int.parse(colorStr.substring(1), radix: 16) + 0xFF000000);
+            mixColor = Color(
+              int.parse(colorStr.substring(1), radix: 16) + 0xFF000000,
+            );
           }
         }
 
         // Extraer autor (usar username en lugar de display_name)
         final profile = mixData['profiles'];
-        final authorName = profile != null 
+        final authorName = profile != null
             ? (profile['username'] as String? ?? 'Anónimo')
             : 'Anónimo';
 
@@ -431,7 +468,11 @@ class CommunityRepository {
           name: mixData['name'] as String,
           author: authorName,
           rating: (mixData['rating'] as num?)?.toDouble() ?? 0.0,
-          reviews: (mixData['reviews'] as num?)?.toInt() ?? 0,
+          reviews:
+              (mixData['reviews_real'] as List?)?.firstOrNull?['count']
+                  as int? ??
+              (mixData['reviews'] as num?)?.toInt() ??
+              0,
           ingredients: ingredients,
           color: mixColor,
         );
@@ -443,7 +484,7 @@ class CommunityRepository {
   }
 
   /// Crea una nueva mezcla en la base de datos.
-  /// 
+  ///
   /// [components] es una lista de mapas con los campos:
   /// - tobacco_name: String
   /// - brand: String
@@ -477,17 +518,19 @@ class CommunityRepository {
       final mixId = mixResponse['id'] as String;
 
       // Insertar componentes
-      final componentsData = components.map((c) => {
-        'mix_id': mixId,
-        'tobacco_name': c['tobacco_name'],
-        'brand': c['brand'],
-        'percentage': c['percentage'],
-        'color': c['color'],
-      }).toList();
+      final componentsData = components
+          .map(
+            (c) => {
+              'mix_id': mixId,
+              'tobacco_name': c['tobacco_name'],
+              'brand': c['brand'],
+              'percentage': c['percentage'],
+              'color': c['color'],
+            },
+          )
+          .toList();
 
-      await _supabase.client
-          .from('mix_components')
-          .insert(componentsData);
+      await _supabase.client.from('mix_components').insert(componentsData);
 
       // Obtener perfil del usuario (usar username)
       final profileResponse = await _supabase.client
@@ -507,7 +550,9 @@ class CommunityRepository {
       if (components.isNotEmpty && components[0]['color'] != null) {
         final colorStr = components[0]['color'] as String;
         if (colorStr.startsWith('#') && colorStr.length == 7) {
-          mixColor = Color(int.parse(colorStr.substring(1), radix: 16) + 0xFF000000);
+          mixColor = Color(
+            int.parse(colorStr.substring(1), radix: 16) + 0xFF000000,
+          );
         }
       }
 
@@ -550,8 +595,12 @@ class CommunityRepository {
       for (final c in (response['mix_components'] as List? ?? [])) {
         Color color = const Color(0xFF72C8C1); // color por defecto
         final colorVal = c['color'];
-        if (colorVal is String && colorVal.startsWith('#') && colorVal.length == 7) {
-          color = Color(int.parse(colorVal.substring(1), radix: 16) + 0xFF000000);
+        if (colorVal is String &&
+            colorVal.startsWith('#') &&
+            colorVal.length == 7) {
+          color = Color(
+            int.parse(colorVal.substring(1), radix: 16) + 0xFF000000,
+          );
         }
         components.add({
           'tobacco_name': c['tobacco_name'] as String,
@@ -579,7 +628,8 @@ class CommunityRepository {
       }
 
       return {
-        'description': response['description'] as String? ?? 'Sin descripción disponible.',
+        'description':
+            response['description'] as String? ?? 'Sin descripción disponible.',
         'components': components,
       };
     } catch (e) {
@@ -596,7 +646,7 @@ class CommunityRepository {
     int limit = 5,
   }) async {
     if (tobaccoNames.isEmpty) return [];
-    
+
     try {
       // Buscar mezclas que contengan al menos uno de los tabacos
       final response = await _supabase.client
@@ -609,6 +659,7 @@ class CommunityRepository {
               description,
               rating,
               reviews,
+              reviews_real:reviews(count),
               created_at,
               profiles!mixes_author_id_fkey(username, display_name),
               mix_components(tobacco_name, brand, percentage, color)
@@ -639,12 +690,14 @@ class CommunityRepository {
         if (components.isNotEmpty && components[0]['color'] != null) {
           final colorStr = components[0]['color'] as String;
           if (colorStr.startsWith('#') && colorStr.length == 7) {
-            mixColor = Color(int.parse(colorStr.substring(1), radix: 16) + 0xFF000000);
+            mixColor = Color(
+              int.parse(colorStr.substring(1), radix: 16) + 0xFF000000,
+            );
           }
         }
 
         final profile = mixData['profiles'];
-        final authorName = profile != null 
+        final authorName = profile != null
             ? (profile['username'] as String? ?? 'Anónimo')
             : 'Anónimo';
 
@@ -653,7 +706,11 @@ class CommunityRepository {
           name: mixData['name'] as String,
           author: authorName,
           rating: (mixData['rating'] as num?)?.toDouble() ?? 0.0,
-          reviews: (mixData['reviews'] as num?)?.toInt() ?? 0,
+          reviews:
+              (mixData['reviews_real'] as List?)?.firstOrNull?['count']
+                  as int? ??
+              (mixData['reviews'] as num?)?.toInt() ??
+              0,
           ingredients: ingredients,
           color: mixColor,
         );
@@ -686,7 +743,9 @@ class CommunityRepository {
         final profile = reviewData['profiles'];
         return {
           'id': reviewData['id'] as String,
-          'author': profile != null ? (profile['username'] as String? ?? 'Anónimo') : 'Anónimo',
+          'author': profile != null
+              ? (profile['username'] as String? ?? 'Anónimo')
+              : 'Anónimo',
           'author_id': reviewData['author_id'] as String?,
           'rating': (reviewData['rating'] as num).toDouble(),
           'comment': reviewData['comment'] as String? ?? '',
@@ -745,15 +804,14 @@ class CommunityRepository {
         return;
       }
 
-      final ratings = (reviews as List).map((r) => (r['rating'] as num).toDouble()).toList();
+      final ratings = (reviews as List)
+          .map((r) => (r['rating'] as num).toDouble())
+          .toList();
       final avgRating = ratings.reduce((a, b) => a + b) / ratings.length;
 
       await _supabase.client
           .from('mixes')
-          .update({
-            'rating': avgRating,
-            'reviews': ratings.length,
-          })
+          .update({'rating': avgRating, 'reviews': ratings.length})
           .eq('id', mixId);
     } catch (e) {
       debugPrint('Error al actualizar rating de mezcla: $e');
@@ -763,14 +821,11 @@ class CommunityRepository {
   /// Elimina una reseña por su ID.
   Future<bool> deleteReview(String reviewId, String mixId) async {
     try {
-      await _supabase.client
-          .from('reviews')
-          .delete()
-          .eq('id', reviewId);
-      
+      await _supabase.client.from('reviews').delete().eq('id', reviewId);
+
       // Actualizar el rating de la mezcla después de eliminar
       await _updateMixRating(mixId);
-      
+
       return true;
     } catch (e) {
       debugPrint('Error al eliminar reseña: $e');
@@ -788,15 +843,12 @@ class CommunityRepository {
     try {
       await _supabase.client
           .from('reviews')
-          .update({
-            'rating': rating,
-            'comment': comment,
-          })
+          .update({'rating': rating, 'comment': comment})
           .eq('id', reviewId);
-      
+
       // Actualizar el rating de la mezcla después de editar
       await _updateMixRating(mixId);
-      
+
       return true;
     } catch (e) {
       debugPrint('Error al actualizar reseña: $e');
@@ -829,10 +881,7 @@ class CommunityRepository {
     try {
       // Intentar borrar directamente la mezcla. Si hay FKs con CASCADE,
       // eliminará componentes/reseñas asociadas automáticamente.
-      await _supabase.client
-          .from('mixes')
-          .delete()
-          .eq('id', mixId);
+      await _supabase.client.from('mixes').delete().eq('id', mixId);
       return true;
     } catch (e) {
       debugPrint('Error al eliminar mezcla: $e');
