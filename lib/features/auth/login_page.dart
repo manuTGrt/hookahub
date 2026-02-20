@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         final bool isDark = themeProvider.isDarkMode;
-        
+
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
@@ -36,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: Row(
                   children: [
                     Icon(
-                      isDark ? Icons.dark_mode : Icons.light_mode, 
+                      isDark ? Icons.dark_mode : Icons.light_mode,
                       color: Theme.of(context).primaryColor,
                     ),
                     Switch.adaptive(
@@ -69,7 +69,9 @@ class _LoginPageState extends State<LoginPage> {
                         letterSpacing: 2,
                         shadows: [
                           Shadow(
-                            color: Theme.of(context).primaryColor.withOpacity(0.18),
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.18),
                             blurRadius: 6,
                             offset: const Offset(2, 2),
                           ),
@@ -81,7 +83,9 @@ class _LoginPageState extends State<LoginPage> {
                       'Tu comunidad de mezclas de tabaco',
                       style: TextStyle(
                         fontSize: 18,
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        color: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withOpacity(0.7),
                       ),
                     ),
                     const SizedBox(height: 40),
@@ -91,7 +95,9 @@ class _LoginPageState extends State<LoginPage> {
                       icon: Icons.email_outlined,
                       fillColor: isDark ? fieldDark : fieldLight,
                       iconColor: Theme.of(context).primaryColor,
-                      textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+                      textColor:
+                          Theme.of(context).textTheme.bodyLarge?.color ??
+                          Colors.black,
                     ),
                     const SizedBox(height: 20),
                     PastelTextField(
@@ -101,10 +107,14 @@ class _LoginPageState extends State<LoginPage> {
                       obscureText: _obscurePassword,
                       fillColor: isDark ? fieldDark : fieldLight,
                       iconColor: Theme.of(context).primaryColor,
-                      textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+                      textColor:
+                          Theme.of(context).textTheme.bodyLarge?.color ??
+                          Colors.black,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: Theme.of(context).primaryColor,
                         ),
                         onPressed: () {
@@ -126,13 +136,15 @@ class _LoginPageState extends State<LoginPage> {
                           final error = await auth.signInEmail(email, password);
                           if (!mounted) return;
                           if (error != null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(error)),
-                            );
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text(error)));
                           } else {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (_) => const MainNavigationPage()),
+                              MaterialPageRoute(
+                                builder: (_) => const MainNavigationPage(),
+                              ),
                             );
                           }
                         },
@@ -149,7 +161,9 @@ class _LoginPageState extends State<LoginPage> {
                               final error = await auth.signInGoogle();
                               if (!mounted) return;
                               if (error != null) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(SnackBar(content: Text(error)));
                               }
                             },
                             icon: const Icon(Icons.g_mobiledata),
@@ -164,7 +178,9 @@ class _LoginPageState extends State<LoginPage> {
                               final error = await auth.signInFacebook();
                               if (!mounted) return;
                               if (error != null) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(SnackBar(content: Text(error)));
                               }
                             },
                             icon: const Icon(Icons.facebook),
@@ -185,8 +201,12 @@ class _LoginPageState extends State<LoginPage> {
                       },
                       child: const Text('¿No tienes cuenta? Regístrate'),
                       style: TextButton.styleFrom(
-                        foregroundColor: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                        textStyle: const TextStyle(fontWeight: FontWeight.normal),
+                        foregroundColor: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 40),

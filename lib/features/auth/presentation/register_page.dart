@@ -30,14 +30,9 @@ class PastelPasswordField extends StatelessWidget {
     return TextField(
       controller: controller,
       obscureText: obscureText,
-      style: TextStyle(
-        color: textColor ?? Colors.black,
-      ),
+      style: TextStyle(color: textColor ?? Colors.black),
       decoration: InputDecoration(
-        prefixIcon: Icon(
-          Icons.lock_outline,
-          color: iconColor ?? turquoiseDark,
-        ),
+        prefixIcon: Icon(Icons.lock_outline, color: iconColor ?? turquoiseDark),
         hintText: hintText,
         hintStyle: TextStyle(
           color: (textColor ?? Colors.black).withOpacity(0.5),
@@ -103,18 +98,24 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isOlderThan18(DateTime birthDate) {
     final now = DateTime.now();
     final eighteenYearsAgo = DateTime(now.year - 18, now.month, now.day);
-    return birthDate.isBefore(eighteenYearsAgo) || birthDate.isAtSameMomentAs(eighteenYearsAgo);
+    return birthDate.isBefore(eighteenYearsAgo) ||
+        birthDate.isAtSameMomentAs(eighteenYearsAgo);
   }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) return 'La contraseña es obligatoria';
     if (value.length < 8) return 'Debe tener al menos 8 caracteres';
-    if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Debe contener al menos una mayúscula';
-    if (!RegExp(r'[a-z]').hasMatch(value)) return 'Debe contener al menos una minúscula';
-    if (!RegExp(r'[0-9]').hasMatch(value)) return 'Debe contener al menos un número';
-    if (!RegExp(r'[!@#\$&*~_\-]').hasMatch(value)) return 'Debe contener un carácter especial (!@#\$&*~_- )';
+    if (!RegExp(r'[A-Z]').hasMatch(value))
+      return 'Debe contener al menos una mayúscula';
+    if (!RegExp(r'[a-z]').hasMatch(value))
+      return 'Debe contener al menos una minúscula';
+    if (!RegExp(r'[0-9]').hasMatch(value))
+      return 'Debe contener al menos un número';
+    if (!RegExp(r'[!@#\$&*~_\-]').hasMatch(value))
+      return 'Debe contener un carácter especial (!@#\$&*~_- )';
     return null;
   }
+
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _firstNameController = TextEditingController();
@@ -129,12 +130,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
-  _usernameFocus.dispose();
-  _firstNameFocus.dispose();
-  _lastNameFocus.dispose();
-  _emailFocus.dispose();
-  _passwordFocus.dispose();
-  _confirmPasswordFocus.dispose();
+    _usernameFocus.dispose();
+    _firstNameFocus.dispose();
+    _lastNameFocus.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmPasswordFocus.dispose();
     _usernameController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
@@ -157,7 +158,8 @@ class _RegisterPageState extends State<RegisterPage> {
         _selectedBirthDate = picked;
         // Validar inmediatamente la mayoría de edad
         _showAgeError = !_isOlderThan18(picked);
-        _showErrors = true; // Activar la visualización de errores para este campo
+        _showErrors =
+            true; // Activar la visualización de errores para este campo
       });
     }
   }
@@ -179,7 +181,14 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Nombre de usuario', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? darkNavy : navy)),
+              Text(
+                'Nombre de usuario',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? darkNavy : navy,
+                ),
+              ),
               const SizedBox(height: 8),
               Focus(
                 focusNode: _usernameFocus,
@@ -187,7 +196,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   if (!hasFocus && _triedRegister) {
                     final value = _usernameController.text;
                     setState(() {
-                      _usernameError = value.isEmpty || value.length < 3 || !RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value);
+                      _usernameError =
+                          value.isEmpty ||
+                          value.length < 3 ||
+                          !RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value);
                     });
                   }
                 },
@@ -197,7 +209,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   icon: Icons.person_outline,
                   fillColor: isDark ? fieldDark : fieldLight,
                   iconColor: isDark ? darkTurquoise : turquoise,
-                  textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+                  textColor:
+                      Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.black,
                 ),
               ),
               if (_showErrors && _usernameError) ...[
@@ -207,14 +221,21 @@ class _RegisterPageState extends State<RegisterPage> {
                     _usernameController.text.isEmpty
                         ? 'El nombre de usuario es obligatorio'
                         : _usernameController.text.length < 3
-                            ? 'Debe tener al menos 3 caracteres'
-                            : 'Solo letras, números y guiones bajos',
+                        ? 'Debe tener al menos 3 caracteres'
+                        : 'Solo letras, números y guiones bajos',
                     style: const TextStyle(color: Colors.red, fontSize: 13),
                   ),
                 ),
               ],
               const SizedBox(height: 16),
-              Text('Nombre', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? darkNavy : navy)),
+              Text(
+                'Nombre',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? darkNavy : navy,
+                ),
+              ),
               const SizedBox(height: 8),
               Focus(
                 focusNode: _firstNameFocus,
@@ -232,7 +253,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   icon: Icons.badge_outlined,
                   fillColor: isDark ? fieldDark : fieldLight,
                   iconColor: isDark ? darkTurquoise : turquoise,
-                  textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+                  textColor:
+                      Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.black,
                 ),
               ),
               if (_showErrors && _firstNameError) ...[
@@ -247,7 +270,14 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ],
               const SizedBox(height: 16),
-              Text('Apellidos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? darkNavy : navy)),
+              Text(
+                'Apellidos',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? darkNavy : navy,
+                ),
+              ),
               const SizedBox(height: 8),
               Focus(
                 focusNode: _lastNameFocus,
@@ -265,7 +295,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   icon: Icons.family_restroom_outlined,
                   fillColor: isDark ? fieldDark : fieldLight,
                   iconColor: isDark ? darkTurquoise : turquoise,
-                  textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+                  textColor:
+                      Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.black,
                 ),
               ),
               if (_showErrors && _lastNameError) ...[
@@ -280,7 +312,14 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ],
               const SizedBox(height: 16),
-              Text('Fecha de nacimiento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? darkNavy : navy)),
+              Text(
+                'Fecha de nacimiento',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? darkNavy : navy,
+                ),
+              ),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: _selectBirthDate,
@@ -295,7 +334,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     icon: Icons.calendar_today_outlined,
                     fillColor: isDark ? fieldDark : fieldLight,
                     iconColor: isDark ? darkTurquoise : turquoise,
-                    textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+                    textColor:
+                        Theme.of(context).textTheme.bodyLarge?.color ??
+                        Colors.black,
                     obscureText: false,
                   ),
                 ),
@@ -303,17 +344,31 @@ class _RegisterPageState extends State<RegisterPage> {
               if (_showErrors && _showAgeError)
                 Padding(
                   padding: const EdgeInsets.only(left: 8, top: 4),
-                  child: Text('Debes ser mayor de 18 años', style: const TextStyle(color: Colors.red, fontSize: 13)),
+                  child: Text(
+                    'Debes ser mayor de 18 años',
+                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                  ),
                 ),
               const SizedBox(height: 16),
-              Text('Correo electrónico', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? darkNavy : navy)),
+              Text(
+                'Correo electrónico',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? darkNavy : navy,
+                ),
+              ),
               const SizedBox(height: 8),
               Focus(
                 focusNode: _emailFocus,
                 onFocusChange: (hasFocus) {
                   if (!hasFocus) {
                     final value = _emailController.text;
-                    final hasError = value.isNotEmpty && !RegExp(r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,4}$').hasMatch(value);
+                    final hasError =
+                        value.isNotEmpty &&
+                        !RegExp(
+                          r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,4}$',
+                        ).hasMatch(value);
                     setState(() {
                       _emailError = hasError;
                       if (hasError) _showErrors = true;
@@ -326,7 +381,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   icon: Icons.email_outlined,
                   fillColor: isDark ? fieldDark : fieldLight,
                   iconColor: isDark ? darkTurquoise : turquoise,
-                  textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+                  textColor:
+                      Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.black,
                 ),
               ),
               if (_showErrors && _emailError) ...[
@@ -341,14 +398,22 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ],
               const SizedBox(height: 16),
-              Text('Contraseña', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? darkNavy : navy)),
+              Text(
+                'Contraseña',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? darkNavy : navy,
+                ),
+              ),
               const SizedBox(height: 8),
               Focus(
                 focusNode: _passwordFocus,
                 onFocusChange: (hasFocus) {
                   if (!hasFocus) {
                     final value = _passwordController.text;
-                    final hasError = value.isNotEmpty && _validatePassword(value) != null;
+                    final hasError =
+                        value.isNotEmpty && _validatePassword(value) != null;
                     setState(() {
                       _passwordError = hasError;
                       if (hasError) _showErrors = true;
@@ -366,24 +431,37 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                   fillColor: isDark ? fieldDark : fieldLight,
                   iconColor: isDark ? darkTurquoise : turquoise,
-                  textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+                  textColor:
+                      Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.black,
                 ),
               ),
               if (_showErrors && _passwordError) ...[
                 Padding(
                   padding: const EdgeInsets.only(left: 8, top: 4),
-                  child: Text(_validatePassword(_passwordController.text) ?? '', style: const TextStyle(color: Colors.red, fontSize: 13)),
+                  child: Text(
+                    _validatePassword(_passwordController.text) ?? '',
+                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                  ),
                 ),
               ],
               const SizedBox(height: 16),
-              Text('Repetir contraseña', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? darkNavy : navy)),
+              Text(
+                'Repetir contraseña',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? darkNavy : navy,
+                ),
+              ),
               const SizedBox(height: 8),
               Focus(
                 focusNode: _confirmPasswordFocus,
                 onFocusChange: (hasFocus) {
                   if (!hasFocus) {
                     final value = _confirmPasswordController.text;
-                    final hasError = value.isNotEmpty && value != _passwordController.text;
+                    final hasError =
+                        value.isNotEmpty && value != _passwordController.text;
                     setState(() {
                       _confirmPasswordError = hasError;
                       if (hasError) _showErrors = true;
@@ -401,7 +479,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                   fillColor: isDark ? fieldDark : fieldLight,
                   iconColor: isDark ? darkTurquoise : turquoise,
-                  textColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+                  textColor:
+                      Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.black,
                 ),
               ),
               if (_showErrors && _confirmPasswordError) ...[
@@ -419,9 +499,9 @@ class _RegisterPageState extends State<RegisterPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-          onPressed: _isLoading
-            ? null
-            : () async {
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
                           setState(() {
                             _showErrors = true;
                             _triedRegister = true;
@@ -434,17 +514,38 @@ class _RegisterPageState extends State<RegisterPage> {
                           final lastName = _lastNameController.text;
                           final email = _emailController.text;
                           final password = _passwordController.text;
-                          final confirmPassword = _confirmPasswordController.text;
+                          final confirmPassword =
+                              _confirmPasswordController.text;
                           setState(() {
-                            _usernameError = username.isEmpty || username.length < 3 || !RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username);
-                            _firstNameError = firstName.isEmpty || firstName.length < 2;
-                            _lastNameError = lastName.isEmpty || lastName.length < 2;
-                            _emailError = email.isEmpty || !RegExp(r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,4}$').hasMatch(email);
-                            _passwordError = _validatePassword(password) != null;
-                            _confirmPasswordError = confirmPassword.isEmpty || confirmPassword != password;
-                            _showAgeError = birthDate == null || !_isOlderThan18(birthDate);
+                            _usernameError =
+                                username.isEmpty ||
+                                username.length < 3 ||
+                                !RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username);
+                            _firstNameError =
+                                firstName.isEmpty || firstName.length < 2;
+                            _lastNameError =
+                                lastName.isEmpty || lastName.length < 2;
+                            _emailError =
+                                email.isEmpty ||
+                                !RegExp(
+                                  r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,4}$',
+                                ).hasMatch(email);
+                            _passwordError =
+                                _validatePassword(password) != null;
+                            _confirmPasswordError =
+                                confirmPassword.isEmpty ||
+                                confirmPassword != password;
+                            _showAgeError =
+                                birthDate == null || !_isOlderThan18(birthDate);
                           });
-                          if (_usernameError || _firstNameError || _lastNameError || _emailError || _passwordError || _confirmPasswordError || _showAgeError) return;
+                          if (_usernameError ||
+                              _firstNameError ||
+                              _lastNameError ||
+                              _emailError ||
+                              _passwordError ||
+                              _confirmPasswordError ||
+                              _showAgeError)
+                            return;
                           setState(() => _isLoading = true);
                           final auth = context.read<AuthProvider>();
                           final error = await auth.registerEmail(
@@ -458,7 +559,9 @@ class _RegisterPageState extends State<RegisterPage> {
                           if (!mounted) return;
                           if (error != null) {
                             setState(() => _isLoading = false);
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text(error)));
                             return;
                           }
                           // ensureProfile también se ejecutará al recibir la sesión
@@ -467,14 +570,25 @@ class _RegisterPageState extends State<RegisterPage> {
                             _showErrors = false;
                             _triedRegister = false;
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registro exitoso. Revisa tu correo si se requiere verificación.')));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Registro exitoso. Revisa tu correo si se requiere verificación.',
+                              ),
+                            ),
+                          );
                           Navigator.pop(context);
                         },
                   child: _isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
                         )
                       : const Text('Registrarse'),
                 ),

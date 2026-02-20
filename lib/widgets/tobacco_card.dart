@@ -31,8 +31,8 @@ class TobaccoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     String _toTitleCase(String input) {
       if (input.trim().isEmpty) return input.trim();
-      return input.trim().substring(0, 1).toUpperCase() + 
-             input.trim().substring(1).toLowerCase();
+      return input.trim().substring(0, 1).toUpperCase() +
+          input.trim().substring(1).toLowerCase();
     }
 
     String _toTitleCaseSpaces(String input) {
@@ -52,6 +52,7 @@ class TobaccoCard extends StatelessWidget {
       }
       return buffer.toString();
     }
+
     // Si no se proporciona color, usar el color primario del tema para que
     // todas las tarjetas de tabacos se vean iguales entre sí.
     final accent = color ?? Theme.of(context).primaryColor;
@@ -77,7 +78,10 @@ class TobaccoCard extends StatelessWidget {
                   backgroundColor: accent,
                   child: Text(
                     name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -87,9 +91,12 @@ class TobaccoCard extends StatelessWidget {
                     children: [
                       Text(
                         _toTitleCase(name),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
                             ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -97,8 +104,10 @@ class TobaccoCard extends StatelessWidget {
                       Text(
                         _toTitleCase(brand),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -113,9 +122,11 @@ class TobaccoCard extends StatelessWidget {
               Text(
                 'Descripción:',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.8),
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.color?.withOpacity(0.8),
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -126,9 +137,11 @@ class TobaccoCard extends StatelessWidget {
               Text(
                 'Sabores:',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.8),
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.color?.withOpacity(0.8),
+                ),
               ),
               const SizedBox(height: 4),
               Wrap(
@@ -137,16 +150,22 @@ class TobaccoCard extends StatelessWidget {
                 children: flavors!
                     .map(
                       (f) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: accent.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           _toTitleCaseSpaces(f),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.w500,
-                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyLarge?.color,
                               ),
                         ),
                       ),
@@ -166,17 +185,19 @@ class TobaccoCard extends StatelessWidget {
                     Text(
                       rating.toStringAsFixed(1),
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).textTheme.bodyLarge?.color,
-                          ),
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
                     ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         reviews == 1 ? '(1 reseña)' : '($reviews reseñas)',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                        ),
                         overflow: TextOverflow.ellipsis,
                         softWrap: false,
                       ),
@@ -190,8 +211,10 @@ class TobaccoCard extends StatelessWidget {
                       child: Text(
                         'Sin valoraciones',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                        ),
                         overflow: TextOverflow.ellipsis,
                         softWrap: false,
                       ),

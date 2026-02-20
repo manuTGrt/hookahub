@@ -53,9 +53,7 @@ class _HistoryPageState extends State<HistoryPage> {
   ) {
     // Estado de carga
     if (historyProvider.isLoading && !historyProvider.isLoaded) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     // Error
@@ -78,10 +76,10 @@ class _HistoryPageState extends State<HistoryPage> {
             Text(
               historyProvider.error!,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: isDark
-                        ? darkNavy.withOpacity(0.7)
-                        : navy.withOpacity(0.6),
-                  ),
+                color: isDark
+                    ? darkNavy.withOpacity(0.7)
+                    : navy.withOpacity(0.6),
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -109,9 +107,9 @@ class _HistoryPageState extends State<HistoryPage> {
             const SizedBox(height: 16),
             Text(
               'No hay historial reciente',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Padding(
@@ -119,10 +117,10 @@ class _HistoryPageState extends State<HistoryPage> {
               child: Text(
                 'Las mezclas que visites aparecerán aquí',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: isDark
-                          ? darkNavy.withOpacity(0.7)
-                          : navy.withOpacity(0.6),
-                    ),
+                  color: isDark
+                      ? darkNavy.withOpacity(0.7)
+                      : navy.withOpacity(0.6),
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -160,18 +158,18 @@ class _HistoryPageState extends State<HistoryPage> {
                     Text(
                       group.key,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? darkNavy : navy,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? darkNavy : navy,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       '(${group.value.length})',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: isDark
-                                ? darkNavy.withOpacity(0.6)
-                                : navy.withOpacity(0.5),
-                          ),
+                        color: isDark
+                            ? darkNavy.withOpacity(0.6)
+                            : navy.withOpacity(0.5),
+                      ),
                     ),
                   ],
                 ),
@@ -208,14 +206,8 @@ class _HistoryPageState extends State<HistoryPage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
-              ? [
-                  darkTurquoise.withOpacity(0.2),
-                  darkNavy.withOpacity(0.1),
-                ]
-              : [
-                  turquoise.withOpacity(0.1),
-                  turquoiseDark.withOpacity(0.05),
-                ],
+              ? [darkTurquoise.withOpacity(0.2), darkNavy.withOpacity(0.1)]
+              : [turquoise.withOpacity(0.1), turquoiseDark.withOpacity(0.05)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -241,18 +233,18 @@ class _HistoryPageState extends State<HistoryPage> {
                 Text(
                   '${provider.uniqueCount} ${provider.uniqueCount == 1 ? 'mezcla única' : 'mezclas únicas'}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? darkNavy : navy,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? darkNavy : navy,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Visitadas en los últimos 2 días',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? darkNavy.withOpacity(0.7)
-                            : navy.withOpacity(0.6),
-                      ),
+                    color: isDark
+                        ? darkNavy.withOpacity(0.7)
+                        : navy.withOpacity(0.6),
+                  ),
                 ),
               ],
             ),
@@ -299,9 +291,7 @@ class _HistoryPageState extends State<HistoryPage> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => MixDetailPage(mix: mix),
-              ),
+              MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)),
             );
           },
         ),

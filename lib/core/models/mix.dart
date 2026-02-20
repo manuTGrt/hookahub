@@ -42,14 +42,14 @@ class Mix {
   }
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'name': name,
-        'author': author,
-        'rating': rating,
-        'ingredients': ingredients,
-        'color': color.value,
+    'id': id,
+    'name': name,
+    'author': author,
+    'rating': rating,
+    'ingredients': ingredients,
+    'color': color.value,
     'reviews': reviews,
-      };
+  };
 
   factory Mix.fromMap(Map<String, dynamic> map) {
     return Mix(
@@ -57,7 +57,9 @@ class Mix {
       name: map['name'] as String,
       author: map['author'] as String,
       rating: (map['rating'] as num).toDouble(),
-      ingredients: (map['ingredients'] as List).map((e) => e.toString()).toList(),
+      ingredients: (map['ingredients'] as List)
+          .map((e) => e.toString())
+          .toList(),
       color: Color(map['color'] as int),
       reviews: (map['reviews'] as num?)?.toInt() ?? 0,
     );

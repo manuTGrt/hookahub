@@ -11,11 +11,7 @@ class HomeStats {
 
   static const empty = HomeStats(tobaccos: 0, mixes: 0, users: 0);
 
-  HomeStats copyWith({
-    int? tobaccos,
-    int? mixes,
-    int? users,
-  }) {
+  HomeStats copyWith({int? tobaccos, int? mixes, int? users}) {
     return HomeStats(
       tobaccos: tobaccos ?? this.tobaccos,
       mixes: mixes ?? this.mixes,

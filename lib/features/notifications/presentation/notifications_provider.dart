@@ -16,16 +16,16 @@ class NotificationsProvider extends ChangeNotifier {
 
   final NotificationsRepository _repository;
   StreamSubscription<void>? _reconnectedSub;
-  
+
   List<AppNotification> _notifications = [];
   int _unreadCount = 0;
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _hasMoreData = true;
   String? _error;
-  
+
   StreamSubscription<AppNotification>? _realtimeSubscription;
-  
+
   static const int _pageSize = 50;
   int _currentOffset = 0;
 
@@ -192,33 +192,31 @@ class NotificationsProvider extends ChangeNotifier {
   /// Suscribirse a notificaciones en tiempo real
   void _subscribeToRealtime() {
     _realtimeSubscription?.cancel();
-    
-    _realtimeSubscription = _repository
-        .subscribeToNotifications()
-        .listen(
-          _onNewNotification,
-          onError: (error) {
-            debugPrint('Error en suscripción Realtime: $error');
-          },
-        );
+
+    _realtimeSubscription = _repository.subscribeToNotifications().listen(
+      _onNewNotification,
+      onError: (error) {
+        debugPrint('Error en suscripción Realtime: $error');
+      },
+    );
   }
 
   /// Callback cuando llega una nueva notificación
   void _onNewNotification(AppNotification notification) {
     // Verificar si ya existe (evitar duplicados)
     final exists = _notifications.any((n) => n.id == notification.id);
-    
+
     if (!exists) {
       // Insertar al inicio de la lista
       _notifications.insert(0, notification);
-      
+
       // Incrementar contador si no está leída
       if (!notification.isRead) {
         _unreadCount++;
       }
-      
+
       notifyListeners();
-      
+
       debugPrint('Nueva notificación recibida: ${notification.title}');
     }
   }

@@ -9,7 +9,7 @@ import '../services/database_health_service.dart';
 /// Gestiona el estado de la conexión con la base de datos y ejecuta healthchecks.
 class DatabaseHealthProvider extends ChangeNotifier {
   DatabaseHealthProvider({required DatabaseHealthService healthService})
-      : _healthService = healthService {
+    : _healthService = healthService {
     _instance = this;
   }
 
@@ -31,7 +31,8 @@ class DatabaseHealthProvider extends ChangeNotifier {
   DateTime? _lastCheckedAt;
 
   // Evento para notificar cuando se recupera la conexión
-  final StreamController<void> _reconnectedController = StreamController<void>.broadcast();
+  final StreamController<void> _reconnectedController =
+      StreamController<void>.broadcast();
   Stream<void> get onReconnected => _reconnectedController.stream;
 
   bool get isConnected => _isConnected;

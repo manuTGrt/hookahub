@@ -79,7 +79,7 @@ class FavoritesProvider extends ChangeNotifier {
   Future<void> updateFavorite(Mix updatedMix) async {
     final index = _favorites.indexWhere((m) => m.id == updatedMix.id);
     if (index == -1) return; // No está en favoritos
-    
+
     _favorites = [
       ..._favorites.take(index),
       updatedMix,

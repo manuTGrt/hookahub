@@ -406,11 +406,9 @@ class CatalogPage extends StatelessWidget {
               builder: (_) => TobaccoDetailPage(tobacco: tobacco),
             ),
           );
-          // Al volver, refrescar la lista para actualizar ratings/reviews
-          // Idealmente solo actualizaríamos el item específico, pero por simplicidad refrescamos
-          // ya que los datos vienen del servidor.
+          // Al volver, actualizar solo el ítem actual para no perder el scroll
           if (context.mounted) {
-            context.read<CatalogProvider>().refresh();
+            await context.read<CatalogProvider>().refreshItem(tobacco.id);
           }
         },
         borderRadius: BorderRadius.circular(16),

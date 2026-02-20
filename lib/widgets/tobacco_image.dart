@@ -52,7 +52,7 @@ class TobaccoImage extends StatelessWidget {
   /// Placeholder cuando no hay imagen disponible
   Widget _buildPlaceholder(BuildContext context) {
     final effectiveColor = placeholderColor ?? Theme.of(context).primaryColor;
-    
+
     return Container(
       width: width,
       height: height,
@@ -103,7 +103,9 @@ class TobaccoImage extends StatelessWidget {
       return size.clamp(24.0, 128.0).toDouble();
     }
     // Fallback: usa el tamaño del tema si existe, o 48
-    return (Theme.of(context).iconTheme.size ?? 48.0).clamp(24.0, 128.0).toDouble();
+    return (Theme.of(context).iconTheme.size ?? 48.0)
+        .clamp(24.0, 128.0)
+        .toDouble();
   }
 
   /// Obtiene el ancho válido del caché, con validación para evitar NaN/Infinity

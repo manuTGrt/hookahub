@@ -104,6 +104,27 @@ class CatalogProvider extends ChangeNotifier {
     await loadMore(resetCursor: true);
   }
 
+  /// Refresca un único elemento en la lista si existe, sin perder el scroll
+  void updateItem(Tobacco updatedTobacco) {
+    final index = _items.indexWhere((t) => t.id == updatedTobacco.id);
+    if (index != -1) {
+      _items[index] = updatedTobacco;
+      notifyListeners();
+    }
+  }
+
+  /// Recarga un único ítem desde el repositorio y actualiza su estado localmente
+  Future<void> refreshItem(String id) async {
+    try {
+      final updated = await _repository.fetchTobaccoById(id);
+      if (updated != null) {
+        updateItem(updated);
+      }
+    } catch (e) {
+      debugPrint('Error refrescando tabaco individual: $e');
+    }
+  }
+
   Future<void> loadMore({bool resetCursor = false}) async {
     if (_isLoading || !_hasMore) return;
     _isLoading = true;
@@ -123,7 +144,9 @@ class CatalogProvider extends ChangeNotifier {
     } catch (e) {
       DatabaseHealthProvider.reportFailure(e);
       // Si es error de conexión, solo mostramos banner global y suprimimos texto en la lista
-      _error = DatabaseHealthProvider.isConnectionError(e) ? null : e.toString();
+      _error = DatabaseHealthProvider.isConnectionError(e)
+          ? null
+          : e.toString();
     } finally {
       _hasAttemptedLoad = true;
       _isLoading = false;

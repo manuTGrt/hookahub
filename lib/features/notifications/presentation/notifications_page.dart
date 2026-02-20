@@ -22,7 +22,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    
+
     // Configurar locale para timeago
     timeago.setLocaleMessages('es', timeago.EsMessages());
   }
@@ -44,7 +44,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notificaciones'),
@@ -56,7 +56,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           Consumer<NotificationsProvider>(
             builder: (context, provider, _) {
               if (provider.unreadCount == 0) return const SizedBox.shrink();
-              
+
               return IconButton(
                 icon: const Icon(Icons.done_all),
                 tooltip: 'Marcar todas como leídas',
@@ -65,7 +65,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Todas las notificaciones marcadas como leídas'),
+                        content: Text(
+                          'Todas las notificaciones marcadas como leídas',
+                        ),
                         duration: Duration(seconds: 2),
                       ),
                     );
@@ -74,7 +76,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               );
             },
           ),
-          
+
           // Eliminar todas las leídas
           PopupMenuButton<String>(
             onSelected: (value) async {
@@ -143,26 +145,31 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     Icon(
                       Icons.error_outline,
                       size: 64,
-                      color: isDark ? darkNavy.withOpacity(0.5) : navy.withOpacity(0.5),
+                      color: isDark
+                          ? darkNavy.withOpacity(0.5)
+                          : navy.withOpacity(0.5),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'Error al cargar notificaciones',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       provider.error!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: isDark ? darkNavy.withOpacity(0.7) : navy.withOpacity(0.6),
-                          ),
+                        color: isDark
+                            ? darkNavy.withOpacity(0.7)
+                            : navy.withOpacity(0.6),
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: () => provider.loadNotifications(refresh: true),
+                      onPressed: () =>
+                          provider.loadNotifications(refresh: true),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Reintentar'),
                     ),
@@ -180,21 +187,25 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   Icon(
                     Icons.notifications_none,
                     size: 80,
-                    color: isDark ? darkNavy.withOpacity(0.5) : navy.withOpacity(0.5),
+                    color: isDark
+                        ? darkNavy.withOpacity(0.5)
+                        : navy.withOpacity(0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No tienes notificaciones',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Te notificaremos cuando haya actividad',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDark ? darkNavy.withOpacity(0.7) : navy.withOpacity(0.6),
-                        ),
+                      color: isDark
+                          ? darkNavy.withOpacity(0.7)
+                          : navy.withOpacity(0.6),
+                    ),
                   ),
                 ],
               ),
@@ -206,7 +217,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              itemCount: provider.notifications.length + (provider.isLoadingMore ? 1 : 0),
+              itemCount:
+                  provider.notifications.length +
+                  (provider.isLoadingMore ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == provider.notifications.length) {
                   // Loading indicator al final
@@ -223,7 +236,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     notification: notification,
                     isDark: isDark,
                     onTap: () => _handleNotificationTap(context, notification),
-                    onDismiss: () => provider.deleteNotification(notification.id),
+                    onDismiss: () =>
+                        provider.deleteNotification(notification.id),
                   ),
                 );
               },
@@ -235,7 +249,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   /// Manejar tap en notificación
-  void _handleNotificationTap(BuildContext context, AppNotification notification) {
+  void _handleNotificationTap(
+    BuildContext context,
+    AppNotification notification,
+  ) {
     // Marcar como leída
     if (!notification.isRead) {
       context.read<NotificationsProvider>().markAsRead(notification.id);
@@ -258,7 +275,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         // Navegar a la página de detalle de la mezcla
         final mixId = notification.data['mix_id'] as String?;
         final mixName = notification.data['mix_name'] as String?;
-        
+
         if (mixId != null && mixName != null) {
           // Crear un objeto Mix mínimo para la navegación
           final mix = Mix(
@@ -270,15 +287,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
             ingredients: [],
             color: const Color(0xFF72C8C1),
           );
-          
+
           Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => MixDetailPage(mix: mix),
-            ),
+            MaterialPageRoute(builder: (context) => MixDetailPage(mix: mix)),
           );
         }
         break;
-        
+
       case NotificationType.newTobacco:
         // TODO: Navegar a TobaccoDetailPage cuando se implemente
         ScaffoldMessenger.of(context).showSnackBar(
@@ -288,7 +303,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ),
         );
         break;
-        
+
       default:
         // Para otros tipos, mostrar mensaje
         ScaffoldMessenger.of(context).showSnackBar(
@@ -338,7 +353,9 @@ class NotificationTile extends StatelessWidget {
           border: Border.all(
             color: notification.isRead
                 ? (isDark ? darkNavy.withOpacity(0.2) : navy.withOpacity(0.1))
-                : (isDark ? darkTurquoise.withOpacity(0.4) : turquoise.withOpacity(0.3)),
+                : (isDark
+                      ? darkTurquoise.withOpacity(0.4)
+                      : turquoise.withOpacity(0.3)),
             width: notification.isRead ? 1 : 2,
           ),
           boxShadow: [
@@ -384,9 +401,10 @@ class NotificationTile extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 notification.title,
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                      fontWeight: notification.isRead 
-                                          ? FontWeight.w500 
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      fontWeight: notification.isRead
+                                          ? FontWeight.w500
                                           : FontWeight.bold,
                                       color: isDark ? darkNavy : navy,
                                     ),
@@ -410,9 +428,10 @@ class NotificationTile extends StatelessWidget {
                           notification.message,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: isDark 
-                                    ? darkNavy.withOpacity(0.8) 
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: isDark
+                                    ? darkNavy.withOpacity(0.8)
                                     : navy.withOpacity(0.7),
                               ),
                         ),
@@ -422,16 +441,20 @@ class NotificationTile extends StatelessWidget {
                             Icon(
                               Icons.access_time,
                               size: 14,
-                              color: isDark 
-                                  ? darkNavy.withOpacity(0.6) 
+                              color: isDark
+                                  ? darkNavy.withOpacity(0.6)
                                   : navy.withOpacity(0.5),
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              timeago.format(notification.createdAt, locale: 'es'),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: isDark 
-                                        ? darkNavy.withOpacity(0.6) 
+                              timeago.format(
+                                notification.createdAt,
+                                locale: 'es',
+                              ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: isDark
+                                        ? darkNavy.withOpacity(0.6)
                                         : navy.withOpacity(0.5),
                                   ),
                             ),

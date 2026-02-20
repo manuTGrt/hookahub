@@ -32,7 +32,7 @@ class _CommunityPageState extends State<CommunityPage> {
   Widget build(BuildContext context) {
     final textScaler = MediaQuery.textScalerOf(context);
     final scaleFactor = textScaler.scale(1.0);
-    
+
     return Scaffold(
       body: Consumer<CommunityProvider>(
         builder: (context, provider, child) {
@@ -84,7 +84,9 @@ class _CommunityPageState extends State<CommunityPage> {
                 children: [
                   // Filtros de mezclas
                   SizedBox(
-                    height: scaleFactor > 1.5 ? 50 : (scaleFactor > 1.3 ? 44 : 40),
+                    height: scaleFactor > 1.5
+                        ? 50
+                        : (scaleFactor > 1.3 ? 44 : 40),
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
@@ -92,13 +94,17 @@ class _CommunityPageState extends State<CommunityPage> {
                         const SizedBox(width: 8),
                         _buildFavoritesChip(context, provider),
                         const SizedBox(width: 8),
-                        _buildTobaccoFilterDropdown(context, provider, scaleFactor),
+                        _buildTobaccoFilterDropdown(
+                          context,
+                          provider,
+                          scaleFactor,
+                        ),
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Lista de mezclas
                   Text(
                     'Mezclas de la comunidad',
@@ -107,9 +113,9 @@ class _CommunityPageState extends State<CommunityPage> {
                       color: Theme.of(context).textTheme.headlineSmall?.color,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Mostrar mensaje si no hay mezclas
                   if (provider.mixes.isEmpty)
                     Center(
@@ -120,7 +126,9 @@ class _CommunityPageState extends State<CommunityPage> {
                             Icon(
                               Icons.science_outlined,
                               size: 64,
-                              color: Theme.of(context).primaryColor.withOpacity(0.5),
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.5),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -130,9 +138,12 @@ class _CommunityPageState extends State<CommunityPage> {
                             const SizedBox(height: 8),
                             Text(
                               'Sé el primero en crear una mezcla',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).textTheme.bodySmall?.color,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall?.color,
+                                  ),
                             ),
                           ],
                         ),
@@ -145,7 +156,11 @@ class _CommunityPageState extends State<CommunityPage> {
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: provider.mixes.length,
                       itemBuilder: (context, index) {
-                        return _buildMixCard(context, provider.mixes[index], scaleFactor);
+                        return _buildMixCard(
+                          context,
+                          provider.mixes[index],
+                          scaleFactor,
+                        );
                       },
                     ),
                 ],
@@ -157,8 +172,6 @@ class _CommunityPageState extends State<CommunityPage> {
     );
   }
 
-  
-
   Widget _buildFavoritesChip(BuildContext context, CommunityProvider provider) {
     final isSelected = provider.filterState.favoritesOnly;
     final fav = context.watch<FavoritesProvider>();
@@ -169,7 +182,7 @@ class _CommunityPageState extends State<CommunityPage> {
         if (selected) {
           provider.setLocalFavorites(fav.favorites);
         } else {
-            provider.toggleFavoritesOnly();
+          provider.toggleFavoritesOnly();
         }
       },
       selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
@@ -188,7 +201,11 @@ class _CommunityPageState extends State<CommunityPage> {
     );
   }
 
-  Widget _buildSortDropdown(BuildContext context, CommunityProvider provider, double scaleFactor) {
+  Widget _buildSortDropdown(
+    BuildContext context,
+    CommunityProvider provider,
+    double scaleFactor,
+  ) {
     final sort = provider.filterState.sortOption;
     return PopupMenuButton<CommunitySortOption>(
       tooltip: 'Ordenar mezclas',
@@ -196,7 +213,10 @@ class _CommunityPageState extends State<CommunityPage> {
       itemBuilder: (_) => [
         const PopupMenuItem<CommunitySortOption>(
           enabled: false,
-          child: Text('Ordenar por', style: TextStyle(fontWeight: FontWeight.bold)),
+          child: Text(
+            'Ordenar por',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
         ...CommunitySortOption.values.map((opt) {
           return PopupMenuItem<CommunitySortOption>(
@@ -204,9 +224,15 @@ class _CommunityPageState extends State<CommunityPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(child: Text(opt.label, overflow: TextOverflow.ellipsis)),
+                Expanded(
+                  child: Text(opt.label, overflow: TextOverflow.ellipsis),
+                ),
                 if (sort == opt)
-                  Icon(Icons.check, size: 18, color: Theme.of(context).primaryColor),
+                  Icon(
+                    Icons.check,
+                    size: 18,
+                    color: Theme.of(context).primaryColor,
+                  ),
               ],
             ),
           );
@@ -233,29 +259,41 @@ class _CommunityPageState extends State<CommunityPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.sort_rounded, size: 18, color: Theme.of(context).primaryColor),
+            Icon(
+              Icons.sort_rounded,
+              size: 18,
+              color: Theme.of(context).primaryColor,
+            ),
             const SizedBox(width: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 120),
               child: Text(
                 sort.label,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13.5,
-                    ),
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13.5,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.arrow_drop_down_rounded, size: 22, color: Theme.of(context).primaryColor),
+            Icon(
+              Icons.arrow_drop_down_rounded,
+              size: 22,
+              color: Theme.of(context).primaryColor,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTobaccoFilterDropdown(BuildContext context, CommunityProvider provider, double scaleFactor) {
+  Widget _buildTobaccoFilterDropdown(
+    BuildContext context,
+    CommunityProvider provider,
+    double scaleFactor,
+  ) {
     final display = provider.filterState.tobaccoName == null
         ? 'Todos los tabacos'
         : provider.filterState.tobaccoName!;
@@ -283,28 +321,40 @@ class _CommunityPageState extends State<CommunityPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.local_fire_department, size: 18, color: Theme.of(context).primaryColor),
+            Icon(
+              Icons.local_fire_department,
+              size: 18,
+              color: Theme.of(context).primaryColor,
+            ),
             const SizedBox(width: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 130),
               child: Text(
                 display,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13.5,
-                    ),
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13.5,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.arrow_drop_down_rounded, size: 22, color: Theme.of(context).primaryColor),
+            Icon(
+              Icons.arrow_drop_down_rounded,
+              size: 22,
+              color: Theme.of(context).primaryColor,
+            ),
             if (provider.filterState.tobaccoName != null)
               Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: InkWell(
                   onTap: provider.clearTobaccoFilter,
-                  child: Icon(Icons.clear, size: 16, color: Theme.of(context).primaryColor),
+                  child: Icon(
+                    Icons.clear,
+                    size: 16,
+                    color: Theme.of(context).primaryColor,
+                  ),
                 ),
               ),
           ],
@@ -313,7 +363,10 @@ class _CommunityPageState extends State<CommunityPage> {
     );
   }
 
-  Future<void> _showTobaccoPicker(BuildContext context, CommunityProvider provider) async {
+  Future<void> _showTobaccoPicker(
+    BuildContext context,
+    CommunityProvider provider,
+  ) async {
     final controller = TextEditingController();
     List<Map<String, String>> results = [];
     bool isLoading = true;
@@ -328,10 +381,14 @@ class _CommunityPageState extends State<CommunityPage> {
           isLoading = true;
           (ctx as Element).markNeedsBuild();
           // Reutilizamos el repositorio de comunidad para obtener tabacos
-          results = await provider.repository.fetchAvailableTobaccos(query: q, limit: 80);
+          results = await provider.repository.fetchAvailableTobaccos(
+            query: q,
+            limit: 80,
+          );
           isLoading = false;
           (ctx).markNeedsBuild();
         }
+
         fetch(null);
         return Padding(
           padding: EdgeInsets.only(
@@ -344,9 +401,13 @@ class _CommunityPageState extends State<CommunityPage> {
             builder: (context, setState) {
               Future<void> doSearch(String value) async {
                 setState(() => isLoading = true);
-                results = await provider.repository.fetchAvailableTobaccos(query: value, limit: 80);
+                results = await provider.repository.fetchAvailableTobaccos(
+                  query: value,
+                  limit: 80,
+                );
                 setState(() => isLoading = false);
               }
+
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -359,7 +420,10 @@ class _CommunityPageState extends State<CommunityPage> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  Text('Filtrar por tabaco', style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'Filtrar por tabaco',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: controller,
@@ -388,30 +452,30 @@ class _CommunityPageState extends State<CommunityPage> {
                     child: isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : results.isEmpty
-                            ? Center(
-                                child: Text(
-                                  'No se encontraron tabacos',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              )
-                            : ListView.builder(
-                                itemCount: results.length,
-                                itemBuilder: (context, index) {
-                                  final item = results[index];
-                                  return ListTile(
-                                    dense: true,
-                                    title: Text(item['name'] ?? ''),
-                                    subtitle: Text(item['brand'] ?? ''),
-                                    onTap: () {
-                                      provider.setTobaccoFilter(
-                                        name: item['name']!,
-                                        brand: item['brand']!,
-                                      );
-                                      Navigator.of(context).pop();
-                                    },
+                        ? Center(
+                            child: Text(
+                              'No se encontraron tabacos',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: results.length,
+                            itemBuilder: (context, index) {
+                              final item = results[index];
+                              return ListTile(
+                                dense: true,
+                                title: Text(item['name'] ?? ''),
+                                subtitle: Text(item['brand'] ?? ''),
+                                onTap: () {
+                                  provider.setTobaccoFilter(
+                                    name: item['name']!,
+                                    brand: item['brand']!,
                                   );
+                                  Navigator.of(context).pop();
                                 },
-                              ),
+                              );
+                            },
+                          ),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -447,10 +511,10 @@ class _CommunityPageState extends State<CommunityPage> {
   }
 
   Widget _buildMixCard(BuildContext context, Mix mix, double scaleFactor) {
-  final fav = context.watch<FavoritesProvider>();
-  final communityProvider = context.read<CommunityProvider>();
-  final isFav = fav.favorites.any((x) => x.id == mix.id);
-    
+    final fav = context.watch<FavoritesProvider>();
+    final communityProvider = context.read<CommunityProvider>();
+    final isFav = fav.favorites.any((x) => x.id == mix.id);
+
     return MixCard(
       mix: mix,
       isFavorite: isFav,
@@ -466,11 +530,9 @@ class _CommunityPageState extends State<CommunityPage> {
       },
       onShare: () {},
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => MixDetailPage(mix: mix),
-          ),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)));
       },
     );
   }

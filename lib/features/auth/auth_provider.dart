@@ -10,19 +10,25 @@ class AuthProvider extends ChangeNotifier {
     _sub = _svc.client.auth.onAuthStateChange.listen((event) async {
       _session = event.session;
       final ev = event.event;
-      if (_session != null && (ev == AuthChangeEvent.signedIn || ev == AuthChangeEvent.userUpdated)) {
+      if (_session != null &&
+          (ev == AuthChangeEvent.signedIn ||
+              ev == AuthChangeEvent.userUpdated)) {
         // Solo crear perfil básico si no se creó durante el registro
         final user = _session!.user;
         final metadata = user.userMetadata;
-        
+
         await _svc.ensureProfile(
           username: metadata?['username']?.toString(),
-          displayName: metadata != null && metadata['first_name'] != null && metadata['last_name'] != null
+          displayName:
+              metadata != null &&
+                  metadata['first_name'] != null &&
+                  metadata['last_name'] != null
               ? '${metadata['first_name']} ${metadata['last_name']}'
-              : metadata?['first_name']?.toString() ?? metadata?['last_name']?.toString(),
+              : metadata?['first_name']?.toString() ??
+                    metadata?['last_name']?.toString(),
           firstName: metadata?['first_name']?.toString(),
           lastName: metadata?['last_name']?.toString(),
-          birthdate: metadata?['birthdate'] != null 
+          birthdate: metadata?['birthdate'] != null
               ? DateTime.tryParse(metadata!['birthdate'].toString())
               : null,
           bio: metadata?['bio']?.toString(),
@@ -43,7 +49,8 @@ class AuthProvider extends ChangeNotifier {
 
   Future<String?> signInEmail(String email, String password) async {
     try {
-      await _svc.signInWithEmail(email: email, password: password)
+      await _svc
+          .signInWithEmail(email: email, password: password)
           .timeout(const Duration(seconds: 4));
       return null;
     } on AuthException catch (e) {
@@ -55,7 +62,9 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<String?> registerEmail(String email, String password, {
+  Future<String?> registerEmail(
+    String email,
+    String password, {
     String? username,
     String? firstName,
     String? lastName,
@@ -63,32 +72,36 @@ class AuthProvider extends ChangeNotifier {
     String? bio,
   }) async {
     try {
-      final response = await _svc.signUpWithEmail(
-        email: email, 
-        password: password,
-        data: {
-          'username': username,
-          'first_name': firstName,
-          'last_name': lastName,
-          'birthdate': birthdate?.toIso8601String(),
-          'bio': bio,
-        }..removeWhere((key, value) => value == null),
-      ).timeout(const Duration(seconds: 4));
-      
+      final response = await _svc
+          .signUpWithEmail(
+            email: email,
+            password: password,
+            data: {
+              'username': username,
+              'first_name': firstName,
+              'last_name': lastName,
+              'birthdate': birthdate?.toIso8601String(),
+              'bio': bio,
+            }..removeWhere((key, value) => value == null),
+          )
+          .timeout(const Duration(seconds: 4));
+
       // Si el usuario se crea inmediatamente (sin confirmación de email)
       if (response.user != null) {
-        await _svc.ensureProfile(
-          username: username,
-          displayName: firstName != null && lastName != null 
-              ? '$firstName $lastName' 
-              : firstName ?? lastName,
-          firstName: firstName,
-          lastName: lastName,
-          birthdate: birthdate,
-          bio: bio,
-        ).timeout(const Duration(seconds: 4));
+        await _svc
+            .ensureProfile(
+              username: username,
+              displayName: firstName != null && lastName != null
+                  ? '$firstName $lastName'
+                  : firstName ?? lastName,
+              firstName: firstName,
+              lastName: lastName,
+              birthdate: birthdate,
+              bio: bio,
+            )
+            .timeout(const Duration(seconds: 4));
       }
-      
+
       return null;
     } on AuthException catch (e) {
       DatabaseHealthProvider.reportFailure(e);

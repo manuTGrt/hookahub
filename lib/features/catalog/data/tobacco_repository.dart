@@ -76,6 +76,32 @@ class TobaccoRepository {
     }).toList();
   }
 
+  /// Busca un tabaco por ID.
+  Future<Tobacco?> fetchTobaccoById(String id) async {
+    final client = _supabase.client;
+    final List<dynamic> rows = await client
+        .from('tobaccos')
+        .select(
+          'id, name, brand, description, image_url, created_at, rating, reviews',
+        )
+        .eq('id', id)
+        .limit(1)
+        .timeout(const Duration(seconds: 4));
+
+    if (rows.isEmpty) return null;
+    final map = rows.first as Map<String, dynamic>;
+    return Tobacco(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      brand: map['brand'] as String,
+      description: map['description'] as String?,
+      flavors: const <String>[],
+      rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
+      reviews: (map['reviews'] as int?) ?? 0,
+      imageUrl: map['image_url'] as String?,
+    );
+  }
+
   /// Busca un tabaco por nombre y marca (case-insensitive). Devuelve el primero o null.
   Future<Tobacco?> findByNameAndBrand({
     required String name,

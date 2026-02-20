@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final textScaler = MediaQuery.textScalerOf(context);
     final scaleFactor = textScaler.scale(1.0);
-    
+
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -44,14 +44,16 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Theme.of(context).primaryColor.withOpacity(0.1), 
-                    Theme.of(context).primaryColor.withOpacity(0.05)
+                    Theme.of(context).primaryColor.withOpacity(0.1),
+                    Theme.of(context).primaryColor.withOpacity(0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.2)),
+                border: Border.all(
+                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,15 +69,17 @@ class _HomePageState extends State<HomePage> {
                   Text(
                     'Descubre, comparte y califica las mejores mezclas de tabaco',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.color?.withOpacity(0.7),
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Accesos rápidos
             Text(
               'Accesos rápidos',
@@ -84,82 +88,91 @@ class _HomePageState extends State<HomePage> {
                 color: Theme.of(context).textTheme.headlineSmall?.color,
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Carrusel horizontal de accesos rápidos con fades laterales
-            _QuickAccessCarousel(scaleFactor: scaleFactor, buildCard: (context) {
-              return [
-                _buildQuickAccessCard(
-                  context,
-                  scaleFactor: scaleFactor,
-                  icon: Icons.local_fire_department,
-                  title: 'Tabacos Populares',
-                  subtitle: 'Los más valorados',
-                  color: pastelBlue,
-                  onTap: () {
-                    final mainNav = MainNavigationPage.of(context);
-                    if (mainNav != null) {
-                      mainNav.navigateToCatalogWithFilter(SortOption.mostPopular);
-                    }
-                  },
-                ),
-                _buildQuickAccessCard(
-                  context,
-                  scaleFactor: scaleFactor,
-                  icon: Icons.star,
-                  title: 'Mezclas Top',
-                  subtitle: 'Mejor calificadas',
-                  color: pastelYellow,
-                  onTap: () {
-                    final mainNav = MainNavigationPage.of(context);
-                    if (mainNav != null) {
-                      mainNav.navigateToCommunityWithFilter(CommunitySortOption.topRated);
-                    }
-                  },
-                ),
-                _buildQuickAccessCard(
-                  context,
-                  scaleFactor: scaleFactor,
-                  icon: Icons.new_releases,
-                  title: 'Novedades',
-                  subtitle: 'Recién agregados',
-                  color: pastelPink,
-                  onTap: () {
-                    final mainNav = MainNavigationPage.of(context);
-                    if (mainNav != null) {
-                      mainNav.navigateToCatalogWithFilter(SortOption.newest);
-                    }
-                  },
-                ),
-                _buildQuickAccessCard(
-                  context,
-                  scaleFactor: scaleFactor,
-                  icon: Icons.favorite,
-                  title: 'Favoritas',
-                  subtitle: 'Mezclas guardadas',
-                  color: pastelGreen,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const FavoritesPage(),
-                      ),
-                    );
-                  },
-                ),
-              ];
-            }),
-            
+            _QuickAccessCarousel(
+              scaleFactor: scaleFactor,
+              buildCard: (context) {
+                return [
+                  _buildQuickAccessCard(
+                    context,
+                    scaleFactor: scaleFactor,
+                    icon: Icons.local_fire_department,
+                    title: 'Tabacos Populares',
+                    subtitle: 'Los más valorados',
+                    color: pastelBlue,
+                    onTap: () {
+                      final mainNav = MainNavigationPage.of(context);
+                      if (mainNav != null) {
+                        mainNav.navigateToCatalogWithFilter(
+                          SortOption.mostPopular,
+                        );
+                      }
+                    },
+                  ),
+                  _buildQuickAccessCard(
+                    context,
+                    scaleFactor: scaleFactor,
+                    icon: Icons.star,
+                    title: 'Mezclas Top',
+                    subtitle: 'Mejor calificadas',
+                    color: pastelYellow,
+                    onTap: () {
+                      final mainNav = MainNavigationPage.of(context);
+                      if (mainNav != null) {
+                        mainNav.navigateToCommunityWithFilter(
+                          CommunitySortOption.topRated,
+                        );
+                      }
+                    },
+                  ),
+                  _buildQuickAccessCard(
+                    context,
+                    scaleFactor: scaleFactor,
+                    icon: Icons.new_releases,
+                    title: 'Novedades',
+                    subtitle: 'Recién agregados',
+                    color: pastelPink,
+                    onTap: () {
+                      final mainNav = MainNavigationPage.of(context);
+                      if (mainNav != null) {
+                        mainNav.navigateToCatalogWithFilter(SortOption.newest);
+                      }
+                    },
+                  ),
+                  _buildQuickAccessCard(
+                    context,
+                    scaleFactor: scaleFactor,
+                    icon: Icons.favorite,
+                    title: 'Favoritas',
+                    subtitle: 'Mezclas guardadas',
+                    color: pastelGreen,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FavoritesPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ];
+              },
+            ),
+
             const SizedBox(height: 24),
-            
+
             // Estadísticas rápidas
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.2)),
+                border: Border.all(
+                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                ),
               ),
               child: Consumer<HomeStatsProvider>(
                 builder: (context, statsProvider, _) {
@@ -170,14 +183,17 @@ class _HomePageState extends State<HomePage> {
                         child: SizedBox(
                           width: 22,
                           height: 22,
-                          child: CircularProgressIndicator.adaptive(strokeWidth: 2.5),
+                          child: CircularProgressIndicator.adaptive(
+                            strokeWidth: 2.5,
+                          ),
                         ),
                       ),
                     );
                   }
 
                   final stats = statsProvider.stats;
-                  final showPlaceholder = statsProvider.error != null && !statsProvider.hasData;
+                  final showPlaceholder =
+                      statsProvider.error != null && !statsProvider.hasData;
 
                   return Column(
                     children: [
@@ -186,7 +202,9 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           _buildStatColumn(
                             context,
-                            showPlaceholder ? '--' : _formatCount(stats.tobaccos),
+                            showPlaceholder
+                                ? '--'
+                                : _formatCount(stats.tobaccos),
                             'Tabacos',
                           ),
                           _buildStatColumn(
@@ -207,8 +225,11 @@ class _HomePageState extends State<HomePage> {
                           child: Text(
                             'No se pudieron cargar las estadísticas',
                             textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.error.withOpacity(0.8),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.error.withOpacity(0.8),
                                 ),
                           ),
                         ),
@@ -235,16 +256,22 @@ class _HomePageState extends State<HomePage> {
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Ajustar tamaños según el factor de escala del texto
-    final iconSize = scaleFactor > 1.5 ? 28.0 : (scaleFactor > 1.3 ? 32.0 : (scaleFactor > 1.1 ? 34.0 : 36.0));
-    final containerPadding = scaleFactor > 1.3 ? 10.0 : (scaleFactor > 1.1 ? 12.0 : 14.0);
-    final cardPadding = scaleFactor > 1.3 ? 12.0 : (scaleFactor > 1.1 ? 14.0 : 16.0);
-    
+    final iconSize = scaleFactor > 1.5
+        ? 28.0
+        : (scaleFactor > 1.3 ? 32.0 : (scaleFactor > 1.1 ? 34.0 : 36.0));
+    final containerPadding = scaleFactor > 1.3
+        ? 10.0
+        : (scaleFactor > 1.1 ? 12.0 : 14.0);
+    final cardPadding = scaleFactor > 1.3
+        ? 12.0
+        : (scaleFactor > 1.1 ? 14.0 : 16.0);
+
     // Espacios fijos para mejor control
     final iconBottomSpacing = scaleFactor > 1.3 ? 8.0 : 12.0;
     final titleBottomSpacing = scaleFactor > 1.3 ? 6.0 : 8.0;
-    
+
     return Semantics(
       label: '$title: $subtitle',
       button: true,
@@ -255,10 +282,7 @@ class _HomePageState extends State<HomePage> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isDark
-                  ? [
-                      color.withOpacity(0.1),
-                      color.withOpacity(0.05),
-                    ]
+                  ? [color.withOpacity(0.1), color.withOpacity(0.05)]
                   : [
                       color.withOpacity(0.08),
                       color.withOpacity(0.15),
@@ -269,12 +293,10 @@ class _HomePageState extends State<HomePage> {
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark 
-                  ? color.withOpacity(0.3)
-                  : color.withOpacity(0.4),
+              color: isDark ? color.withOpacity(0.3) : color.withOpacity(0.4),
               width: 1.5,
             ),
-            boxShadow: isDark 
+            boxShadow: isDark
                 ? null
                 : [
                     BoxShadow(
@@ -307,11 +329,11 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       padding: EdgeInsets.all(containerPadding),
                       decoration: BoxDecoration(
-                        color: isDark 
+                        color: isDark
                             ? color.withOpacity(0.2)
                             : color.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: isDark 
+                        boxShadow: isDark
                             ? null
                             : [
                                 BoxShadow(
@@ -324,9 +346,7 @@ class _HomePageState extends State<HomePage> {
                       child: Icon(
                         icon,
                         size: iconSize,
-                        color: isDark 
-                            ? color.withOpacity(0.9)
-                            : color,
+                        color: isDark ? color.withOpacity(0.9) : color,
                       ),
                     ),
                     SizedBox(height: iconBottomSpacing),
@@ -348,7 +368,9 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        color: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withOpacity(0.7),
                         fontWeight: FontWeight.w500,
                         height: 1.2,
                       ),
@@ -382,7 +404,9 @@ class _HomePageState extends State<HomePage> {
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+              color: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.color?.withOpacity(0.6),
             ),
           ),
         ],
@@ -429,14 +453,20 @@ class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
         final double crossAxisSpacing = 12;
         final double cardWidth = (constraints.maxWidth - crossAxisSpacing) / 2;
         // Ajustar aspect ratio para dar más altura cuando hay texto grande
-        final double aspect = widget.scaleFactor > 1.5 ? 0.48 : (widget.scaleFactor > 1.3 ? 0.58 : (widget.scaleFactor > 1.1 ? 0.72 : 0.88));
+        final double aspect = widget.scaleFactor > 1.5
+            ? 0.48
+            : (widget.scaleFactor > 1.3
+                  ? 0.58
+                  : (widget.scaleFactor > 1.1 ? 0.72 : 0.88));
         final double cardHeight = cardWidth / aspect;
 
         final children = widget.buildCard(context);
 
         // Fades (izquierda/derecha) basados en desplazamiento
         final bool showLeft = _offset > 2;
-        final bool showRight = _controller.hasClients && _controller.position.maxScrollExtent - _offset > 2;
+        final bool showRight =
+            _controller.hasClients &&
+            _controller.position.maxScrollExtent - _offset > 2;
 
         return Stack(
           children: [
@@ -447,7 +477,11 @@ class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
                 children: [
                   for (int i = 0; i < children.length; i++) ...[
                     SizedBox(width: i == 0 ? 0 : 12),
-                    SizedBox(width: cardWidth, height: cardHeight, child: children[i]),
+                    SizedBox(
+                      width: cardWidth,
+                      height: cardHeight,
+                      child: children[i],
+                    ),
                   ],
                 ],
               ),
@@ -467,7 +501,9 @@ class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
                         end: Alignment.centerRight,
                         colors: [
                           Theme.of(context).scaffoldBackgroundColor,
-                          Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
+                          Theme.of(
+                            context,
+                          ).scaffoldBackgroundColor.withOpacity(0.0),
                         ],
                       ),
                     ),
@@ -489,7 +525,9 @@ class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
                         end: Alignment.centerLeft,
                         colors: [
                           Theme.of(context).scaffoldBackgroundColor,
-                          Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
+                          Theme.of(
+                            context,
+                          ).scaffoldBackgroundColor.withOpacity(0.0),
                         ],
                       ),
                     ),

@@ -34,7 +34,8 @@ class AppSegmentedControl extends StatelessWidget {
   final double segmentRadius;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry segmentPadding;
-  final bool useFilledActive; // Si true, estilo "pill" relleno (como tabaco detail)
+  final bool
+  useFilledActive; // Si true, estilo "pill" relleno (como tabaco detail)
 
   @override
   Widget build(BuildContext context) {

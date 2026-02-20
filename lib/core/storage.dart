@@ -5,7 +5,8 @@ class StorageConfig {
 
   // Marca si el bucket es privado (true) o público (false)
   static const bool avatarsPrivate = true;
-  static const bool tobaccoImagesPrivate = false; // Público para mejor rendimiento
+  static const bool tobaccoImagesPrivate =
+      false; // Público para mejor rendimiento
 
   // Segundos de validez para URLs firmadas
   static const int signedUrlExpiresIn = 3600; // 1 hora

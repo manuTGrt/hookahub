@@ -38,7 +38,8 @@ class _CommunityPageState extends State<CommunityPage> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       // Cuando estamos a 200 píxeles del final, cargar más
       final provider = context.read<CommunityProvider>();
       if (!provider.isLoadingMore && provider.hasMoreData) {
@@ -51,7 +52,7 @@ class _CommunityPageState extends State<CommunityPage> {
   Widget build(BuildContext context) {
     final textScaler = MediaQuery.textScalerOf(context);
     final scaleFactor = textScaler.scale(1.0);
-    
+
     return Scaffold(
       body: Consumer<CommunityProvider>(
         builder: (context, provider, child) {
@@ -107,36 +108,48 @@ class _CommunityPageState extends State<CommunityPage> {
                       children: [
                         // Barra de controles (orden, favoritas, tabaco)
                         SizedBox(
-                          height: scaleFactor > 1.5 ? 50 : (scaleFactor > 1.3 ? 44 : 40),
+                          height: scaleFactor > 1.5
+                              ? 50
+                              : (scaleFactor > 1.3 ? 44 : 40),
                           child: ListView(
                             scrollDirection: Axis.horizontal,
                             children: [
-                              _buildSortDropdown(context, provider, scaleFactor),
+                              _buildSortDropdown(
+                                context,
+                                provider,
+                                scaleFactor,
+                              ),
                               const SizedBox(width: 8),
                               _buildFavoritesChip(context, provider),
                               const SizedBox(width: 8),
-                              _TobaccoFilterDropdown(provider: provider, scaleFactor: scaleFactor),
+                              _TobaccoFilterDropdown(
+                                provider: provider,
+                                scaleFactor: scaleFactor,
+                              ),
                             ],
                           ),
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         // Título
                         Text(
                           'Mezclas de la comunidad',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).textTheme.headlineSmall?.color,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall?.color,
+                              ),
                         ),
-                        
+
                         const SizedBox(height: 16),
                       ],
                     ),
                   ),
                 ),
-                
+
                 // Lista de mezclas
                 if (provider.mixes.isEmpty)
                   SliverFillRemaining(
@@ -149,7 +162,9 @@ class _CommunityPageState extends State<CommunityPage> {
                             Icon(
                               Icons.science_outlined,
                               size: 64,
-                              color: Theme.of(context).primaryColor.withOpacity(0.5),
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.5),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -159,9 +174,12 @@ class _CommunityPageState extends State<CommunityPage> {
                             const SizedBox(height: 8),
                             Text(
                               'Sé el primero en crear una mezcla',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).textTheme.bodySmall?.color,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall?.color,
+                                  ),
                             ),
                           ],
                         ),
@@ -172,15 +190,16 @@ class _CommunityPageState extends State<CommunityPage> {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          return _buildMixCard(context, provider.mixes[index], scaleFactor);
-                        },
-                        childCount: provider.mixes.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return _buildMixCard(
+                          context,
+                          provider.mixes[index],
+                          scaleFactor,
+                        );
+                      }, childCount: provider.mixes.length),
                     ),
                   ),
-                
+
                 // Indicador de carga al final
                 if (provider.isLoadingMore)
                   SliverToBoxAdapter(
@@ -196,7 +215,7 @@ class _CommunityPageState extends State<CommunityPage> {
                       ),
                     ),
                   ),
-                
+
                 // Mensaje cuando no hay más datos
                 if (!provider.hasMoreData && provider.mixes.isNotEmpty)
                   SliverToBoxAdapter(
@@ -205,18 +224,19 @@ class _CommunityPageState extends State<CommunityPage> {
                       child: Center(
                         child: Text(
                           'No hay más mezclas',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodySmall?.color?.withOpacity(0.6),
+                              ),
                         ),
                       ),
                     ),
                   ),
-                
+
                 // Espacio extra al final
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 16),
-                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
               ],
             ),
           );
@@ -258,7 +278,11 @@ class _CommunityPageState extends State<CommunityPage> {
   }
 
   // Dropdown de ordenamiento (estética igual a catálogo)
-  Widget _buildSortDropdown(BuildContext context, CommunityProvider provider, double scaleFactor) {
+  Widget _buildSortDropdown(
+    BuildContext context,
+    CommunityProvider provider,
+    double scaleFactor,
+  ) {
     final sort = provider.filterState.sortOption;
     return Theme(
       data: Theme.of(context).copyWith(
@@ -281,7 +305,8 @@ class _CommunityPageState extends State<CommunityPage> {
         ),
       ),
       child: PopupMenuButton<CommunitySortOption>(
-        onSelected: (CommunitySortOption option) => provider.setSortOption(option),
+        onSelected: (CommunitySortOption option) =>
+            provider.setSortOption(option),
         tooltip: 'Ordenar mezclas',
         offset: const Offset(0, 10),
         position: PopupMenuPosition.under,
@@ -293,30 +318,43 @@ class _CommunityPageState extends State<CommunityPage> {
               height: 40,
               child: Row(
                 children: [
-                  Icon(Icons.sort, size: 18, color: Theme.of(context).primaryColor),
+                  Icon(
+                    Icons.sort,
+                    size: 18,
+                    color: Theme.of(context).primaryColor,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Ordenar por',
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ],
               ),
             ),
-            PopupMenuDivider(height: 1, color: Theme.of(context).scaffoldBackgroundColor),
+            PopupMenuDivider(
+              height: 1,
+              color: Theme.of(context).scaffoldBackgroundColor,
+            ),
             ...CommunitySortOption.values.map((opt) {
               final isSelected = sort == opt;
               return PopupMenuItem<CommunitySortOption>(
                 value: opt,
                 height: 52,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeInOut,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? Theme.of(context).primaryColor.withOpacity(0.08)
@@ -329,22 +367,31 @@ class _CommunityPageState extends State<CommunityPage> {
                         duration: const Duration(milliseconds: 200),
                         curve: Curves.easeInOut,
                         child: Icon(
-                          isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+                          isSelected
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked,
                           size: 20,
                           color: isSelected
                               ? Theme.of(context).primaryColor
-                              : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.3),
+                              : Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.color?.withOpacity(0.3),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           opt.label,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
                                 color: isSelected
                                     ? Theme.of(context).primaryColor
-                                    : Theme.of(context).textTheme.bodyMedium?.color,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                    : Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.color,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
                               ),
                         ),
                       ),
@@ -352,7 +399,9 @@ class _CommunityPageState extends State<CommunityPage> {
                         Icon(
                           _getSortIcon(opt),
                           size: 16,
-                          color: Theme.of(context).primaryColor.withOpacity(0.6),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.6),
                         ),
                     ],
                   ),
@@ -389,23 +438,31 @@ class _CommunityPageState extends State<CommunityPage> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.sort_rounded, size: 18, color: Theme.of(context).primaryColor),
+              Icon(
+                Icons.sort_rounded,
+                size: 18,
+                color: Theme.of(context).primaryColor,
+              ),
               const SizedBox(width: 8),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 120),
                 child: Text(
                   sort.label,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13.5,
-                      ),
+                    color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.5,
+                  ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.arrow_drop_down_rounded, size: 22, color: Theme.of(context).primaryColor),
+              Icon(
+                Icons.arrow_drop_down_rounded,
+                size: 22,
+                color: Theme.of(context).primaryColor,
+              ),
             ],
           ),
         ),
@@ -433,10 +490,10 @@ class _CommunityPageState extends State<CommunityPage> {
   // Widget dropdown con buscador para tabacos (estética catálogo)
   // Similar a _BrandFilterDropdown de catálogo pero adaptado a name+brand.
   // Ignora por ahora marca al filtrar localmente; se aplica de forma futura en la query.
-  
+
   Widget _buildMixCard(BuildContext context, Mix mix, double scaleFactor) {
-  final fav = context.watch<FavoritesProvider>();
-  final communityProvider = context.read<CommunityProvider>();
+    final fav = context.watch<FavoritesProvider>();
+    final communityProvider = context.read<CommunityProvider>();
     final isFav = fav.favorites.any((x) => x.id == mix.id);
     final profileProvider = context.watch<ProfileProvider>();
     final currentUsername = profileProvider.profile?.username;
@@ -462,10 +519,8 @@ class _CommunityPageState extends State<CommunityPage> {
           ? () async {
               final updated = await Navigator.of(context).push<Mix>(
                 MaterialPageRoute(
-                  builder: (_) => CreateMixPage(
-                    currentUser: mix.author,
-                    mixToEdit: mix,
-                  ),
+                  builder: (_) =>
+                      CreateMixPage(currentUser: mix.author, mixToEdit: mix),
                 ),
               );
               if (updated != null && context.mounted) {
@@ -483,7 +538,8 @@ class _CommunityPageState extends State<CommunityPage> {
                 builder: (context) => AlertDialog(
                   title: const Text('Eliminar mezcla'),
                   content: const Text(
-                      '¿Seguro que quieres eliminar esta mezcla? Esta acción no se puede deshacer.'),
+                    '¿Seguro que quieres eliminar esta mezcla? Esta acción no se puede deshacer.',
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
@@ -507,18 +563,18 @@ class _CommunityPageState extends State<CommunityPage> {
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No se pudo eliminar la mezcla')),
+                    const SnackBar(
+                      content: Text('No se pudo eliminar la mezcla'),
+                    ),
                   );
                 }
               }
             }
           : null,
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => MixDetailPage(mix: mix),
-          ),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)));
       },
     );
   }
@@ -558,18 +614,24 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
 
   void _showTobaccoMenu() async {
     final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
         button.localToGlobal(Offset(0, button.size.height), ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+        button.localToGlobal(
+          button.size.bottomRight(Offset.zero),
+          ancestor: overlay,
+        ),
       ),
       Offset.zero & overlay.size,
     );
 
     const String allKey = '__ALL_TOBACCO__';
     setState(() => _loading = true);
-  _available = await widget.provider.repository.fetchAvailableTobaccos(limit: 5000);
+    _available = await widget.provider.repository.fetchAvailableTobaccos(
+      limit: 5000,
+    );
     setState(() => _loading = false);
 
     await showMenu<String?>(
@@ -611,7 +673,9 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                           ? IconButton(
                               icon: Icon(
                                 Icons.clear,
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.color?.withOpacity(0.5),
                                 size: 20,
                               ),
                               onPressed: () {
@@ -623,13 +687,17 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -639,7 +707,10 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                           width: 2,
                         ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
                       isDense: true,
                     ),
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -650,10 +721,12 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 300),
                     child: _loading
-                        ? const Center(child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 24),
-                            child: CircularProgressIndicator(),
-                          ))
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 24),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
                         : SingleChildScrollView(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -666,21 +739,32 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                                   selectedName: selectedName,
                                   isAllOption: true,
                                 ),
-                                ...list.map((item) => _buildTobaccoOption(
-                                      context,
-                                      '${item['name']}::${item['brand']}',
-                                      '${item['name']} • ${item['brand']}',
-                                      Icons.local_fire_department,
-                                      selectedName: selectedName,
-                                    )),
+                                ...list.map(
+                                  (item) => _buildTobaccoOption(
+                                    context,
+                                    '${item['name']}::${item['brand']}',
+                                    '${item['name']} • ${item['brand']}',
+                                    Icons.local_fire_department,
+                                    selectedName: selectedName,
+                                  ),
+                                ),
                                 if (list.isEmpty && !_loading)
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
                                     child: Text(
                                       'No se encontraron tabacos',
                                       textAlign: TextAlign.center,
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.color
+                                                ?.withOpacity(0.5),
                                           ),
                                     ),
                                   ),
@@ -717,7 +801,9 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
     required String? selectedName,
     bool isAllOption = false,
   }) {
-    final isSelected = isAllOption ? selectedName == null : selectedName != null && display.startsWith(selectedName);
+    final isSelected = isAllOption
+        ? selectedName == null
+        : selectedName != null && display.startsWith(selectedName);
     return InkWell(
       onTap: () => Navigator.of(context).pop(key),
       child: AnimatedContainer(
@@ -726,28 +812,34 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.08) : Colors.transparent,
+          color: isSelected
+              ? Theme.of(context).primaryColor.withOpacity(0.08)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
             Icon(
-              isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+              isSelected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked,
               size: 20,
               color: isSelected
                   ? Theme.of(context).primaryColor
-                  : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.3),
+                  : Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.color?.withOpacity(0.3),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 display,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: isSelected
-                          ? Theme.of(context).primaryColor
-                          : Theme.of(context).textTheme.bodyMedium?.color,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    ),
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).textTheme.bodyMedium?.color,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
               ),
             ),
             if (isSelected)
@@ -769,7 +861,9 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
     return GestureDetector(
       onTap: _showTobaccoMenu,
       child: Container(
-        height: widget.scaleFactor > 1.5 ? 50 : (widget.scaleFactor > 1.3 ? 44 : 40),
+        height: widget.scaleFactor > 1.5
+            ? 50
+            : (widget.scaleFactor > 1.3 ? 44 : 40),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -796,29 +890,41 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.local_fire_department, size: 18, color: Theme.of(context).primaryColor),
+            Icon(
+              Icons.local_fire_department,
+              size: 18,
+              color: Theme.of(context).primaryColor,
+            ),
             const SizedBox(width: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 130),
               child: Text(
                 displayText,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13.5,
-                    ),
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13.5,
+                ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.arrow_drop_down_rounded, size: 22, color: Theme.of(context).primaryColor),
+            Icon(
+              Icons.arrow_drop_down_rounded,
+              size: 22,
+              color: Theme.of(context).primaryColor,
+            ),
             if (selectedName != null)
               Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: InkWell(
                   onTap: widget.provider.clearTobaccoFilter,
-                  child: Icon(Icons.clear, size: 16, color: Theme.of(context).primaryColor),
+                  child: Icon(
+                    Icons.clear,
+                    size: 16,
+                    color: Theme.of(context).primaryColor,
+                  ),
                 ),
               ),
           ],

@@ -5,10 +5,7 @@ import '../features/notifications/presentation/notifications_page.dart';
 
 /// Icono de notificaciones con badge de contador
 class NotificationIcon extends StatelessWidget {
-  const NotificationIcon({
-    super.key,
-    this.isDark = false,
-  });
+  const NotificationIcon({super.key, this.isDark = false});
 
   final bool isDark;
 
@@ -21,9 +18,7 @@ class NotificationIcon extends StatelessWidget {
             IconButton(
               icon: Icon(
                 Icons.notifications_outlined,
-                color: isDark
-                    ? Theme.of(context).primaryColor
-                    : Colors.white,
+                color: isDark ? Theme.of(context).primaryColor : Colors.white,
                 size: 26,
               ),
               onPressed: () {

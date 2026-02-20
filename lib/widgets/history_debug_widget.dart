@@ -15,10 +15,7 @@ class HistoryDebugWidget extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Debug Historial'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: provider.load,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: provider.load),
         ],
       ),
       body: SingleChildScrollView(
@@ -34,7 +31,10 @@ class HistoryDebugWidget extends StatelessWidget {
                   _buildRow('isLoading', provider.isLoading.toString()),
                   _buildRow('isLoaded', provider.isLoaded.toString()),
                   _buildRow('error', provider.error ?? 'null'),
-                  _buildRow('entries.length', provider.entries.length.toString()),
+                  _buildRow(
+                    'entries.length',
+                    provider.entries.length.toString(),
+                  ),
                   _buildRow('uniqueCount', provider.uniqueCount.toString()),
                 ],
               ),
@@ -51,9 +51,18 @@ class HistoryDebugWidget extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('ID: ${entry.id}', style: const TextStyle(fontSize: 10)),
-                          Text('Mix ID: ${entry.mixId}', style: const TextStyle(fontSize: 10)),
-                          Text('Nombre: ${entry.mixName}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                            'ID: ${entry.id}',
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                          Text(
+                            'Mix ID: ${entry.mixId}',
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                          Text(
+                            'Nombre: ${entry.mixName}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           Text('Autor: ${entry.author}'),
                           Text('Visitado: ${entry.visitedAt}'),
                           Text('Ingredientes: ${entry.ingredients.join(", ")}'),
@@ -113,10 +122,7 @@ class HistoryDebugWidget extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         child,
@@ -136,9 +142,7 @@ class HistoryDebugWidget extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );

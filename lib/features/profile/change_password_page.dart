@@ -14,7 +14,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
@@ -52,7 +52,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   Future<void> _changePassword() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() {
       _isLoading = true;
     });
@@ -60,7 +60,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     try {
       // Simular cambio de contraseña
       await Future.delayed(const Duration(seconds: 2));
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -72,7 +72,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             ),
           ),
         );
-        
+
         Navigator.of(context).pop();
       }
     } catch (e) {
@@ -110,14 +110,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       controller: controller,
       obscureText: obscureText,
       validator: validator,
-      style: TextStyle(
-        color: isDark ? darkNavy : navy,
-      ),
+      style: TextStyle(color: isDark ? darkNavy : navy),
       decoration: InputDecoration(
-        prefixIcon: Icon(
-          Icons.lock_outline,
-          color: borderTurquoise,
-        ),
+        prefixIcon: Icon(Icons.lock_outline, color: borderTurquoise),
         suffixIcon: IconButton(
           icon: Icon(
             obscureText ? Icons.visibility_off : Icons.visibility,
@@ -167,7 +162,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       // AppBar removida: el título y navegación atrás se muestran en la barra superior global
       body: Form(
@@ -182,12 +177,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark 
-                    ? darkTurquoise.withOpacity(0.1) 
-                    : turquoise.withOpacity(0.1),
+                  color: isDark
+                      ? darkTurquoise.withOpacity(0.1)
+                      : turquoise.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isDark ? darkTurquoise.withOpacity(0.3) : turquoise.withOpacity(0.3),
+                    color: isDark
+                        ? darkTurquoise.withOpacity(0.3)
+                        : turquoise.withOpacity(0.3),
                   ),
                 ),
                 child: Row(
@@ -202,7 +199,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       child: Text(
                         'Tu nueva contraseña debe tener al menos 8 caracteres e incluir una mayúscula, una minúscula y un número.',
                         style: TextStyle(
-                          color: isDark ? darkNavy.withOpacity(0.8) : navy.withOpacity(0.7),
+                          color: isDark
+                              ? darkNavy.withOpacity(0.8)
+                              : navy.withOpacity(0.7),
                           fontSize: 14,
                         ),
                       ),
@@ -210,9 +209,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Current password
               Text(
                 'Contraseña actual',
@@ -234,9 +233,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 },
                 validator: _validateCurrentPassword,
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // New password
               Text(
                 'Nueva contraseña',
@@ -258,9 +257,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 },
                 validator: _validateNewPassword,
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Confirm password
               Text(
                 'Confirmar nueva contraseña',
@@ -282,9 +281,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 },
                 validator: _validateConfirmPassword,
               ),
-              
+
               const SizedBox(height: 48),
-              
+
               // Change password button
               SizedBox(
                 width: double.infinity,
@@ -300,24 +299,26 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     elevation: 0,
                   ),
                   child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Text(
+                          'Cambiar contraseña',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      )
-                    : const Text(
-                        'Cambiar contraseña',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
             ],
           ),

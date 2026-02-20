@@ -82,7 +82,7 @@ class NotificationsRepository {
           .update({'is_read': true})
           .eq('user_id', user.id)
           .eq('is_read', false);
-      
+
       return true;
     } catch (e) {
       debugPrint('Error al marcar todas como leídas: $e');
@@ -115,7 +115,7 @@ class NotificationsRepository {
           .delete()
           .eq('user_id', user.id)
           .eq('is_read', true);
-      
+
       return true;
     } catch (e) {
       debugPrint('Error al eliminar notificaciones leídas: $e');

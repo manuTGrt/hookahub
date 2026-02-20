@@ -52,6 +52,7 @@ class MixCard extends StatelessWidget {
       }
       return buffer.toString();
     }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: InkWell(
@@ -68,207 +69,233 @@ class MixCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: mixColor,
-                    child: Text(
-                      mix.author.isNotEmpty ? mix.author[0].toUpperCase() : '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          mix.name,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).textTheme.bodyLarge?.color,
-                              ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          'por ${mix.author}${time != null ? ' • $time' : ''}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.color
-                                    ?.withOpacity(0.6),
-                              ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (trailingIcon != null)
-                    IconButton(
-                      icon: Icon(trailingIcon, color: mixColor),
-                      onPressed: onTrailingTap,
-                    ),
-                  if (isOwned && onEdit != null && onDelete != null)
-                    PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert, color: mixColor),
-                      onSelected: (value) {
-                        if (value == 'edit') {
-                          onEdit!();
-                        } else if (value == 'delete') {
-                          onDelete!();
-                        }
-                      },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit),
-                              SizedBox(width: 8),
-                              Text('Editar'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete),
-                              SizedBox(width: 8),
-                              Text('Eliminar'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Tabacos:',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.color
-                          ?.withOpacity(0.8),
-                    ),
-              ),
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: mix.ingredients
-                    .map(
-                      (ingredient) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: mixColor.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _toTitleCaseSpaces(ingredient),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).textTheme.bodyLarge?.color,
-                                fontWeight: FontWeight.w500,
-                              ),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: mixColor,
+                      child: Text(
+                        mix.author.isNotEmpty
+                            ? mix.author[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  // El bloque de rating ocupa el espacio restante.
-                  Expanded(
-                    child: Row(
-                      children: () {
-                        final hasRating = (mix.reviews > 0) && (mix.rating > 0);
-                        if (hasRating) {
-                          return [
-                            Icon(Icons.star, size: 16, color: mixColor),
-                            const SizedBox(width: 4),
-                            Text(
-                              mix.rating.toStringAsFixed(1),
-                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                                  ),
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                mix.reviews == 1 ? '(1 reseña)' : '(${mix.reviews} reseñas)',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.color
-                                          ?.withOpacity(0.5),
-                                    ),
-                                overflow: TextOverflow.ellipsis,
-                                softWrap: false,
-                              ),
-                            ),
-                          ];
-                        } else {
-                          return [
-                            Icon(Icons.star_border, size: 16, color: mixColor),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                'Sin valoraciones',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.color
-                                          ?.withOpacity(0.6),
-                                    ),
-                                overflow: TextOverflow.ellipsis,
-                                softWrap: false,
-                              ),
-                            ),
-                          ];
-                        }
-                      }(),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Acciones (tamaño inflexible)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            mix.name,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyLarge?.color,
+                                ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'por ${mix.author}${time != null ? ' • $time' : ''}',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color
+                                      ?.withOpacity(0.6),
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (trailingIcon != null)
                       IconButton(
-                        icon: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          size: 16,
-                          color: mixColor,
-                        ),
-                        onPressed: onFavoriteTap,
+                        icon: Icon(trailingIcon, color: mixColor),
+                        onPressed: onTrailingTap,
                       ),
-                      if (onShare != null)
-                        IconButton(
-                          icon: Icon(Icons.share_outlined, size: 16, color: mixColor),
-                          onPressed: onShare,
-                        ),
-                    ],
+                    if (isOwned && onEdit != null && onDelete != null)
+                      PopupMenuButton<String>(
+                        icon: Icon(Icons.more_vert, color: mixColor),
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            onEdit!();
+                          } else if (value == 'delete') {
+                            onDelete!();
+                          }
+                        },
+                        itemBuilder: (context) => const [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit),
+                                SizedBox(width: 8),
+                                Text('Editar'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete),
+                                SizedBox(width: 8),
+                                Text('Eliminar'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Tabacos:',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.color?.withOpacity(0.8),
                   ),
-                ],
-              )
-            ],
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: mix.ingredients
+                      .map(
+                        (ingredient) => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: mixColor.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _toTitleCaseSpaces(ingredient),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyLarge?.color,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    // El bloque de rating ocupa el espacio restante.
+                    Expanded(
+                      child: Row(
+                        children: () {
+                          final hasRating =
+                              (mix.reviews > 0) && (mix.rating > 0);
+                          if (hasRating) {
+                            return [
+                              Icon(Icons.star, size: 16, color: mixColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                mix.rating.toStringAsFixed(1),
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.color,
+                                    ),
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  mix.reviews == 1
+                                      ? '(1 reseña)'
+                                      : '(${mix.reviews} reseñas)',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.color
+                                            ?.withOpacity(0.5),
+                                      ),
+                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: false,
+                                ),
+                              ),
+                            ];
+                          } else {
+                            return [
+                              Icon(
+                                Icons.star_border,
+                                size: 16,
+                                color: mixColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  'Sin valoraciones',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.color
+                                            ?.withOpacity(0.6),
+                                      ),
+                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: false,
+                                ),
+                              ),
+                            ];
+                          }
+                        }(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Acciones (tamaño inflexible)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            size: 16,
+                            color: mixColor,
+                          ),
+                          onPressed: onFavoriteTap,
+                        ),
+                        if (onShare != null)
+                          IconButton(
+                            icon: Icon(
+                              Icons.share_outlined,
+                              size: 16,
+                              color: mixColor,
+                            ),
+                            onPressed: onShare,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

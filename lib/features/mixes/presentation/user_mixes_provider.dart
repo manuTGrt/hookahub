@@ -33,7 +33,10 @@ class UserMixesProvider extends ChangeNotifier {
 
     try {
       _offset = 0;
-      final result = await _repo.fetchMyMixes(limit: _pageSize, offset: _offset);
+      final result = await _repo.fetchMyMixes(
+        limit: _pageSize,
+        offset: _offset,
+      );
       _mixes = result;
       _offset = _mixes.length;
       _hasMore = result.length >= _pageSize;
@@ -58,7 +61,10 @@ class UserMixesProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _repo.fetchMyMixes(limit: _pageSize, offset: _offset);
+      final result = await _repo.fetchMyMixes(
+        limit: _pageSize,
+        offset: _offset,
+      );
       if (result.isNotEmpty) {
         _mixes.addAll(result);
         _offset += result.length;

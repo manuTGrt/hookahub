@@ -11,9 +11,9 @@ class HistoryRepository {
 
   /// Registra una vista de mezcla en el historial del usuario actual.
   /// Si ya existe una vista previa de esta mezcla, actualiza la fecha/hora.
-  /// 
+  ///
   /// [mixId]: ID de la mezcla que se está visitando.
-  /// 
+  ///
   /// Retorna `true` si se registró correctamente, `false` en caso contrario.
   Future<bool> recordMixView(String mixId) async {
     try {
@@ -44,10 +44,10 @@ class HistoryRepository {
 
   /// Obtiene el historial de mezclas visitadas en los últimos [days] días.
   /// Por defecto obtiene las vistas de los últimos 2 días.
-  /// 
+  ///
   /// [days]: Número de días hacia atrás para buscar (por defecto 2).
   /// [limit]: Número máximo de entradas a retornar (por defecto 100).
-  /// 
+  ///
   /// Retorna una lista de [VisitEntry] ordenada por fecha descendente (más recientes primero).
   Future<List<VisitEntry>> fetchRecentHistory({
     int days = 2,
@@ -92,12 +92,10 @@ class HistoryRepository {
       debugPrint('🔍 Número de registros: ${(response as List).length}');
 
       // Convertir respuesta a lista de VisitEntry
-      final entries = (response as List)
-          .map((data) {
-            debugPrint('🔍 Procesando entrada: $data');
-            return VisitEntry.fromMap(data as Map<String, dynamic>);
-          })
-          .toList();
+      final entries = (response as List).map((data) {
+        debugPrint('🔍 Procesando entrada: $data');
+        return VisitEntry.fromMap(data as Map<String, dynamic>);
+      }).toList();
 
       debugPrint('✅ Historial cargado: ${entries.length} entradas');
       return entries;
@@ -109,9 +107,9 @@ class HistoryRepository {
 
   /// Elimina todas las vistas de mezclas anteriores a [days] días.
   /// Útil para limpieza de datos antiguos.
-  /// 
+  ///
   /// [days]: Número de días a mantener (por defecto 7).
-  /// 
+  ///
   /// Retorna el número de registros eliminados.
   Future<int> clearOldHistory({int days = 7}) async {
     try {
@@ -140,7 +138,7 @@ class HistoryRepository {
   }
 
   /// Elimina todo el historial del usuario actual.
-  /// 
+  ///
   /// Retorna `true` si se eliminó correctamente.
   Future<bool> clearAllHistory() async {
     try {
@@ -150,10 +148,7 @@ class HistoryRepository {
         return false;
       }
 
-      await _supabase.client
-          .from('mix_views')
-          .delete()
-          .eq('user_id', user.id);
+      await _supabase.client.from('mix_views').delete().eq('user_id', user.id);
 
       debugPrint('Historial completo eliminado');
       return true;

@@ -15,15 +15,21 @@ import 'community_provider.dart';
 // Utilidad: convierte cada palabra a "Title Case" (primera mayúscula, resto minúsculas).
 String titleCase(String input) {
   if (input.isEmpty) return input;
-  final words = input.trim().split(RegExp(r"\s+")).map((w) {
-    final parts = w.split('-');
-    final cased = parts.map((p) {
-      if (p.isEmpty) return p;
-      final lower = p.toLowerCase();
-      return lower[0].toUpperCase() + lower.substring(1);
-    }).join('-');
-    return cased;
-  }).join(' ');
+  final words = input
+      .trim()
+      .split(RegExp(r"\s+"))
+      .map((w) {
+        final parts = w.split('-');
+        final cased = parts
+            .map((p) {
+              if (p.isEmpty) return p;
+              final lower = p.toLowerCase();
+              return lower[0].toUpperCase() + lower.substring(1);
+            })
+            .join('-');
+        return cased;
+      })
+      .join(' ');
   return words;
 }
 
@@ -80,7 +86,10 @@ class _CreateMixPageState extends State<CreateMixPage> {
   bool get _canAddMore => _ingredients.length < 4;
   bool get _hasMinIngredients => _ingredients.length >= 2;
 
-  double get _totalPercent => _ingredients.fold<double>(0, (a, b) => a + (double.tryParse(b.percentCtrl.text) ?? 0));
+  double get _totalPercent => _ingredients.fold<double>(
+    0,
+    (a, b) => a + (double.tryParse(b.percentCtrl.text) ?? 0),
+  );
 
   bool get _percentagesValid {
     if (_ingredients.isEmpty) return false;
@@ -93,33 +102,36 @@ class _CreateMixPageState extends State<CreateMixPage> {
   }
 
   // El botón se habilita solo según ingredientes y porcentajes, NO por título/descr.
-  bool get _canPressCreate => _hasMinIngredients && _percentagesValid && _ingredients.length <= 4;
+  bool get _canPressCreate =>
+      _hasMinIngredients && _percentagesValid && _ingredients.length <= 4;
 
   /// Carga los datos de la mezcla existente en modo edición
   Future<void> _loadExistingMix() async {
     final mix = widget.mixToEdit!;
     setState(() => _loadingExisting = true);
-    
+
     try {
       _nameCtrl.text = mix.name;
-      
+
       // Cargar detalles desde repositorio para obtener descripción y componentes
       final repo = context.read<CommunityProvider>().repository;
       final details = await repo.fetchMixDetails(mix.id);
-      
+
       if (details == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al cargar los detalles de la mezcla')),
+            const SnackBar(
+              content: Text('Error al cargar los detalles de la mezcla'),
+            ),
           );
           setState(() => _loadingExisting = false);
         }
         return;
       }
-      
+
       final desc = details['description'] as String?;
       final comps = (details['components'] as List?) ?? [];
-      
+
       if (mounted) {
         _descCtrl.text = desc ?? '';
       }
@@ -127,19 +139,19 @@ class _CreateMixPageState extends State<CreateMixPage> {
       // Resolver cada componente a Tobacco (si existe en catálogo) o crear placeholder
       final tobRepo = TobaccoRepository(SupabaseService());
       final List<_SelectedIngredient> loaded = [];
-      
+
       for (final c in comps) {
         final name = c['tobacco_name'] as String;
         final brand = c['brand'] as String;
         final percent = (c['percentage'] as num).toDouble();
-        
+
         Tobacco? t;
         try {
           t = await tobRepo.findByNameAndBrand(name: name, brand: brand);
         } catch (_) {
           // Si no se encuentra en catálogo, crear placeholder
         }
-        
+
         t ??= Tobacco(
           id: 'edit-${name.toLowerCase().replaceAll(' ', '-')}-${brand.toLowerCase().replaceAll(' ', '-')}',
           name: name,
@@ -148,15 +160,15 @@ class _CreateMixPageState extends State<CreateMixPage> {
           rating: 0,
           reviews: 0,
         );
-        
+
         final sel = _SelectedIngredient(tobacco: t);
         // Formatear el porcentaje sin decimales si es entero
-        sel.percentCtrl.text = percent.truncateToDouble() == percent 
-            ? percent.toStringAsFixed(0) 
+        sel.percentCtrl.text = percent.truncateToDouble() == percent
+            ? percent.toStringAsFixed(0)
             : percent.toStringAsFixed(1);
         loaded.add(sel);
       }
-      
+
       if (mounted) {
         setState(() {
           _ingredients
@@ -168,9 +180,9 @@ class _CreateMixPageState extends State<CreateMixPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _loadingExisting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar datos: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al cargar datos: $e')));
       }
     }
   }
@@ -178,7 +190,9 @@ class _CreateMixPageState extends State<CreateMixPage> {
   void _addIngredient(Tobacco t) {
     if (!_canAddMore) return;
     if (_ingredients.any((e) => e.tobacco.id == t.id)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ese tabaco ya está en la mezcla.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ese tabaco ya está en la mezcla.')),
+      );
       return;
     }
     setState(() {
@@ -212,11 +226,15 @@ class _CreateMixPageState extends State<CreateMixPage> {
       _descError = descErr;
     });
     if (nameErr != null || descErr != null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Revisa los errores antes de crear.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Revisa los errores antes de crear.')),
+      );
       return;
     }
     if (!_canPressCreate) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Corrige ingredientes/porcentajes.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Corrige ingredientes/porcentajes.')),
+      );
       return;
     }
 
@@ -232,12 +250,14 @@ class _CreateMixPageState extends State<CreateMixPage> {
       // Obtener el usuario autenticado
       final supabaseService = SupabaseService();
       final currentUser = supabaseService.client.auth.currentUser;
-      
+
       if (currentUser == null) {
         if (!mounted) return;
         Navigator.of(context).pop(); // Cerrar diálogo de carga
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Debes iniciar sesión para crear una mezcla.')),
+          const SnackBar(
+            content: Text('Debes iniciar sesión para crear una mezcla.'),
+          ),
         );
         return;
       }
@@ -245,8 +265,14 @@ class _CreateMixPageState extends State<CreateMixPage> {
       // Preparar los componentes para el provider con colores distintos por ingrediente
       // Paleta fija (coincide con los tonos usados en MixDetailPage)
       const paletteHex = [
-        '#87DAD2', '#4E9891', '#1AA6B8', '#245F5C',
-        '#6FC2B9', '#3A8780', '#0F96A6', '#0A8EA0'
+        '#87DAD2',
+        '#4E9891',
+        '#1AA6B8',
+        '#245F5C',
+        '#6FC2B9',
+        '#3A8780',
+        '#0F96A6',
+        '#0A8EA0',
       ];
       final components = _ingredients.asMap().entries.map((entry) {
         final i = entry.key;
@@ -261,7 +287,7 @@ class _CreateMixPageState extends State<CreateMixPage> {
 
       final communityProvider = context.read<CommunityProvider>();
       Mix? resultMix;
-      
+
       if (_isEdit) {
         // Modo edición: actualizar mezcla existente
         resultMix = await communityProvider.editMix(
@@ -288,14 +314,22 @@ class _CreateMixPageState extends State<CreateMixPage> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isEdit ? '¡Mezcla actualizada exitosamente!' : '¡Mezcla creada exitosamente!'),
+            content: Text(
+              _isEdit
+                  ? '¡Mezcla actualizada exitosamente!'
+                  : '¡Mezcla creada exitosamente!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isEdit ? 'Error al actualizar la mezcla' : 'Error al crear la mezcla'),
+            content: Text(
+              _isEdit
+                  ? 'Error al actualizar la mezcla'
+                  : 'Error al crear la mezcla',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -305,9 +339,11 @@ class _CreateMixPageState extends State<CreateMixPage> {
       Navigator.of(context).pop(); // Cerrar diálogo de carga
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_isEdit 
-              ? 'Error al actualizar la mezcla: ${e.toString()}' 
-              : 'Error al crear la mezcla: ${e.toString()}'),
+          content: Text(
+            _isEdit
+                ? 'Error al actualizar la mezcla: ${e.toString()}'
+                : 'Error al crear la mezcla: ${e.toString()}',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -330,23 +366,21 @@ class _CreateMixPageState extends State<CreateMixPage> {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      textAlignVertical: maxLines > 1 ? TextAlignVertical.top : TextAlignVertical.center,
+      textAlignVertical: maxLines > 1
+          ? TextAlignVertical.top
+          : TextAlignVertical.center,
       onChanged: onChanged,
       decoration: InputDecoration(
-        prefixIcon: icon != null
-            ? Icon(
-                icon,
-                color: borderTurquoise,
-              )
-            : null,
+        prefixIcon: icon != null ? Icon(icon, color: borderTurquoise) : null,
         hintText: hint,
         errorText: errorText,
         hintStyle: TextStyle(
-          color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black).withOpacity(0.5),
+          color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black)
+              .withOpacity(0.5),
         ),
         filled: true,
         fillColor: isDark ? fieldDark : fieldLight,
-        contentPadding: EdgeInsets.fromLTRB( icon != null ? 0 : 16, 14, 16, 14),
+        contentPadding: EdgeInsets.fromLTRB(icon != null ? 0 : 16, 14, 16, 14),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: borderTurquoise, width: 1.5),
@@ -375,7 +409,7 @@ class _CreateMixPageState extends State<CreateMixPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // Si estamos en modo edición y cargando datos, mostrar solo indicador de carga
     if (_isEdit && _loadingExisting) {
       return Scaffold(
@@ -397,7 +431,9 @@ class _CreateMixPageState extends State<CreateMixPage> {
                       Text(
                         'Cargando mezcla...',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.textTheme.bodyLarge?.color?.withOpacity(0.7),
+                          color: theme.textTheme.bodyLarge?.color?.withOpacity(
+                            0.7,
+                          ),
                         ),
                       ),
                     ],
@@ -409,7 +445,7 @@ class _CreateMixPageState extends State<CreateMixPage> {
         ),
       );
     }
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
@@ -443,7 +479,8 @@ class _CreateMixPageState extends State<CreateMixPage> {
                         hint: 'Introduce el título',
                         errorText: _nameError,
                         onChanged: (_) {
-                          if (_nameError != null) setState(() => _nameError = null);
+                          if (_nameError != null)
+                            setState(() => _nameError = null);
                         },
                       ),
                       const SizedBox(height: 24),
@@ -463,7 +500,8 @@ class _CreateMixPageState extends State<CreateMixPage> {
                         errorText: _descError,
                         maxLines: 3,
                         onChanged: (_) {
-                          if (_descError != null) setState(() => _descError = null);
+                          if (_descError != null)
+                            setState(() => _descError = null);
                         },
                       ),
                       const SizedBox(height: 32),
@@ -480,23 +518,32 @@ class _CreateMixPageState extends State<CreateMixPage> {
                             ),
                           ),
                           if (_ingredients.isNotEmpty)
-                            Text('Total: ${_totalPercent.toStringAsFixed(0)}%',
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: _percentagesValid ? theme.colorScheme.primary : theme.colorScheme.error,
-                                  fontWeight: FontWeight.w600,
-                                )),
+                            Text(
+                              'Total: ${_totalPercent.toStringAsFixed(0)}%',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: _percentagesValid
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.error,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       ChangeNotifierProvider(
                         create: (_) => TobaccoLookupProvider(
                           TobaccoRepository(SupabaseService()),
-                          autoLoad: !_isEdit, // No cargar automáticamente si estamos editando
+                          autoLoad:
+                              !_isEdit, // No cargar automáticamente si estamos editando
                         ),
                         child: Consumer<TobaccoLookupProvider>(
                           builder: (context, lookup, _) {
-                            final existingIds = _ingredients.map((e) => e.tobacco.id).toSet();
-                            final items = lookup.items.where((t) => !existingIds.contains(t.id)).toList();
+                            final existingIds = _ingredients
+                                .map((e) => e.tobacco.id)
+                                .toSet();
+                            final items = lookup.items
+                                .where((t) => !existingIds.contains(t.id))
+                                .toList();
                             return _IngredientSelector(
                               items: items,
                               enabled: _canAddMore,
@@ -510,7 +557,8 @@ class _CreateMixPageState extends State<CreateMixPage> {
                               },
                               pending: _pendingSelection,
                               onAdd: () {
-                                if (_pendingSelection != null) _addIngredient(_pendingSelection!);
+                                if (_pendingSelection != null)
+                                  _addIngredient(_pendingSelection!);
                               },
                             );
                           },
@@ -519,8 +567,12 @@ class _CreateMixPageState extends State<CreateMixPage> {
                       if (!_canAddMore)
                         Padding(
                           padding: const EdgeInsets.only(top: 6),
-                          child: Text('Máximo de 4 tabacos alcanzado',
-                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.secondary)),
+                          child: Text(
+                            'Máximo de 4 tabacos alcanzado',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.secondary,
+                            ),
+                          ),
                         ),
                       const SizedBox(height: 16),
                       if (_ingredients.isEmpty)
@@ -529,15 +581,22 @@ class _CreateMixPageState extends State<CreateMixPage> {
                           decoration: BoxDecoration(
                             color: theme.colorScheme.primary.withOpacity(0.05),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: theme.dividerColor.withOpacity(0.2)),
+                            border: Border.all(
+                              color: theme.dividerColor.withOpacity(0.2),
+                            ),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.info_outline, color: theme.colorScheme.primary),
+                              Icon(
+                                Icons.info_outline,
+                                color: theme.colorScheme.primary,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Text('Selecciona al menos dos tabacos y asigna porcentajes que sumen 100%.',
-                                    style: theme.textTheme.bodyMedium),
+                                child: Text(
+                                  'Selecciona al menos dos tabacos y asigna porcentajes que sumen 100%.',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
                               ),
                             ],
                           ),
@@ -548,7 +607,8 @@ class _CreateMixPageState extends State<CreateMixPage> {
                             for (final ing in _ingredients)
                               _SlidableIngredientRow(
                                 key: ValueKey('slide-${ing.tobacco.id}'),
-                                onDelete: () => _removeIngredient(ing.tobacco.id),
+                                onDelete: () =>
+                                    _removeIngredient(ing.tobacco.id),
                                 child: _IngredientRow(
                                   ingredient: ing,
                                   onChanged: () => setState(() {}),
@@ -562,7 +622,9 @@ class _CreateMixPageState extends State<CreateMixPage> {
                         width: double.infinity,
                         child: FilledButton.icon(
                           icon: const Icon(Icons.check_circle_outline),
-                          label: Text(_isEdit ? 'Guardar cambios' : 'Crear mezcla'),
+                          label: Text(
+                            _isEdit ? 'Guardar cambios' : 'Crear mezcla',
+                          ),
                           onPressed: _canPressCreate ? _handleCreate : null,
                         ),
                       ),
@@ -601,7 +663,12 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           Center(
-            child: Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            child: Text(
+              title,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -664,7 +731,8 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
   }
 
   void _onScroll() {
-    if (!mounted || !widget.enabled || !widget.hasMore || widget.isLoading) return;
+    if (!mounted || !widget.enabled || !widget.hasMore || widget.isLoading)
+      return;
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     if (position.maxScrollExtent - position.pixels < 120) {
@@ -675,17 +743,17 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
 
   void _toggleExpanded() {
     if (!mounted || !widget.enabled) return;
-    
+
     // Si estamos abriendo el desplegable y no hay items ni está cargando,
     // cargar datos iniciales (útil cuando autoLoad=false en el provider)
     if (!_expanded && widget.items.isEmpty && !widget.isLoading) {
       widget.onLoadMore(resetCursor: true);
     }
-    
+
     setState(() {
       _expanded = !_expanded;
     });
-    
+
     // Resetear scroll al abrir el desplegable
     if (_expanded && _scrollController.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -727,10 +795,7 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: isDark ? fieldDark : fieldLight,
-        border: Border.all(
-          color: turquoiseDark,
-          width: 1.5,
-        ),
+        border: Border.all(color: turquoiseDark, width: 1.5),
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(16),
@@ -749,7 +814,9 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
               const SizedBox(width: 12),
               _ModernAddButton(
                 enabled: widget.enabled && widget.pending != null,
-                onPressed: widget.enabled && widget.pending != null ? _handleAdd : null,
+                onPressed: widget.enabled && widget.pending != null
+                    ? _handleAdd
+                    : null,
                 tooltip: widget.enabled ? 'Añadir tabaco' : 'Máximo alcanzado',
               ),
             ],
@@ -763,10 +830,7 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
               decoration: BoxDecoration(
                 color: isDark ? fieldDark : fieldLight,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: turquoiseDark,
-                  width: 1.5,
-                ),
+                border: Border.all(color: turquoiseDark, width: 1.5),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
@@ -777,7 +841,9 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
                     controller: _scrollController,
                     shrinkWrap: true,
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: widget.items.length + ((widget.hasMore || widget.isLoading) ? 1 : 0),
+                    itemCount:
+                        widget.items.length +
+                        ((widget.hasMore || widget.isLoading) ? 1 : 0),
                     separatorBuilder: (context, index) => Divider(
                       height: 1,
                       color: theme.dividerColor.withOpacity(0.1),
@@ -792,12 +858,17 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
                                 ? const SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : Text(
-                                    widget.hasMore ? 'Cargar más…' : 'No hay más resultados',
+                                    widget.hasMore
+                                        ? 'Cargar más…'
+                                        : 'No hay más resultados',
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                                      color: theme.textTheme.bodySmall?.color
+                                          ?.withOpacity(0.7),
                                     ),
                                   ),
                           ),
@@ -813,7 +884,10 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
                             setState(() {});
                           },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             decoration: selected
                                 ? BoxDecoration(
                                     color: turquoise.withOpacity(0.1),
@@ -829,21 +903,32 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         titleCase(t.name),
-                                        style: theme.textTheme.bodyLarge?.copyWith(
-                                          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                                          color: selected ? turquoiseDark : null,
-                                        ),
+                                        style: theme.textTheme.bodyLarge
+                                            ?.copyWith(
+                                              fontWeight: selected
+                                                  ? FontWeight.w600
+                                                  : FontWeight.w500,
+                                              color: selected
+                                                  ? turquoiseDark
+                                                  : null,
+                                            ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
                                         titleCase(t.brand),
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: theme
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.color
+                                                  ?.withOpacity(0.7),
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -871,15 +956,18 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
                 ),
               ),
             ),
-          if (_expanded && widget.enabled && widget.items.isEmpty && !widget.isLoading)
+          if (_expanded &&
+              widget.enabled &&
+              widget.items.isEmpty &&
+              !widget.isLoading)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Center(
                 child: Text(
                   'Sin resultados',
                   style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
-                      ),
+                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                  ),
                 ),
               ),
             ),
@@ -890,10 +978,7 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
               decoration: BoxDecoration(
                 color: turquoise.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: turquoiseDark,
-                  width: 1.5,
-                ),
+                border: Border.all(color: turquoiseDark, width: 1.5),
               ),
               child: Row(
                 children: [
@@ -927,7 +1012,7 @@ class _ModernAddButton extends StatelessWidget {
     required this.onPressed,
     required this.tooltip,
   });
-  
+
   final bool enabled;
   final VoidCallback? onPressed;
   final String tooltip;
@@ -936,7 +1021,7 @@ class _ModernAddButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Tooltip(
       message: tooltip,
       child: AnimatedContainer(
@@ -959,7 +1044,9 @@ class _ModernAddButton extends StatelessWidget {
           boxShadow: enabled
               ? [
                   BoxShadow(
-                    color: (isDark ? darkTurquoise : turquoise).withOpacity(0.3),
+                    color: (isDark ? darkTurquoise : turquoise).withOpacity(
+                      0.3,
+                    ),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -994,7 +1081,11 @@ class _ModernAddButton extends StatelessWidget {
 }
 
 class _SearchField extends StatelessWidget {
-  const _SearchField({required this.controller, required this.enabled, required this.onTap});
+  const _SearchField({
+    required this.controller,
+    required this.enabled,
+    required this.onTap,
+  });
   final TextEditingController controller;
   final bool enabled;
   final VoidCallback onTap;
@@ -1002,17 +1093,14 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return TextField(
       controller: controller,
       enabled: enabled,
       onTap: enabled ? onTap : null,
       style: theme.textTheme.bodyLarge,
       decoration: InputDecoration(
-        prefixIcon: Icon(
-          Icons.search_rounded,
-          color: turquoiseDark,
-        ),
+        prefixIcon: Icon(Icons.search_rounded, color: turquoiseDark),
         suffixIcon: ValueListenableBuilder<TextEditingValue>(
           valueListenable: controller,
           builder: (context, value, child) {
@@ -1023,17 +1111,21 @@ class _SearchField extends StatelessWidget {
                       color: turquoiseDark.withOpacity(0.7),
                       size: 20,
                     ),
-                    onPressed: enabled ? () {
-                      controller.clear();
-                      FocusScope.of(context).requestFocus(FocusNode());
-                    } : null,
+                    onPressed: enabled
+                        ? () {
+                            controller.clear();
+                            FocusScope.of(context).requestFocus(FocusNode());
+                          }
+                        : null,
                   )
                 : const SizedBox.shrink();
           },
         ),
         hintText: 'Buscar tabaco por nombre o marca...',
         hintStyle: TextStyle(
-          color: (theme.textTheme.bodyLarge?.color ?? Colors.black).withOpacity(0.5),
+          color: (theme.textTheme.bodyLarge?.color ?? Colors.black).withOpacity(
+            0.5,
+          ),
         ),
         filled: true,
         fillColor: isDark ? fieldDark : fieldLight,
@@ -1048,7 +1140,10 @@ class _SearchField extends StatelessWidget {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: turquoiseDark.withOpacity(0.5), width: 1.5),
+          borderSide: BorderSide(
+            color: turquoiseDark.withOpacity(0.5),
+            width: 1.5,
+          ),
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -1118,18 +1213,27 @@ class _IngredientRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(titleCase(ingredient.tobacco.name),
-                    style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-                Text(titleCase(ingredient.tobacco.brand),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
-                    )),
+                Text(
+                  titleCase(ingredient.tobacco.name),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  titleCase(ingredient.tobacco.brand),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                  ),
+                ),
               ],
             ),
           ),
           SizedBox(
             width: 80,
-            child: _PercentField(controller: ingredient.percentCtrl, onChanged: onChanged),
+            child: _PercentField(
+              controller: ingredient.percentCtrl,
+              onChanged: onChanged,
+            ),
           ),
         ],
       ),
@@ -1140,7 +1244,11 @@ class _IngredientRow extends StatelessWidget {
 /// Fila deslizable personalizada: al arrastrar hacia la izquierda se revela el botón de borrar y
 /// puede quedar parcialmente abierta. Al completar el deslizamiento extremo también se borra.
 class _SlidableIngredientRow extends StatefulWidget {
-  const _SlidableIngredientRow({super.key, required this.child, required this.onDelete});
+  const _SlidableIngredientRow({
+    super.key,
+    required this.child,
+    required this.onDelete,
+  });
   final Widget child;
   final VoidCallback onDelete;
 
@@ -1148,19 +1256,24 @@ class _SlidableIngredientRow extends StatefulWidget {
   State<_SlidableIngredientRow> createState() => _SlidableIngredientRowState();
 }
 
-class _SlidableIngredientRowState extends State<_SlidableIngredientRow> with SingleTickerProviderStateMixin {
+class _SlidableIngredientRowState extends State<_SlidableIngredientRow>
+    with SingleTickerProviderStateMixin {
   // Anchura del área de acción (botón borrar)
   static const double _actionWidth = 76; // ancho suficiente para icono + margen
   late AnimationController _controller; // controla animación de arrastre
   late Animation<double> _animation;
   double _dragExtent = 0; // negativo hacia la izquierda
   bool _closing = false;
-  double _maxSlideWidth = 0; // ancho total disponible para permitir swipe completo
+  double _maxSlideWidth =
+      0; // ancho total disponible para permitir swipe completo
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 180));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+    );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
   }
 
@@ -1216,7 +1329,9 @@ class _SlidableIngredientRowState extends State<_SlidableIngredientRow> with Sin
       });
     });
     _controller.forward().whenComplete(() {
-      _controller.removeListener(() {}); // listener anónimo no removible -> noop seguro
+      _controller.removeListener(
+        () {},
+      ); // listener anónimo no removible -> noop seguro
     });
   }
 
@@ -1270,7 +1385,10 @@ class _SlidableIngredientRowState extends State<_SlidableIngredientRow> with Sin
                                 child: const Center(
                                   child: Tooltip(
                                     message: 'Borrar',
-                                    child: Icon(Icons.delete_outline, color: Colors.white),
+                                    child: Icon(
+                                      Icons.delete_outline,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1301,9 +1419,11 @@ class _SlidableIngredientRowState extends State<_SlidableIngredientRow> with Sin
   }
 }
 
-
 class _SelectedIngredient {
-  _SelectedIngredient({required this.tobacco}) : percentCtrl = TextEditingController(text: _defaultPercent.toStringAsFixed(0));
+  _SelectedIngredient({required this.tobacco})
+    : percentCtrl = TextEditingController(
+        text: _defaultPercent.toStringAsFixed(0),
+      );
   final Tobacco tobacco;
   final TextEditingController percentCtrl;
 

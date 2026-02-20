@@ -16,14 +16,15 @@ class DatabaseConnectionBanner extends StatelessWidget {
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
         final background = theme.brightness == Brightness.dark
-          ? warningSurfaceDark
-          : warningSurfaceLight;
+            ? warningSurfaceDark
+            : warningSurfaceLight;
         final accentColor = colorScheme.error;
         final textColor = theme.brightness == Brightness.dark
-          ? Colors.white
-          : accentColor;
+            ? Colors.white
+            : accentColor;
         final localizations = AppLocalizations.of(context);
-        final message = localizations?.databaseOfflineMessage ?? 'Conexión perdida';
+        final message =
+            localizations?.databaseOfflineMessage ?? 'Conexión perdida';
         final retryText = localizations?.databaseRetryButton ?? 'Reintentar';
 
         return IgnorePointer(
@@ -46,7 +47,10 @@ class DatabaseConnectionBanner extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       color: background,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -65,7 +69,10 @@ class DatabaseConnectionBanner extends StatelessWidget {
                                 backgroundColor: accentColor,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
                               ),
                               onPressed: provider.isChecking
                                   ? null
@@ -78,7 +85,10 @@ class DatabaseConnectionBanner extends StatelessWidget {
                                       height: 16,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                        valueColor:
+                                            const AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
                                       ),
                                     )
                                   : Text(retryText),

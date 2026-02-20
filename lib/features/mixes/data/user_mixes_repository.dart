@@ -30,13 +30,17 @@ class UserMixesRepository {
 
       return (response as List).map((mixData) {
         final components = mixData['mix_components'] as List? ?? [];
-        final ingredients = components.map((c) => c['tobacco_name'] as String).toList();
+        final ingredients = components
+            .map((c) => c['tobacco_name'] as String)
+            .toList();
 
         Color mixColor = const Color(0xFF72C8C1);
         if (components.isNotEmpty && components[0]['color'] != null) {
           final colorStr = components[0]['color'] as String;
           if (colorStr.startsWith('#') && colorStr.length == 7) {
-            mixColor = Color(int.parse(colorStr.substring(1), radix: 16) + 0xFF000000);
+            mixColor = Color(
+              int.parse(colorStr.substring(1), radix: 16) + 0xFF000000,
+            );
           }
         }
 

@@ -25,19 +25,14 @@ class PastelTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  // Color turquesa aún más claro para el borde
+    // Color turquesa aún más claro para el borde
     const turquoiseDark = Color(0xFF008080);
     return TextField(
       controller: controller,
       obscureText: obscureText,
-      style: TextStyle(
-        color: textColor ?? Colors.black,
-      ),
+      style: TextStyle(color: textColor ?? Colors.black),
       decoration: InputDecoration(
-        prefixIcon: Icon(
-          icon,
-          color: iconColor ?? turquoiseDark,
-        ),
+        prefixIcon: Icon(icon, color: iconColor ?? turquoiseDark),
         hintText: hintText,
         hintStyle: TextStyle(
           color: (textColor ?? Colors.black).withOpacity(0.5),

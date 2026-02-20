@@ -7,12 +7,7 @@ import '../data/community_repository.dart';
 import '../../community/domain/community_filters.dart';
 
 /// Estado del provider de la comunidad
-enum LegacyCommunityFilter {
-  popular,
-  recent,
-  topRated,
-  favorites,
-}
+enum LegacyCommunityFilter { popular, recent, topRated, favorites }
 
 /// Provider para gestionar el estado de las mezclas de la comunidad.
 class CommunityProvider extends ChangeNotifier {
@@ -24,7 +19,7 @@ class CommunityProvider extends ChangeNotifier {
 
   final CommunityRepository _repository;
   StreamSubscription<void>? _reconnectedSub;
-  
+
   // Exponer el repositorio para acceso directo desde widgets
   CommunityRepository get repository => _repository;
 
@@ -36,10 +31,10 @@ class CommunityProvider extends ChangeNotifier {
   bool _isLoadingMore = false;
   bool _hasMoreData = true;
   String? _error;
-  
+
   // Cache de favoritas locales para recalcular filtros/sort sin red
   List<Mix>? _localFavoritesCache;
-  
+
   static const int _pageSize = 20;
   int _currentOffset = 0;
 
@@ -62,7 +57,9 @@ class CommunityProvider extends ChangeNotifier {
 
     try {
       // Compatibilidad con filtro legacy de favoritos
-      final favoritesOnly = _legacyFilter == LegacyCommunityFilter.favorites || _filterState.favoritesOnly;
+      final favoritesOnly =
+          _legacyFilter == LegacyCommunityFilter.favorites ||
+          _filterState.favoritesOnly;
       final sort = _filterState.sortOption;
 
       if (favoritesOnly) {
@@ -72,7 +69,9 @@ class CommunityProvider extends ChangeNotifier {
           _mixes = _mixes.where((m) {
             final name = _filterState.tobaccoName!.toLowerCase();
             final brand = _filterState.tobaccoBrand?.toLowerCase();
-            final hasName = m.ingredients.any((ing) => ing.toLowerCase() == name);
+            final hasName = m.ingredients.any(
+              (ing) => ing.toLowerCase() == name,
+            );
             // Nota: en el modelo Mix no guardamos brand por ingrediente; se filtra solo por nombre
             return hasName && (brand == null || brand.isEmpty ? true : true);
           }).toList();
@@ -116,7 +115,7 @@ class CommunityProvider extends ChangeNotifier {
         tobaccoName: _filterState.tobaccoName,
         tobaccoBrand: _filterState.tobaccoBrand,
       );
-      
+
       _currentOffset = _mixes.length;
       _hasMoreData = _mixes.length >= _pageSize;
       _isLoaded = true;
@@ -133,7 +132,9 @@ class CommunityProvider extends ChangeNotifier {
   /// Carga más mezclas (scroll infinito).
   Future<void> loadMoreMixes() async {
     // No cargar más si ya estamos cargando o no hay más datos
-    final favoritesOnly = _legacyFilter == LegacyCommunityFilter.favorites || _filterState.favoritesOnly;
+    final favoritesOnly =
+        _legacyFilter == LegacyCommunityFilter.favorites ||
+        _filterState.favoritesOnly;
     if (_isLoadingMore || !_hasMoreData || favoritesOnly) {
       return;
     }
@@ -213,15 +214,16 @@ class CommunityProvider extends ChangeNotifier {
     }
   }
 
-
   /// Cambia el filtro y recarga las mezclas.
   Future<void> setLegacyFilter(LegacyCommunityFilter filter) async {
     if (_legacyFilter == filter) return;
     _legacyFilter = filter;
     // Sincronizar con estado moderno (favoritos)
-    if (filter == LegacyCommunityFilter.favorites && !_filterState.favoritesOnly) {
+    if (filter == LegacyCommunityFilter.favorites &&
+        !_filterState.favoritesOnly) {
       _filterState = _filterState.copyWith(favoritesOnly: true);
-    } else if (filter != LegacyCommunityFilter.favorites && _filterState.favoritesOnly) {
+    } else if (filter != LegacyCommunityFilter.favorites &&
+        _filterState.favoritesOnly) {
       _filterState = _filterState.copyWith(favoritesOnly: false);
     }
     notifyListeners();
@@ -243,7 +245,9 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   void toggleFavoritesOnly() {
-    _filterState = _filterState.copyWith(favoritesOnly: !_filterState.favoritesOnly);
+    _filterState = _filterState.copyWith(
+      favoritesOnly: !_filterState.favoritesOnly,
+    );
     loadMixes();
   }
 
@@ -262,12 +266,17 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   void setTobaccoFilter({required String name, required String brand}) {
-    _filterState = _filterState.copyWith(tobaccoName: name, tobaccoBrand: brand);
+    _filterState = _filterState.copyWith(
+      tobaccoName: name,
+      tobaccoBrand: brand,
+    );
     if (_filterState.favoritesOnly && _localFavoritesCache != null) {
       // Filtrar sobre la cache local por nombre de tabaco
       var list = List<Mix>.from(_localFavoritesCache!);
       final needle = name.toLowerCase();
-      list = list.where((m) => m.ingredients.any((i) => i.toLowerCase() == needle)).toList();
+      list = list
+          .where((m) => m.ingredients.any((i) => i.toLowerCase() == needle))
+          .toList();
       _sortLocal(list, _filterState.sortOption);
       _mixes = list;
       _hasMoreData = false;
@@ -295,7 +304,9 @@ class CommunityProvider extends ChangeNotifier {
     // Filtro por tabaco (solo por nombre disponible)
     if (_filterState.tobaccoName != null) {
       final needle = _filterState.tobaccoName!.toLowerCase();
-      list = list.where((m) => m.ingredients.any((i) => i.toLowerCase() == needle)).toList();
+      list = list
+          .where((m) => m.ingredients.any((i) => i.toLowerCase() == needle))
+          .toList();
     }
     // Orden
     _sortLocal(list, _filterState.sortOption);
@@ -309,7 +320,7 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   /// Crea una nueva mezcla.
-  /// 
+  ///
   /// [components] debe contener mapas con:
   /// - tobacco_name: String
   /// - brand: String

@@ -61,38 +61,40 @@ class AppNotification {
         final reviewerName = data['reviewer_name'] as String? ?? 'Alguien';
         final mixName = data['mix_name'] as String? ?? 'tu mezcla';
         return '$reviewerName comentó en "$mixName"';
-        
+
       case NotificationType.newTobacco:
-        final tobaccoName = data['tobacco_name'] as String? ?? 'Un nuevo tabaco';
+        final tobaccoName =
+            data['tobacco_name'] as String? ?? 'Un nuevo tabaco';
         final brand = data['tobacco_brand'] as String? ?? '';
         return '$tobaccoName $brand se agregó al catálogo';
-        
+
       case NotificationType.mixTrending:
         final mixName = data['mix_name'] as String? ?? 'Tu mezcla';
         final rating = (data['rating'] as num?)?.toStringAsFixed(1) ?? '5.0';
         return '$mixName está siendo muy bien valorada ($rating⭐)';
-        
+
       case NotificationType.favoriteMyMix:
         final favoriterName = data['favoriter_name'] as String? ?? 'Alguien';
         final mixName = data['mix_name'] as String? ?? 'tu mezcla';
         return '$favoriterName marcó "$mixName" como favorita';
-        
+
       case NotificationType.followNewMix:
         final authorName = data['author_name'] as String? ?? 'Un usuario';
         final mixName = data['mix_name'] as String? ?? '';
         return '$authorName creó una nueva mezcla: $mixName';
-        
+
       case NotificationType.reviewReply:
         final replierName = data['replier_name'] as String? ?? 'Alguien';
         return '$replierName respondió a tu reseña';
-        
+
       case NotificationType.weeklyDigest:
         return 'Revisa tu actividad de esta semana';
-        
+
       case NotificationType.achievement:
-        final achievementName = data['achievement_name'] as String? ?? 'Nuevo logro';
+        final achievementName =
+            data['achievement_name'] as String? ?? 'Nuevo logro';
         return 'Has desbloqueado: $achievementName';
-        
+
       case NotificationType.recommendedMix:
         final mixName = data['mix_name'] as String? ?? 'Una mezcla';
         return 'Creemos que te gustará: $mixName';

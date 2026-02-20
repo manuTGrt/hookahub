@@ -38,7 +38,9 @@ class HistoryProvider extends ChangeNotifier {
   Future<void> load() async {
     // Prevenir llamadas concurrentes
     if (_isLoading) {
-      debugPrint('⏳ HistoryProvider: Ya hay una carga en progreso, ignorando nueva llamada');
+      debugPrint(
+        '⏳ HistoryProvider: Ya hay una carga en progreso, ignorando nueva llamada',
+      );
       return;
     }
 
@@ -51,8 +53,10 @@ class HistoryProvider extends ChangeNotifier {
       // Cargar historial de los últimos 2 días
       _entries = await _repository.fetchRecentHistory(days: 2);
       _uniqueCount = await _repository.getUniqueVisitedCount(days: 2);
-      
-      debugPrint('✅ HistoryProvider: Historial cargado - ${_entries.length} entradas, $_uniqueCount únicas');
+
+      debugPrint(
+        '✅ HistoryProvider: Historial cargado - ${_entries.length} entradas, $_uniqueCount únicas',
+      );
       _isLoaded = true;
       _error = null;
     } catch (e) {
@@ -75,13 +79,13 @@ class HistoryProvider extends ChangeNotifier {
 
   /// Registra una visita a una mezcla.
   /// Llama a este método cuando el usuario abre la página de detalle de una mezcla.
-  /// 
+  ///
   /// [mixId]: ID de la mezcla visitada.
   /// [silent]: Si es `true`, no notifica a los listeners ni actualiza la UI.
   Future<void> recordView(String mixId, {bool silent = true}) async {
     try {
       final success = await _repository.recordMixView(mixId);
-      
+
       if (success && !silent) {
         // Recargar historial si no es silencioso
         await load();
@@ -96,14 +100,14 @@ class HistoryProvider extends ChangeNotifier {
   Future<bool> clearAll() async {
     try {
       final success = await _repository.clearAllHistory();
-      
+
       if (success) {
         _entries = [];
         _uniqueCount = 0;
         _isLoaded = true;
         notifyListeners();
       }
-      
+
       return success;
     } catch (e) {
       _error = 'Error al limpiar historial: $e';
@@ -118,18 +122,18 @@ class HistoryProvider extends ChangeNotifier {
   Future<int> clearOld({int days = 7}) async {
     try {
       final deletedCount = await _repository.clearOldHistory(days: days);
-      
-      if (deletedCount > 0) {
 
-    @override
-    void dispose() {
-      _reconnectedSub?.cancel();
-      super.dispose();
-    }
+      if (deletedCount > 0) {
+        @override
+        void dispose() {
+          _reconnectedSub?.cancel();
+          super.dispose();
+        }
+
         // Recargar historial después de la limpieza
         await load();
       }
-      
+
       return deletedCount;
     } catch (e) {
       _error = 'Error al limpiar historial antiguo: $e';

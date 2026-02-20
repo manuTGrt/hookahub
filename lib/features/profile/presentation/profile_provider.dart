@@ -7,9 +7,11 @@ import '../data/profile_repository.dart';
 import '../domain/profile.dart';
 
 class ProfileProvider extends ChangeNotifier {
-  ProfileProvider({required ProfileRepository repository, required AuthProvider auth})
-      : _repo = repository,
-        _auth = auth {
+  ProfileProvider({
+    required ProfileRepository repository,
+    required AuthProvider auth,
+  }) : _repo = repository,
+       _auth = auth {
     _reconnectedSub = DatabaseHealthProvider.instance.onReconnected.listen((_) {
       // La navegación principal decide refrescar el tab visible
       unawaited(load());
@@ -46,8 +48,8 @@ class ProfileProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-  _profile = await _repo.getCurrentUserProfile();
-  _signedAvatarUrl = await _repo.createSignedAvatarUrl(_profile?.avatarUrl);
+      _profile = await _repo.getCurrentUserProfile();
+      _signedAvatarUrl = await _repo.createSignedAvatarUrl(_profile?.avatarUrl);
       _mixesCount = await _repo.countCurrentUserMixes();
       DatabaseHealthProvider.reportSuccess();
     } catch (e) {

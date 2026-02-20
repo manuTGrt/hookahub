@@ -23,14 +23,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
-  
+
   DateTime? _selectedBirthDate;
   String _selectedAvatarType = 'avatar'; // 'avatar' o 'photo'
   int _selectedAvatarIndex = 0;
   bool _hasChanges = false;
   bool _isLoading = false;
   bool _settingInitialValues = false;
-  bool _initialLoading = true; // Nuevo: indica si estamos cargando los datos iniciales
+  bool _initialLoading =
+      true; // Nuevo: indica si estamos cargando los datos iniciales
 
   // Lista de avatares predefinidos
   final List<IconData> _avatarIcons = [
@@ -62,7 +63,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         });
       }
     });
-    
+
     // Listeners para detectar cambios
     _usernameController.addListener(_onDataChanged);
     _firstNameController.addListener(_onDataChanged);
@@ -113,7 +114,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _isOlderThan18(DateTime birthDate) {
     final now = DateTime.now();
     final eighteenYearsAgo = DateTime(now.year - 18, now.month, now.day);
-    return birthDate.isBefore(eighteenYearsAgo) || birthDate.isAtSameMomentAs(eighteenYearsAgo);
+    return birthDate.isBefore(eighteenYearsAgo) ||
+        birthDate.isAtSameMomentAs(eighteenYearsAgo);
   }
 
   Future<void> _selectBirthDate() async {
@@ -144,7 +146,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Debes ser mayor de 18 años para usar esta aplicación'),
+              content: const Text(
+                'Debes ser mayor de 18 años para usar esta aplicación',
+              ),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -178,7 +182,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
         return picked?.path;
       } else {
-        final result = await fp.FilePicker.platform.pickFiles(type: fp.FileType.image, allowMultiple: false, withData: false);
+        final result = await fp.FilePicker.platform.pickFiles(
+          type: fp.FileType.image,
+          allowMultiple: false,
+          withData: false,
+        );
         return result?.files.single.path;
       }
     } catch (_) {
@@ -240,10 +248,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: false,
           ),
-          IOSUiSettings(
-            title: 'Ajustar foto',
-            aspectRatioLockEnabled: false,
-          ),
+          IOSUiSettings(title: 'Ajustar foto', aspectRatioLockEnabled: false),
         ],
       );
       return cropped?.path;
@@ -277,7 +282,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 height: 4,
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: isDark ? darkNavy.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
+                  color: isDark
+                      ? darkNavy.withOpacity(0.3)
+                      : Colors.grey.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -320,11 +327,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                          ),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                              ),
                           itemCount: _avatarIcons.length,
                           itemBuilder: (context, index) {
                             final isSelected = localSelectedIndex == index;
@@ -333,14 +341,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 setModalState(() {
                                   localSelectedIndex = index;
                                 });
-                                final provider = context.read<ProfileProvider>();
+                                final provider = context
+                                    .read<ProfileProvider>();
                                 setState(() => _isLoading = true);
                                 final err = await provider.setAvatarIcon(index);
                                 if (!mounted) return;
                                 setState(() => _isLoading = false);
                                 if (err != null) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(err), behavior: SnackBarBehavior.floating),
+                                    SnackBar(
+                                      content: Text(err),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
                                   );
                                   return;
                                 }
@@ -358,12 +370,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? (isDark ? darkTurquoise : turquoise)
-                                      : (isDark ? darkBg.withOpacity(0.5) : Colors.grey.withOpacity(0.1)),
+                                      : (isDark
+                                            ? darkBg.withOpacity(0.5)
+                                            : Colors.grey.withOpacity(0.1)),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
                                         ? (isDark ? darkTurquoise : turquoise)
-                                        : (isDark ? darkNavy.withOpacity(0.2) : Colors.grey.withOpacity(0.3)),
+                                        : (isDark
+                                              ? darkNavy.withOpacity(0.2)
+                                              : Colors.grey.withOpacity(0.3)),
                                     width: 2,
                                   ),
                                 ),
@@ -394,11 +410,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           // Elegir origen: cámara o galería
                           final useCamera = await _chooseImageSource();
                           try {
-                            final path = await _pickImagePath(fromCamera: useCamera == true);
+                            final path = await _pickImagePath(
+                              fromCamera: useCamera == true,
+                            );
                             if (path == null) return;
                             // Evitar crop en cámara y en Android (algunos dispositivos pueden cerrar la app)
-                            final shouldSkipCrop = useCamera == true || Platform.isAndroid;
-                            final finalPath = shouldSkipCrop ? path : (await _cropImage(path) ?? path);
+                            final shouldSkipCrop =
+                                useCamera == true || Platform.isAndroid;
+                            final finalPath = shouldSkipCrop
+                                ? path
+                                : (await _cropImage(path) ?? path);
                             if (!mounted) return;
                             final provider = context.read<ProfileProvider>();
                             setState(() => _isLoading = true);
@@ -407,7 +428,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             setState(() => _isLoading = false);
                             if (err != null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(err), behavior: SnackBarBehavior.floating),
+                                SnackBar(
+                                  content: Text(err),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
                               );
                             } else {
                               Navigator.of(context).pop();
@@ -422,7 +446,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             if (!mounted) return;
                             setState(() => _isLoading = false);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('No se pudo procesar la imagen'), behavior: SnackBarBehavior.floating),
+                              SnackBar(
+                                content: Text('No se pudo procesar la imagen'),
+                                behavior: SnackBarBehavior.floating,
+                              ),
                             );
                           }
                         },
@@ -447,30 +474,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected 
-            ? (isDark ? darkTurquoise.withOpacity(0.1) : turquoise.withOpacity(0.1))
-            : Colors.transparent,
+          color: isSelected
+              ? (isDark
+                    ? darkTurquoise.withOpacity(0.1)
+                    : turquoise.withOpacity(0.1))
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected 
-              ? (isDark ? darkTurquoise : turquoise)
-              : (isDark ? darkNavy.withOpacity(0.2) : Colors.grey.withOpacity(0.3)),
+            color: isSelected
+                ? (isDark ? darkTurquoise : turquoise)
+                : (isDark
+                      ? darkNavy.withOpacity(0.2)
+                      : Colors.grey.withOpacity(0.3)),
             width: 2,
           ),
         ),
         child: Row(
           children: [
             Icon(
-              isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-              color: isSelected 
-                ? (isDark ? darkTurquoise : turquoise)
-                : (isDark ? darkNavy.withOpacity(0.6) : Colors.grey),
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: isSelected
+                  ? (isDark ? darkTurquoise : turquoise)
+                  : (isDark ? darkNavy.withOpacity(0.6) : Colors.grey),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -489,7 +522,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? darkNavy.withOpacity(0.7) : navy.withOpacity(0.6),
+                      color: isDark
+                          ? darkNavy.withOpacity(0.7)
+                          : navy.withOpacity(0.6),
                     ),
                   ),
                 ],
@@ -505,14 +540,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (!_formKey.currentState!.validate()) return;
     final provider = context.read<ProfileProvider>();
     setState(() => _isLoading = true);
-    final err = await provider.save(ProfileUpdate(
-      username: _usernameController.text.trim(),
-      email: _emailController.text.trim(),
-      firstName: _firstNameController.text.trim(),
-      lastName: _lastNameController.text.trim(),
-      birthdate: _selectedBirthDate,
-      // avatarUrl: ... // pendiente cuando se implemente subida de foto
-    ));
+    final err = await provider.save(
+      ProfileUpdate(
+        username: _usernameController.text.trim(),
+        email: _emailController.text.trim(),
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        birthdate: _selectedBirthDate,
+        // avatarUrl: ... // pendiente cuando se implemente subida de foto
+      ),
+    );
     if (!mounted) return;
     setState(() => _isLoading = false);
     if (err == null) {
@@ -546,7 +583,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       context: context,
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        
+
         return AlertDialog(
           backgroundColor: isDark ? darkBg : Colors.white,
           shape: RoundedRectangleBorder(
@@ -571,7 +608,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
               child: Text(
                 'Cancelar',
                 style: TextStyle(
-                  color: isDark ? darkNavy.withOpacity(0.7) : navy.withOpacity(0.6),
+                  color: isDark
+                      ? darkNavy.withOpacity(0.7)
+                      : navy.withOpacity(0.6),
                 ),
               ),
             ),
@@ -609,7 +648,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     const borderTurquoise = turquoiseDark; // Mismo color que PastelTextField
-    
+
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -618,13 +657,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
       ),
       decoration: InputDecoration(
-        prefixIcon: Icon(
-          icon,
-          color: borderTurquoise,
-        ),
+        prefixIcon: Icon(icon, color: borderTurquoise),
         hintText: hintText,
         hintStyle: TextStyle(
-          color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black).withOpacity(0.5),
+          color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black)
+              .withOpacity(0.5),
         ),
         filled: true,
         fillColor: isDark ? fieldDark : fieldLight,
@@ -655,7 +692,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildDateField() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     const borderTurquoise = turquoiseDark; // Mismo color que PastelTextField
-    
+
     return GestureDetector(
       onTap: _selectBirthDate,
       child: TextFormField(
@@ -669,10 +706,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
             color: borderTurquoise,
           ),
           hintText: _selectedBirthDate != null
-            ? '${_selectedBirthDate!.day}/${_selectedBirthDate!.month}/${_selectedBirthDate!.year}'
-            : 'Selecciona tu fecha de nacimiento',
+              ? '${_selectedBirthDate!.day}/${_selectedBirthDate!.month}/${_selectedBirthDate!.year}'
+              : 'Selecciona tu fecha de nacimiento',
           hintStyle: TextStyle(
-            color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black),
+            color:
+                (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black),
           ),
           filled: true,
           fillColor: isDark ? fieldDark : fieldLight,
@@ -706,7 +744,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final profileProvider = context.watch<ProfileProvider>();
-    
+
     return Scaffold(
       // AppBar removida: el título y navegación atrás se muestran en la barra superior global
       body: _initialLoading
@@ -737,270 +775,290 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   children: [
                     if (profileProvider.isLoading)
                       const LinearProgressIndicator(minHeight: 2),
-              // Avatar section
-              Center(
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      onTap: _showAvatarSelector,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isDark ? darkTurquoise : turquoise,
-                            width: 3,
+                    // Avatar section
+                    Center(
+                      child: Column(
+                        children: [
+                          GestureDetector(
+                            onTap: _showAvatarSelector,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isDark ? darkTurquoise : turquoise,
+                                  width: 3,
+                                ),
+                              ),
+                              child: CircleAvatar(
+                                radius: 50,
+                                backgroundColor: isDark
+                                    ? darkTurquoise
+                                    : turquoise,
+                                backgroundImage:
+                                    (profileProvider.signedAvatarUrl != null &&
+                                        profileProvider
+                                            .signedAvatarUrl!
+                                            .isNotEmpty)
+                                    ? NetworkImage(
+                                        profileProvider.signedAvatarUrl!,
+                                      )
+                                    : null,
+                                child:
+                                    (profileProvider.signedAvatarUrl == null ||
+                                        profileProvider
+                                            .signedAvatarUrl!
+                                            .isEmpty)
+                                    ? (_selectedAvatarType == 'avatar'
+                                          ? Icon(
+                                              _avatarIcons[_selectedAvatarIndex],
+                                              size: 60,
+                                              color: Colors.white,
+                                            )
+                                          : const Icon(
+                                              Icons.photo_camera,
+                                              size: 60,
+                                              color: Colors.white,
+                                            ))
+                                    : null,
+                              ),
+                            ),
                           ),
-                        ),
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: isDark ? darkTurquoise : turquoise,
-                          backgroundImage: (profileProvider.signedAvatarUrl != null && profileProvider.signedAvatarUrl!.isNotEmpty)
-                ? NetworkImage(profileProvider.signedAvatarUrl!)
-                              : null,
-                          child: (profileProvider.signedAvatarUrl == null || profileProvider.signedAvatarUrl!.isEmpty)
-                              ? (_selectedAvatarType == 'avatar'
-                                  ? Icon(
-                                      _avatarIcons[_selectedAvatarIndex],
-                                      size: 60,
-                                      color: Colors.white,
-                                    )
-                                  : const Icon(
-                                      Icons.photo_camera,
-                                      size: 60,
-                                      color: Colors.white,
-                                    ))
-                              : null,
-                        ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: _showAvatarSelector,
+                            child: Text(
+                              'Cambiar foto',
+                              style: TextStyle(
+                                color: isDark ? darkTurquoise : turquoise,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Username
+                    Text(
+                      'Nombre de usuario',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? darkNavy : navy,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: _showAvatarSelector,
-                      child: Text(
-                        'Cambiar foto',
-                        style: TextStyle(
-                          color: isDark ? darkTurquoise : turquoise,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                    _buildCustomTextField(
+                      controller: _usernameController,
+                      hintText: 'Introduce tu nombre de usuario',
+                      icon: Icons.person_outline,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'El nombre de usuario es obligatorio';
+                        }
+                        if (value.length < 3) {
+                          return 'El nombre de usuario debe tener al menos 3 caracteres';
+                        }
+                        if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+                          return 'Solo se permiten letras, números y guiones bajos';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // First name
+                    Text(
+                      'Nombre',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? darkNavy : navy,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildCustomTextField(
+                      controller: _firstNameController,
+                      hintText: 'Introduce tu nombre',
+                      icon: Icons.badge_outlined,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'El nombre es obligatorio';
+                        }
+                        if (value.length < 2) {
+                          return 'El nombre debe tener al menos 2 caracteres';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Last name
+                    Text(
+                      'Apellidos',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? darkNavy : navy,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildCustomTextField(
+                      controller: _lastNameController,
+                      hintText: 'Introduce tus apellidos',
+                      icon: Icons.family_restroom_outlined,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Los apellidos son obligatorios';
+                        }
+                        if (value.length < 2) {
+                          return 'Los apellidos deben tener al menos 2 caracteres';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Birth date
+                    Text(
+                      'Fecha de nacimiento',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? darkNavy : navy,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildDateField(),
+
+                    const SizedBox(height: 24),
+
+                    // Email
+                    Text(
+                      'Correo electrónico',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? darkNavy : navy,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildCustomTextField(
+                      controller: _emailController,
+                      hintText: 'Introduce tu correo electrónico',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'El correo electrónico es obligatorio';
+                        }
+                        if (!RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                        ).hasMatch(value)) {
+                          return 'Introduce un correo electrónico válido';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Change password button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ChangePasswordPage(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark
+                              ? darkTurquoise.withOpacity(0.8)
+                              : turquoise.withOpacity(0.8),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Cambiar contraseña',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Username
-              Text(
-                'Nombre de usuario',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? darkNavy : navy,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildCustomTextField(
-                controller: _usernameController,
-                hintText: 'Introduce tu nombre de usuario',
-                icon: Icons.person_outline,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'El nombre de usuario es obligatorio';
-                  }
-                  if (value.length < 3) {
-                    return 'El nombre de usuario debe tener al menos 3 caracteres';
-                  }
-                  if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
-                    return 'Solo se permiten letras, números y guiones bajos';
-                  }
-                  return null;
-                },
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // First name
-              Text(
-                'Nombre',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? darkNavy : navy,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildCustomTextField(
-                controller: _firstNameController,
-                hintText: 'Introduce tu nombre',
-                icon: Icons.badge_outlined,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'El nombre es obligatorio';
-                  }
-                  if (value.length < 2) {
-                    return 'El nombre debe tener al menos 2 caracteres';
-                  }
-                  return null;
-                },
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // Last name
-              Text(
-                'Apellidos',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? darkNavy : navy,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildCustomTextField(
-                controller: _lastNameController,
-                hintText: 'Introduce tus apellidos',
-                icon: Icons.family_restroom_outlined,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Los apellidos son obligatorios';
-                  }
-                  if (value.length < 2) {
-                    return 'Los apellidos deben tener al menos 2 caracteres';
-                  }
-                  return null;
-                },
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // Birth date
-              Text(
-                'Fecha de nacimiento',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? darkNavy : navy,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildDateField(),
-              
-              const SizedBox(height: 24),
-              
-              // Email
-              Text(
-                'Correo electrónico',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? darkNavy : navy,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildCustomTextField(
-                controller: _emailController,
-                hintText: 'Introduce tu correo electrónico',
-                icon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'El correo electrónico es obligatorio';
-                  }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                    return 'Introduce un correo electrónico válido';
-                  }
-                  return null;
-                },
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Change password button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ChangePasswordPage(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark ? darkTurquoise.withOpacity(0.8) : turquoise.withOpacity(0.8),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Cambiar contraseña',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Save changes button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _hasChanges && !_isLoading ? () => _saveChanges() : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark ? darkTurquoise : turquoise,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+
+                    const SizedBox(height: 16),
+
+                    // Save changes button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _hasChanges && !_isLoading
+                            ? () => _saveChanges()
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark ? darkTurquoise : turquoise,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
                         ),
-                      )
-                    : const Text(
-                        'Guardar cambios',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Text(
+                                'Guardar cambios',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Delete account button
+                    Center(
+                      child: TextButton(
+                        onPressed: _showDeleteAccountDialog,
+                        child: const Text(
+                          'Eliminar cuenta',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
-                ),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Delete account button
-              Center(
-                child: TextButton(
-                  onPressed: _showDeleteAccountDialog,
-                  child: const Text(
-                    'Eliminar cuenta',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
                     ),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 32),
+
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),

@@ -12,8 +12,8 @@ class SearchProvider extends ChangeNotifier {
   SearchProvider({
     required TobaccoRepository tobaccoRepository,
     required CommunityRepository communityRepository,
-  })  : _tobaccoRepository = tobaccoRepository,
-        _communityRepository = communityRepository {
+  }) : _tobaccoRepository = tobaccoRepository,
+       _communityRepository = communityRepository {
     _reconnectedSub = DatabaseHealthProvider.instance.onReconnected.listen((_) {
       if (_lastQuery.isNotEmpty && !_isSearching) {
         unawaited(search(_lastQuery));
@@ -107,7 +107,9 @@ class SearchProvider extends ChangeNotifier {
           return true;
         }
         // Buscar en ingredientes
-        if (mix.ingredients.any((ing) => ing.toLowerCase().contains(lowerQuery))) {
+        if (mix.ingredients.any(
+          (ing) => ing.toLowerCase().contains(lowerQuery),
+        )) {
           return true;
         }
         // Buscar en autor

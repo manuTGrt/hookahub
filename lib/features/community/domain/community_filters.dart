@@ -54,9 +54,9 @@ class CommunityFilterState {
   }
 
   CommunityFilterState clearTobacco() => CommunityFilterState(
-        tobaccoName: null,
-        tobaccoBrand: null,
-        sortOption: sortOption,
-        favoritesOnly: favoritesOnly,
-      );
+    tobaccoName: null,
+    tobaccoBrand: null,
+    sortOption: sortOption,
+    favoritesOnly: favoritesOnly,
+  );
 }

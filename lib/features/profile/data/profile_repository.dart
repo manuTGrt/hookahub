@@ -54,7 +54,8 @@ class ProfileRepository {
       if (update.username != null) 'username': update.username,
       if (update.email != null) 'email': update.email,
       if (displayName != null) 'display_name': displayName,
-      if (update.birthdate != null) 'birthdate': update.birthdate!.toIso8601String(),
+      if (update.birthdate != null)
+        'birthdate': update.birthdate!.toIso8601String(),
       if (update.avatarUrl != null) 'avatar_url': update.avatarUrl,
       'updated_at': DateTime.now().toIso8601String(),
     };
@@ -64,7 +65,9 @@ class ProfileRepository {
     await _client.from('profiles').update(data).eq('id', user.id);
 
     // Nota: si se requiere cambiar email del auth, hay que usar auth.updateUser
-    if (update.email != null && update.email!.isNotEmpty && update.email != user.email) {
+    if (update.email != null &&
+        update.email!.isNotEmpty &&
+        update.email != user.email) {
       await _client.auth.updateUser(UserAttributes(email: update.email));
     }
   }
@@ -80,14 +83,19 @@ class ProfileRepository {
     final tmpPath = await _compressToJpg(filePath);
     final ext = '.jpg';
     final fileName = 'avatar_current$ext';
-  final storagePath = '${user.id}/$fileName';
+    final storagePath = '${user.id}/$fileName';
 
     try {
       // Sube archivo
-  await _client.storage.from(StorageConfig.avatarsBucket).upload(
+      await _client.storage
+          .from(StorageConfig.avatarsBucket)
+          .upload(
             storagePath,
-    File(tmpPath),
-    fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+            File(tmpPath),
+            fileOptions: const FileOptions(
+              contentType: 'image/jpeg',
+              upsert: true,
+            ),
           );
     } on StorageException catch (e) {
       throw StorageException('Error al subir a Storage: ${e.message}');
@@ -99,10 +107,18 @@ class ProfileRepository {
     try {
       await _client
           .from('profiles')
-          .update({'avatar_url': storagePath, 'updated_at': DateTime.now().toIso8601String()})
+          .update({
+            'avatar_url': storagePath,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
           .eq('id', user.id);
     } on PostgrestException catch (e) {
-      throw PostgrestException(message: 'Error al actualizar perfil: ${e.message}', code: e.code, details: e.details, hint: e.hint);
+      throw PostgrestException(
+        message: 'Error al actualizar perfil: ${e.message}',
+        code: e.code,
+        details: e.details,
+        hint: e.hint,
+      );
     }
 
     // Limpieza: eliminar avatares antiguos en la carpeta del usuario (mantener solo el recién subido)
@@ -118,7 +134,10 @@ class ProfileRepository {
   Future<String> _compressToJpg(String inputPath) async {
     // Usa flutter_image_compress para convertir a JPG con compresión
     final dir = await getTemporaryDirectory();
-    final outPath = p.join(dir.path, 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg');
+    final outPath = p.join(
+      dir.path,
+      'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg',
+    );
     final result = await FlutterImageCompress.compressAndGetFile(
       inputPath,
       outPath,
@@ -134,7 +153,10 @@ class ProfileRepository {
     return result.path;
   }
 
-  Future<void> _cleanupOldAvatars({required String userId, required String keepPath}) async {
+  Future<void> _cleanupOldAvatars({
+    required String userId,
+    required String keepPath,
+  }) async {
     try {
       final folderPath = userId; // estamos guardando como '<uid>/<filename>'
       final files = await _client.storage
@@ -181,14 +203,19 @@ class ProfileRepository {
           .list(path: folderPath);
       if (files.isNotEmpty) {
         final toRemove = files.map((f) => '$folderPath/${f.name}').toList();
-        await _client.storage.from(StorageConfig.avatarsBucket).remove(toRemove);
+        await _client.storage
+            .from(StorageConfig.avatarsBucket)
+            .remove(toRemove);
       }
     } catch (_) {}
 
     // Guardar referencia de icono en DB
     await _client
         .from('profiles')
-        .update({'avatar_url': 'icon:$index', 'updated_at': DateTime.now().toIso8601String()})
+        .update({
+          'avatar_url': 'icon:$index',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
         .eq('id', user.id);
   }
 
@@ -205,7 +232,9 @@ class ProfileRepository {
           .list(path: folderPath);
       if (files.isNotEmpty) {
         final toRemove = files.map((f) => '$folderPath/${f.name}').toList();
-        await _client.storage.from(StorageConfig.avatarsBucket).remove(toRemove);
+        await _client.storage
+            .from(StorageConfig.avatarsBucket)
+            .remove(toRemove);
       }
     } catch (_) {
       // ignorar errores de borrado
@@ -214,7 +243,10 @@ class ProfileRepository {
     // Poner avatar_url a null en profiles
     await _client
         .from('profiles')
-        .update({'avatar_url': null, 'updated_at': DateTime.now().toIso8601String()})
+        .update({
+          'avatar_url': null,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
         .eq('id', user.id);
   }
 

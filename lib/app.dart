@@ -42,9 +42,8 @@ class HookahubApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) => HomeStatsProvider(
-            HomeStatsRepository(SupabaseService()),
-          ),
+          create: (_) =>
+              HomeStatsProvider(HomeStatsRepository(SupabaseService())),
         ),
         ChangeNotifierProvider(
           create: (_) => FavoritesProvider(FavoritesRepository()),
@@ -55,16 +54,20 @@ class HookahubApp extends StatelessWidget {
             repository: ProfileRepository(SupabaseService()),
             auth: context.read<AuthProvider>(),
           ),
-          update: (context, auth, previous) => previous ?? ProfileProvider(
-            repository: ProfileRepository(SupabaseService()),
-            auth: auth,
-          ),
+          update: (context, auth, previous) =>
+              previous ??
+              ProfileProvider(
+                repository: ProfileRepository(SupabaseService()),
+                auth: auth,
+              ),
         ),
         ChangeNotifierProvider(
-          create: (_) => CommunityProvider(CommunityRepository(SupabaseService())),
+          create: (_) =>
+              CommunityProvider(CommunityRepository(SupabaseService())),
         ),
         ChangeNotifierProvider(
-          create: (_) => UserMixesProvider(UserMixesRepository(SupabaseService())),
+          create: (_) =>
+              UserMixesProvider(UserMixesRepository(SupabaseService())),
         ),
         ChangeNotifierProvider(
           create: (_) => HistoryProvider(HistoryRepository(SupabaseService())),
@@ -79,9 +82,8 @@ class HookahubApp extends StatelessWidget {
           create: (_) => CatalogProvider(TobaccoRepository(SupabaseService())),
         ),
         ChangeNotifierProvider(
-          create: (_) => NotificationsProvider(
-            NotificationsRepository(SupabaseService()),
-          ),
+          create: (_) =>
+              NotificationsProvider(NotificationsRepository(SupabaseService())),
         ),
       ],
       child: Consumer<ThemeProvider>(

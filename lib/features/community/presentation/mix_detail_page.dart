@@ -23,10 +23,13 @@ import '../../../core/providers/database_health_provider.dart';
 /// Convierte una cadena a Title Case (primera letra de cada palabra en mayúscula).
 String _toTitleCase(String text) {
   if (text.isEmpty) return text;
-  return text.split(' ').map((word) {
-    if (word.isEmpty) return word;
-    return word[0].toUpperCase() + word.substring(1).toLowerCase();
-  }).join(' ');
+  return text
+      .split(' ')
+      .map((word) {
+        if (word.isEmpty) return word;
+        return word[0].toUpperCase() + word.substring(1).toLowerCase();
+      })
+      .join(' ');
 }
 
 /// Convierte una cadena a Capital Case (solo la primera letra en mayúscula).
@@ -65,17 +68,17 @@ class MixDetailPage extends StatefulWidget {
 
 class _MixDetailPageState extends State<MixDetailPage> {
   int _segment = 0; // 0 = Relacionadas, 1 = Reseñas
-  
+
   // Estado de carga de detalles
   bool _isLoading = true;
   String _description = 'Sin descripción disponible.';
   List<MixComponent> _components = [];
   bool _isMyMix = false; // Propiedad del recurso
-  
+
   // Estado de mezclas relacionadas
   bool _loadingRelated = true;
   List<Mix> _relatedMixes = [];
-  
+
   // Estado de reseñas para la mezcla
   bool _loadingReviews = true;
   final List<Review> _reviews = [];
@@ -115,7 +118,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
       try {
         final repository = context.read<CommunityProvider>().repository;
         final fullMix = await repository.fetchMixById(widget.mix.id);
-        
+
         if (fullMix != null && mounted) {
           setState(() {
             _currentMix = fullMix;
@@ -157,17 +160,21 @@ class _MixDetailPageState extends State<MixDetailPage> {
     try {
       final repository = context.read<CommunityProvider>().repository;
       final details = await repository.fetchMixDetails(widget.mix.id);
-      
+
       if (details != null && mounted) {
         _description = details['description'] as String;
         final componentsData = details['components'] as List;
-        final loaded = componentsData.map((c) => MixComponent(
-          tobacco: c['tobacco_name'] as String,
-          brand: c['brand'] as String,
-          percentage: c['percentage'] as double,
-          color: c['color'] as Color,
-          description: (c['description'] as String?)?.trim(),
-        )).toList();
+        final loaded = componentsData
+            .map(
+              (c) => MixComponent(
+                tobacco: c['tobacco_name'] as String,
+                brand: c['brand'] as String,
+                percentage: c['percentage'] as double,
+                color: c['color'] as Color,
+                description: (c['description'] as String?)?.trim(),
+              ),
+            )
+            .toList();
         final distinct = _assignDistinctColors(loaded);
         final enriched = await _resolveCatalogForComponents(distinct);
         if (!mounted) return;
@@ -207,13 +214,13 @@ class _MixDetailPageState extends State<MixDetailPage> {
     try {
       final repository = context.read<CommunityProvider>().repository;
       final tobaccoNames = _components.map((c) => c.tobacco).toList();
-      
+
       final related = await repository.fetchRelatedMixes(
         currentMixId: widget.mix.id,
         tobaccoNames: tobaccoNames,
         limit: 3,
       );
-      
+
       if (mounted) {
         setState(() {
           _relatedMixes = related;
@@ -231,20 +238,24 @@ class _MixDetailPageState extends State<MixDetailPage> {
     try {
       final repository = context.read<CommunityProvider>().repository;
       final reviews = await repository.fetchReviews(widget.mix.id);
-      
+
       if (mounted) {
         setState(() {
           _reviews.clear();
-          _reviews.addAll(reviews.map((r) => Review(
-            id: r['id'] as String,
-            author: r['author'] as String,
-            authorId: r['author_id'] as String?,
-            rating: r['rating'] as double,
-            comment: r['comment'] as String,
-            createdAt: r['created_at'] as DateTime,
-          )));
+          _reviews.addAll(
+            reviews.map(
+              (r) => Review(
+                id: r['id'] as String,
+                author: r['author'] as String,
+                authorId: r['author_id'] as String?,
+                rating: r['rating'] as double,
+                comment: r['comment'] as String,
+                createdAt: r['created_at'] as DateTime,
+              ),
+            ),
+          );
           _loadingReviews = false;
-          
+
           // Actualizar el mix local con los datos de las reseñas
           _updateLocalMixRating();
         });
@@ -259,12 +270,11 @@ class _MixDetailPageState extends State<MixDetailPage> {
   /// Actualiza el rating y conteo de reseñas del mix local basándose en las reseñas cargadas
   void _updateLocalMixRating() {
     if (_reviews.isEmpty) {
-      _currentMix = _currentMix.copyWith(
-        rating: 0.0,
-        reviews: 0,
-      );
+      _currentMix = _currentMix.copyWith(rating: 0.0, reviews: 0);
     } else {
-      final avgRating = _reviews.map((r) => r.rating).reduce((a, b) => a + b) / _reviews.length;
+      final avgRating =
+          _reviews.map((r) => r.rating).reduce((a, b) => a + b) /
+          _reviews.length;
       _currentMix = _currentMix.copyWith(
         rating: avgRating,
         reviews: _reviews.length,
@@ -287,9 +297,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
 
     // Mostrar indicador de carga mientras se obtienen los detalles
     if (_isLoading) {
-      return Scaffold(
-        body: const Center(child: CircularProgressIndicator()),
-      );
+      return Scaffold(body: const Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -313,137 +321,155 @@ class _MixDetailPageState extends State<MixDetailPage> {
               ),
             ),
 
-          // Descripción
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Descripción',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _description,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Proporciones
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Proporciones',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  _Legend(components: _components),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: DonutChart(
-                      slices: [
-                        for (final c in _components) DonutSlice(value: c.percentage / 100.0, color: c.color),
-                      ],
-                      size: 220,
-                      strokeWidth: 28,
-                      backgroundColor: Theme.of(context).dividerColor.withOpacity(0.15),
-                      center: _DonutCenter(mix: _currentMix),
+            // Descripción
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Descripción',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      _description,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Lista de tabacos usados (estilo similar a MixCard, mostrando sabores)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Tabacos utilizados',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  ..._components.map((c) {
-                    final item = c.catalog;
-                    final displayName = _toTitleCase(item?.name ?? c.tobacco);
-                    final displayBrand = _toTitleCase(item?.brand ?? c.brand);
-                    final rawDescription = (item?.description?.trim().isNotEmpty ?? false)
-                        ? item!.description
-                        : (c.description?.trim().isNotEmpty ?? false)
-                            ? c.description
-                            : 'Sin descripción.';
-                    final description = _toCapitalCase(rawDescription ?? 'Sin descripción.');
-
-                    return TobaccoCard(
-                      name: displayName,
-                      brand: displayBrand,
-                      flavors: const [],
-                      description: description,
-                      color: c.color,
-                      onTap: () {
-                        final tobacco = item ?? Tobacco(
-                          id: 'tob-${c.tobacco.toLowerCase().replaceAll(' ', '-')}',
-                          name: _toTitleCase(c.tobacco),
-                          brand: _toTitleCase(c.brand),
-                          flavors: const [],
-                          rating: 0,
-                          reviews: 0,
-                          placeholderColor: c.color,
-                        );
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => TobaccoDetailPage(tobacco: tobacco),
-                          ),
-                        );
-                      },
-                    );
-                  }),
-                ],
+            // Proporciones
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Proporciones',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _Legend(components: _components),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: DonutChart(
+                        slices: [
+                          for (final c in _components)
+                            DonutSlice(
+                              value: c.percentage / 100.0,
+                              color: c.color,
+                            ),
+                        ],
+                        size: 220,
+                        strokeWidth: 28,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).dividerColor.withOpacity(0.15),
+                        center: _DonutCenter(mix: _currentMix),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Selector dual + contenido
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppSegmentedControl(
-                    segments: const ['Relacionadas', 'Reseñas'],
-                    currentIndex: _segment,
-                    onChanged: (i) => setState(() => _segment = i),
-                  ),
-                  const SizedBox(height: 12),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    child: _segment == 0
-                        ? _RelatedMixes(
-                            mixes: _relatedMixes,
-                            isLoading: _loadingRelated,
-                          )
-                        : _buildReviewsSection(context),
-                  ),
-                ],
+            // Lista de tabacos usados (estilo similar a MixCard, mostrando sabores)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tabacos utilizados',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._components.map((c) {
+                      final item = c.catalog;
+                      final displayName = _toTitleCase(item?.name ?? c.tobacco);
+                      final displayBrand = _toTitleCase(item?.brand ?? c.brand);
+                      final rawDescription =
+                          (item?.description?.trim().isNotEmpty ?? false)
+                          ? item!.description
+                          : (c.description?.trim().isNotEmpty ?? false)
+                          ? c.description
+                          : 'Sin descripción.';
+                      final description = _toCapitalCase(
+                        rawDescription ?? 'Sin descripción.',
+                      );
+
+                      return TobaccoCard(
+                        name: displayName,
+                        brand: displayBrand,
+                        flavors: const [],
+                        description: description,
+                        color: c.color,
+                        onTap: () {
+                          final tobacco =
+                              item ??
+                              Tobacco(
+                                id: 'tob-${c.tobacco.toLowerCase().replaceAll(' ', '-')}',
+                                name: _toTitleCase(c.tobacco),
+                                brand: _toTitleCase(c.brand),
+                                flavors: const [],
+                                rating: 0,
+                                reviews: 0,
+                                placeholderColor: c.color,
+                              );
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  TobaccoDetailPage(tobacco: tobacco),
+                            ),
+                          );
+                        },
+                      );
+                    }),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+
+            // Selector dual + contenido
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppSegmentedControl(
+                      segments: const ['Relacionadas', 'Reseñas'],
+                      currentIndex: _segment,
+                      onChanged: (i) => setState(() => _segment = i),
+                    ),
+                    const SizedBox(height: 12),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: _segment == 0
+                          ? _RelatedMixes(
+                              mixes: _relatedMixes,
+                              isLoading: _loadingRelated,
+                            )
+                          : _buildReviewsSection(context),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ), // Cierre de PopScope
     );
   }
@@ -473,7 +499,9 @@ class _MixDetailPageState extends State<MixDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Eliminar mezcla'),
-        content: const Text('¿Seguro que quieres eliminar esta mezcla? Esta acción no se puede deshacer.'),
+        content: const Text(
+          '¿Seguro que quieres eliminar esta mezcla? Esta acción no se puede deshacer.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -494,9 +522,9 @@ class _MixDetailPageState extends State<MixDetailPage> {
       final ok = await provider.deleteMix(widget.mix.id);
       if (!mounted) return;
       if (ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mezcla eliminada')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Mezcla eliminada')));
         Navigator.of(context).maybePop();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -537,19 +565,24 @@ class _MixDetailPageState extends State<MixDetailPage> {
             child: Center(
               child: Text(
                 'Sé el primero en reseñar esta mezcla',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                ),
               ),
             ),
           )
         else
-          ..._reviews.map((r) => _ReviewTile(
-            review: r,
-            onDelete: () => _handleDeleteReview(r.id),
-            onEdit: () => _handleEditReview(r),
-          )).toList(),
+          ..._reviews
+              .map(
+                (r) => _ReviewTile(
+                  review: r,
+                  onDelete: () => _handleDeleteReview(r.id),
+                  onEdit: () => _handleEditReview(r),
+                ),
+              )
+              .toList(),
       ],
     );
   }
@@ -559,7 +592,9 @@ class _MixDetailPageState extends State<MixDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Eliminar reseña'),
-        content: const Text('¿Estás seguro de que quieres eliminar esta reseña?'),
+        content: const Text(
+          '¿Estás seguro de que quieres eliminar esta reseña?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -582,9 +617,9 @@ class _MixDetailPageState extends State<MixDetailPage> {
       if (!mounted) return;
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reseña eliminada')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Reseña eliminada')));
         await _loadReviews();
         // Ya no necesitamos llamar a _updateMixRating aquí, el repositorio lo hace
       } else {
@@ -629,7 +664,9 @@ class _MixDetailPageState extends State<MixDetailPage> {
                   maxLines: 4,
                   decoration: InputDecoration(
                     hintText: 'Comparte tu experiencia...',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ],
@@ -647,13 +684,17 @@ class _MixDetailPageState extends State<MixDetailPage> {
               onPressed: () async {
                 if (dialogController.text.trim().isEmpty || dialogRating <= 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Añade comentario y puntuación')),
+                    const SnackBar(
+                      content: Text('Añade comentario y puntuación'),
+                    ),
                   );
                   return;
                 }
 
                 try {
-                  final repository = context.read<CommunityProvider>().repository;
+                  final repository = context
+                      .read<CommunityProvider>()
+                      .repository;
                   final success = await repository.updateReview(
                     reviewId: review.id,
                     mixId: widget.mix.id,
@@ -674,7 +715,9 @@ class _MixDetailPageState extends State<MixDetailPage> {
                     // Ya no necesitamos llamar a _updateMixRating aquí, el repositorio lo hace
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Error al actualizar reseña')),
+                      const SnackBar(
+                        content: Text('Error al actualizar reseña'),
+                      ),
                     );
                   }
                 } catch (e) {
@@ -682,7 +725,9 @@ class _MixDetailPageState extends State<MixDetailPage> {
                     dialogController.dispose();
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Error al actualizar reseña')),
+                      const SnackBar(
+                        content: Text('Error al actualizar reseña'),
+                      ),
                     );
                   }
                 }
@@ -702,7 +747,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
       );
       return;
     }
-    
+
     _submitReviewToDatabase();
   }
 
@@ -721,10 +766,10 @@ class _MixDetailPageState extends State<MixDetailPage> {
       if (!mounted) return;
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reseña publicada')),
-        );
-        
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Reseña publicada')));
+
         // Limpiar formulario
         setState(() {
           _reviewController.clear();
@@ -747,10 +792,16 @@ class _MixDetailPageState extends State<MixDetailPage> {
     }
   }
 
-  List<MixComponent> _buildComponentsFromIngredients(BuildContext context, Mix mix) {
+  List<MixComponent> _buildComponentsFromIngredients(
+    BuildContext context,
+    Mix mix,
+  ) {
     // Paleta turquesa basada en el color primario (desplazando el tono)
     final base = Theme.of(context).primaryColor;
-    final palette = _turquoisePaletteFrom(base, count: math.max(3, mix.ingredients.length));
+    final palette = _turquoisePaletteFrom(
+      base,
+      count: math.max(3, mix.ingredients.length),
+    );
 
     final parts = mix.ingredients.length;
     // Distribución simple: reparte 100 en partes decrecientes (p.e. 50/30/20 para 3)
@@ -776,7 +827,10 @@ class _MixDetailPageState extends State<MixDetailPage> {
   // Asegura que cada componente tenga un color distinto para el gráfico/leyenda
   List<MixComponent> _assignDistinctColors(List<MixComponent> comps) {
     if (comps.isEmpty) return comps;
-    final palette = _turquoisePaletteFrom(Theme.of(context).primaryColor, count: comps.length);
+    final palette = _turquoisePaletteFrom(
+      Theme.of(context).primaryColor,
+      count: comps.length,
+    );
     return List.generate(comps.length, (i) {
       final c = comps[i];
       return MixComponent(
@@ -790,12 +844,17 @@ class _MixDetailPageState extends State<MixDetailPage> {
     });
   }
 
-  Future<List<MixComponent>> _resolveCatalogForComponents(List<MixComponent> comps) async {
+  Future<List<MixComponent>> _resolveCatalogForComponents(
+    List<MixComponent> comps,
+  ) async {
     if (comps.isEmpty) return comps;
     final repo = TobaccoRepository(SupabaseService());
     final futures = comps.map((c) async {
       try {
-        final item = await repo.findByNameAndBrand(name: c.tobacco, brand: c.brand);
+        final item = await repo.findByNameAndBrand(
+          name: c.tobacco,
+          brand: c.brand,
+        );
         return MixComponent(
           tobacco: c.tobacco,
           brand: c.brand,
@@ -813,7 +872,14 @@ class _MixDetailPageState extends State<MixDetailPage> {
 }
 
 class _HeaderArea extends StatelessWidget {
-  const _HeaderArea({required this.height, required this.mix, required this.textColor, required this.isMyMix, required this.onEdit, required this.onDelete});
+  const _HeaderArea({
+    required this.height,
+    required this.mix,
+    required this.textColor,
+    required this.isMyMix,
+    required this.onEdit,
+    required this.onDelete,
+  });
   final double height;
   final Mix mix;
   final Color textColor;
@@ -865,7 +931,10 @@ class _HeaderArea extends StatelessWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: textColor),
+                  icon: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    color: textColor,
+                  ),
                   tooltip: isFav ? 'Quitar de favoritas' : 'Añadir a favoritas',
                   onPressed: () {
                     if (isFav) {
@@ -930,16 +999,16 @@ class _HeaderArea extends StatelessWidget {
                 Text(
                   mix.author,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: textColor.withOpacity(0.9),
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: textColor.withOpacity(0.9),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Text(
                   mix.name,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: textColor,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -963,7 +1032,11 @@ class _Legend extends StatelessWidget {
       runSpacing: 8,
       children: [
         for (final c in components)
-          _LegendItem(color: c.color, label: '${c.percentage.toStringAsFixed(0)}% • ${_toTitleCase(c.tobacco)} — ${_toTitleCase(c.brand)}')
+          _LegendItem(
+            color: c.color,
+            label:
+                '${c.percentage.toStringAsFixed(0)}% • ${_toTitleCase(c.tobacco)} — ${_toTitleCase(c.brand)}',
+          ),
       ],
     );
   }
@@ -987,7 +1060,11 @@ class _LegendItem extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
           const SizedBox(width: 8),
           Text(label, style: Theme.of(context).textTheme.bodySmall),
         ],
@@ -1003,7 +1080,14 @@ class DonutSlice {
 }
 
 class DonutChart extends StatelessWidget {
-  const DonutChart({super.key, required this.slices, this.size = 200, this.strokeWidth = 24, this.backgroundColor, this.center});
+  const DonutChart({
+    super.key,
+    required this.slices,
+    this.size = 200,
+    this.strokeWidth = 24,
+    this.backgroundColor,
+    this.center,
+  });
   final List<DonutSlice> slices;
   final double size;
   final double strokeWidth;
@@ -1034,7 +1118,11 @@ class DonutChart extends StatelessWidget {
 }
 
 class _DonutPainter extends CustomPainter {
-  _DonutPainter({required this.slices, required this.strokeWidth, required this.backgroundColor});
+  _DonutPainter({
+    required this.slices,
+    required this.strokeWidth,
+    required this.backgroundColor,
+  });
   final List<DonutSlice> slices;
   final double strokeWidth;
   final Color backgroundColor;
@@ -1051,11 +1139,19 @@ class _DonutPainter extends CustomPainter {
     // fondo
     if (backgroundColor.opacity > 0) {
       paint.color = backgroundColor;
-      canvas.drawArc(rect.deflate(strokeWidth / 2), 0, 2 * math.pi, false, paint);
+      canvas.drawArc(
+        rect.deflate(strokeWidth / 2),
+        0,
+        2 * math.pi,
+        false,
+        paint,
+      );
     }
 
     double angle = startAngle;
-    final total = slices.fold<double>(0, (a, b) => a + b.value).clamp(0.0001, 1.0);
+    final total = slices
+        .fold<double>(0, (a, b) => a + b.value)
+        .clamp(0.0001, 1.0);
     for (final s in slices) {
       final sweep = 2 * math.pi * (s.value / total);
       paint.color = s.color;
@@ -1066,7 +1162,9 @@ class _DonutPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DonutPainter oldDelegate) {
-    return oldDelegate.slices != slices || oldDelegate.strokeWidth != strokeWidth || oldDelegate.backgroundColor != backgroundColor;
+    return oldDelegate.slices != slices ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.backgroundColor != backgroundColor;
   }
 }
 
@@ -1079,17 +1177,30 @@ class _DonutCenter extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.local_fire_department, color: Theme.of(context).primaryColor, size: 24),
+        Icon(
+          Icons.local_fire_department,
+          color: Theme.of(context).primaryColor,
+          size: 24,
+        ),
         const SizedBox(height: 6),
-        Text('${mix.rating > 0 ? mix.rating.toStringAsFixed(1) : '—'}', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         Text(
-          mix.reviews == 0 
-            ? 'Sin reseñas' 
-            : mix.reviews == 1 
-              ? '1 reseña' 
+          '${mix.rating > 0 ? mix.rating.toStringAsFixed(1) : '—'}',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        Text(
+          mix.reviews == 0
+              ? 'Sin reseñas'
+              : mix.reviews == 1
+              ? '1 reseña'
               : '${mix.reviews} reseñas',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6)),
-        )
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+          ),
+        ),
       ],
     );
   }
@@ -1098,11 +1209,8 @@ class _DonutCenter extends StatelessWidget {
 // SegmentedControl antiguo sustituido por AppSegmentedControl reutilizable.
 
 class _RelatedMixes extends StatelessWidget {
-  const _RelatedMixes({
-    required this.mixes,
-    required this.isLoading,
-  });
-  
+  const _RelatedMixes({required this.mixes, required this.isLoading});
+
   final List<Mix> mixes;
   final bool isLoading;
 
@@ -1122,7 +1230,9 @@ class _RelatedMixes extends StatelessWidget {
           child: Text(
             'No se encontraron mezclas relacionadas',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              color: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.color?.withOpacity(0.7),
             ),
           ),
         ),
@@ -1146,11 +1256,9 @@ class _RelatedMixes extends StatelessWidget {
             },
             onShare: () => Share.share('Mezcla: ${m.name} por ${m.author}'),
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => MixDetailPage(mix: m),
-                ),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => MixDetailPage(mix: m)));
             },
           ),
       ],
@@ -1179,13 +1287,15 @@ class _ReviewForm extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).primaryColor.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.2)),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.2),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -1193,7 +1303,9 @@ class _ReviewForm extends StatelessWidget {
         children: [
           Text(
             'Escribe una reseña',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           _StarInput(value: rating, onChanged: onRatingChanged),
@@ -1203,7 +1315,9 @@ class _ReviewForm extends StatelessWidget {
             maxLines: 3,
             decoration: InputDecoration(
               hintText: 'Comparte tu experiencia... ',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -1214,7 +1328,7 @@ class _ReviewForm extends StatelessWidget {
               icon: const Icon(Icons.send),
               label: const Text('Publicar'),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -1233,7 +1347,7 @@ class _StarInput extends StatelessWidget {
         final filled = i < value.round();
         return IconButton(
           padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+          constraints: const BoxConstraints(),
           icon: Icon(
             filled ? Icons.star : Icons.star_border,
             color: Theme.of(context).primaryColor,
@@ -1251,7 +1365,7 @@ class _ReviewTile extends StatelessWidget {
     required this.onDelete,
     required this.onEdit,
   });
-  
+
   final Review review;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
@@ -1261,7 +1375,8 @@ class _ReviewTile extends StatelessWidget {
     // Obtener el usuario actual para verificar si es el autor
     final supabase = SupabaseService();
     final currentUserId = supabase.client.auth.currentUser?.id;
-    final isMyReview = currentUserId != null && currentUserId == review.authorId;
+    final isMyReview =
+        currentUserId != null && currentUserId == review.authorId;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1269,7 +1384,9 @@ class _ReviewTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).primaryColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.12)),
+        border: Border.all(
+          color: Theme.of(context).primaryColor.withOpacity(0.12),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1279,8 +1396,12 @@ class _ReviewTile extends StatelessWidget {
             children: [
               CircleAvatar(
                 backgroundColor: Theme.of(context).primaryColor,
-                child: Text(review.author.isNotEmpty ? review.author[0].toUpperCase() : '?',
-                    style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  review.author.isNotEmpty
+                      ? review.author[0].toUpperCase()
+                      : '?',
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -1289,16 +1410,17 @@ class _ReviewTile extends StatelessWidget {
                   children: [
                     Text(
                       review.author,
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelLarge
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     Row(
                       children: List.generate(
                         5,
                         (i) => Icon(
-                          i < review.rating.round() ? Icons.star : Icons.star_border,
+                          i < review.rating.round()
+                              ? Icons.star
+                              : Icons.star_border,
                           size: 16,
                           color: Theme.of(context).primaryColor,
                         ),
@@ -1349,10 +1471,11 @@ class _ReviewTile extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text(
               _timeAgo(review.createdAt),
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6)),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.color?.withOpacity(0.6),
+              ),
             ),
           ),
         ],
@@ -1391,7 +1514,10 @@ List<Color> _turquoisePaletteFrom(Color base, {int count = 4}) {
   if (count == 1) return [_kTurquoiseSwatches[5]]; // tono central
 
   final last = _kTurquoiseSwatches.length - 1;
-  final indices = List<int>.generate(count, (i) => ((i * last) / (count - 1)).round());
+  final indices = List<int>.generate(
+    count,
+    (i) => ((i * last) / (count - 1)).round(),
+  );
   final colors = indices.map((i) => _kTurquoiseSwatches[i]).toList();
 
   // Si piden más que la paleta, ciclar pero con desfase para mantener contraste.

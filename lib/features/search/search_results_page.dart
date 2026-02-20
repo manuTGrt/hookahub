@@ -36,12 +36,16 @@ class SearchResultsPage extends StatelessWidget {
             gradient: LinearGradient(
               colors: isDark
                   ? [
-                      Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
-                      Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95)
+                      Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor.withOpacity(0.95),
+                      Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor.withOpacity(0.95),
                     ]
                   : [
                       Theme.of(context).primaryColor,
-                      Theme.of(context).colorScheme.secondary
+                      Theme.of(context).colorScheme.secondary,
                     ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -58,7 +62,10 @@ class SearchResultsPage extends StatelessWidget {
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: Row(
                 children: [
                   Container(
@@ -106,7 +113,10 @@ class SearchResultsPage extends StatelessWidget {
               children: [
                 // Contador de resultados
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Theme.of(context).primaryColor.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
@@ -125,9 +135,12 @@ class SearchResultsPage extends StatelessWidget {
                       Expanded(
                         child: RichText(
                           text: TextSpan(
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyLarge?.color,
                                 ),
                             children: [
                               TextSpan(
@@ -171,23 +184,25 @@ class SearchResultsPage extends StatelessWidget {
                     count: tobaccos.length,
                   ),
                   const SizedBox(height: 12),
-      ...tobaccos.map((tobacco) => TobaccoCard(
-                        name: tobacco.name,
-                        brand: tobacco.brand,
-                        description: tobacco.description,
-                        flavors: tobacco.flavors,
-                        // Usar el mismo color que las mezclas para consistencia visual
-                        color: const Color(0xFF72C8C1),
-                        rating: tobacco.rating,
-                        reviews: tobacco.reviews,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => TobaccoDetailPage(tobacco: tobacco),
-                            ),
-                          );
-                        },
-                      )),
+                  ...tobaccos.map(
+                    (tobacco) => TobaccoCard(
+                      name: tobacco.name,
+                      brand: tobacco.brand,
+                      description: tobacco.description,
+                      flavors: tobacco.flavors,
+                      // Usar el mismo color que las mezclas para consistencia visual
+                      color: const Color(0xFF72C8C1),
+                      rating: tobacco.rating,
+                      reviews: tobacco.reviews,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => TobaccoDetailPage(tobacco: tobacco),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                   const SizedBox(height: 24),
                 ],
 
@@ -202,7 +217,9 @@ class SearchResultsPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   ...mixes.map((mix) {
                     final favProvider = context.watch<FavoritesProvider>();
-                    final isFavorite = favProvider.favorites.any((m) => m.id == mix.id);
+                    final isFavorite = favProvider.favorites.any(
+                      (m) => m.id == mix.id,
+                    );
 
                     // Forzar el mismo color que las tarjetas de tabaco para consistencia
                     final mixWithFixedColor = mix.copyWith(
@@ -248,19 +265,15 @@ class SearchResultsPage extends StatelessWidget {
             color: Theme.of(context).primaryColor.withOpacity(0.15),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            color: Theme.of(context).primaryColor,
-            size: 20,
-          ),
+          child: Icon(icon, color: Theme.of(context).primaryColor, size: 20),
         ),
         const SizedBox(width: 12),
         Text(
           title,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-              ),
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
         ),
         const Spacer(),
         Container(
@@ -272,9 +285,9 @@ class SearchResultsPage extends StatelessWidget {
           child: Text(
             count.toString(),
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
-                ),
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).primaryColor,
+            ),
           ),
         ),
       ],
@@ -304,21 +317,19 @@ class SearchResultsPage extends StatelessWidget {
             Text(
               'No se encontraron resultados',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               'Intenta buscar con otras palabras clave o verifica la ortografía',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.color
-                        ?.withOpacity(0.6),
-                  ),
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -327,7 +338,10 @@ class SearchResultsPage extends StatelessWidget {
               icon: const Icon(Icons.arrow_back),
               label: const Text('Volver'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

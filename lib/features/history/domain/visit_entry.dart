@@ -6,28 +6,28 @@ import 'package:flutter/material.dart';
 class VisitEntry {
   /// ID único de la entrada en el historial
   final String id;
-  
+
   /// ID de la mezcla visitada
   final String mixId;
-  
+
   /// Nombre de la mezcla
   final String mixName;
-  
+
   /// Autor de la mezcla
   final String author;
-  
+
   /// Fecha y hora de la visita
   final DateTime visitedAt;
-  
+
   /// Color representativo de la mezcla (del primer componente)
   final Color mixColor;
-  
+
   /// Calificación de la mezcla
   final double rating;
-  
+
   /// Número de reseñas
   final int reviews;
-  
+
   /// Ingredientes de la mezcla
   final List<String> ingredients;
 
@@ -47,10 +47,10 @@ class VisitEntry {
   factory VisitEntry.fromMap(Map<String, dynamic> map) {
     try {
       debugPrint('🔍 VisitEntry.fromMap recibió: $map');
-      
+
       // Extraer datos de la mezcla
       final mixData = map['mixes'] as Map<String, dynamic>?;
-      
+
       // Si la mezcla fue eliminada, retornar entrada con datos mínimos
       if (mixData == null || mixData.isEmpty) {
         debugPrint('⚠️ Mezcla eliminada o sin datos: ${map['mix_id']}');
@@ -66,7 +66,7 @@ class VisitEntry {
           ingredients: [],
         );
       }
-      
+
       // Extraer componentes para obtener color e ingredientes
       final components = mixData['mix_components'] as List? ?? [];
       final ingredients = components
@@ -101,7 +101,7 @@ class VisitEntry {
         reviews: (mixData['reviews'] as num?)?.toInt() ?? 0,
         ingredients: ingredients,
       );
-      
+
       debugPrint('✅ VisitEntry creada: ${entry.mixName}');
       return entry;
     } catch (e, stackTrace) {
@@ -114,14 +114,14 @@ class VisitEntry {
 
   /// Convierte la entrada a un mapa
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'mix_id': mixId,
-        'mix_name': mixName,
-        'author': author,
-        'viewed_at': visitedAt.toIso8601String(),
-        'mix_color': mixColor.value,
-        'rating': rating,
-        'reviews': reviews,
-        'ingredients': ingredients,
-      };
+    'id': id,
+    'mix_id': mixId,
+    'mix_name': mixName,
+    'author': author,
+    'viewed_at': visitedAt.toIso8601String(),
+    'mix_color': mixColor.value,
+    'rating': rating,
+    'reviews': reviews,
+    'ingredients': ingredients,
+  };
 }

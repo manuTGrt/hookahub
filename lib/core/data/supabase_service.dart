@@ -4,16 +4,24 @@ class SupabaseService {
   SupabaseClient get client => Supabase.instance.client;
 
   // Auth API
-  Future<AuthResponse> signInWithEmail({required String email, required String password}) {
+  Future<AuthResponse> signInWithEmail({
+    required String email,
+    required String password,
+  }) {
     return client.auth.signInWithPassword(email: email, password: password);
   }
 
-  Future<AuthResponse> signUpWithEmail({required String email, required String password, Map<String, dynamic>? data}) {
+  Future<AuthResponse> signUpWithEmail({
+    required String email,
+    required String password,
+    Map<String, dynamic>? data,
+  }) {
     return client.auth.signUp(
-      email: email, 
-      password: password, 
+      email: email,
+      password: password,
       data: data,
-      emailRedirectTo: 'io.supabase.flutter://login-callback/', // Deep link para confirmación
+      emailRedirectTo:
+          'io.supabase.flutter://login-callback/', // Deep link para confirmación
     );
   }
 
@@ -35,9 +43,12 @@ class SupabaseService {
     // Construir datos de perfil (idempotente vía upsert)
     final profileData = <String, dynamic>{
       'id': uid,
-      'username': username ?? (email?.split('@').first ?? 'user_${uid.substring(0, 6)}'),
+      'username':
+          username ??
+          (email?.split('@').first ?? 'user_${uid.substring(0, 6)}'),
       'email': email,
-      'display_name': displayName ?? firstName ?? email?.split('@').first ?? 'Usuario',
+      'display_name':
+          displayName ?? firstName ?? email?.split('@').first ?? 'Usuario',
       'bio': bio,
       'birthdate': birthdate?.toIso8601String(),
       // No forzamos is_public si ya existía; pero para primer insert irá true.

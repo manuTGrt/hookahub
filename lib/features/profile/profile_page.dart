@@ -29,18 +29,21 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-  final profileProvider = context.watch<ProfileProvider>();
-  final favoritesProvider = context.watch<FavoritesProvider>();
+    final profileProvider = context.watch<ProfileProvider>();
+    final favoritesProvider = context.watch<FavoritesProvider>();
     final profile = profileProvider.profile;
     final signedUrl = profileProvider.signedAvatarUrl;
     final hasPhoto = signedUrl != null && signedUrl.isNotEmpty;
-    final iconIndex = (profile?.avatarUrl != null && profile!.avatarUrl!.startsWith('icon:'))
+    final iconIndex =
+        (profile?.avatarUrl != null && profile!.avatarUrl!.startsWith('icon:'))
         ? int.tryParse(profile.avatarUrl!.substring(5))
         : null;
-    final displayName = (profile?.displayName != null && profile!.displayName!.trim().isNotEmpty)
+    final displayName =
+        (profile?.displayName != null &&
+            profile!.displayName!.trim().isNotEmpty)
         ? profile.displayName!
         : (profile?.username ?? 'Usuario');
-    
+
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -52,17 +55,23 @@ class _ProfilePageState extends State<ProfilePage> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: isDark 
-                    ? [darkTurquoise.withOpacity(0.2), darkNavy.withOpacity(0.1)]
-                    : [turquoise.withOpacity(0.1), turquoiseDark.withOpacity(0.05)],
+                  colors: isDark
+                      ? [
+                          darkTurquoise.withOpacity(0.2),
+                          darkNavy.withOpacity(0.1),
+                        ]
+                      : [
+                          turquoise.withOpacity(0.1),
+                          turquoiseDark.withOpacity(0.05),
+                        ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isDark 
-                    ? darkTurquoise.withOpacity(0.3) 
-                    : turquoise.withOpacity(0.2)
+                  color: isDark
+                      ? darkTurquoise.withOpacity(0.3)
+                      : turquoise.withOpacity(0.2),
                 ),
               ),
               child: Column(
@@ -99,17 +108,17 @@ class _ProfilePageState extends State<ProfilePage> {
                         : (profile != null ? '@${profile.username}' : ''),
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark 
-                        ? darkNavy.withOpacity(0.7) 
-                        : navy.withOpacity(0.6),
+                      color: isDark
+                          ? darkNavy.withOpacity(0.7)
+                          : navy.withOpacity(0.6),
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Estadísticas del usuario
             Row(
               children: [
@@ -120,7 +129,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     Theme.of(context).primaryColor,
                     onTap: () {
                       final nav = MainNavigationPage.of(context);
-                      nav?.pushInCurrentTab('Mis mezclas', const UserMixesPage());
+                      nav?.pushInCurrentTab(
+                        'Mis mezclas',
+                        const UserMixesPage(),
+                      );
                     },
                   ),
                 ),
@@ -138,9 +150,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Opciones del perfil
             _buildOptionsList(context),
           ],
@@ -149,14 +161,19 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStatCard(String number, String label, Color color, {VoidCallback? onTap}) {
+  Widget _buildStatCard(
+    String number,
+    String label,
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return Builder(
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        
-    final textScaler = MediaQuery.textScalerOf(context);
-    final scaleFactor = textScaler.scale(1.0);
-        
+
+        final textScaler = MediaQuery.textScalerOf(context);
+        final scaleFactor = textScaler.scale(1.0);
+
         final card = Container(
           height: scaleFactor > 1.1 ? (scaleFactor > 1.4 ? 110 : 90) : 80,
           padding: const EdgeInsets.all(16),
@@ -247,7 +264,6 @@ class _ProfilePageState extends State<ProfilePage> {
           },
         ),
         const SizedBox(height: 12),
-        
 
         Container(
           margin: const EdgeInsets.symmetric(vertical: 16.0),
@@ -272,12 +288,16 @@ class _ProfilePageState extends State<ProfilePage> {
                   gradient: LinearGradient(
                     colors: isDark
                         ? [
-                            Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
-                            Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95)
+                            Theme.of(
+                              context,
+                            ).scaffoldBackgroundColor.withOpacity(0.95),
+                            Theme.of(
+                              context,
+                            ).scaffoldBackgroundColor.withOpacity(0.95),
                           ]
                         : [
                             Theme.of(context).primaryColor,
-                            Theme.of(context).colorScheme.secondary
+                            Theme.of(context).colorScheme.secondary,
                           ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -285,7 +305,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   borderRadius: BorderRadius.circular(16),
                   border: isDark
                       ? Border.all(
-                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          color: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.3),
                           width: 1,
                         )
                       : null,
@@ -293,7 +315,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       ? null
                       : [
                           BoxShadow(
-                            color: Theme.of(context).primaryColor.withOpacity(0.3),
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -310,7 +334,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       } catch (_) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Error al cerrar sesión')),
+                            const SnackBar(
+                              content: Text('Error al cerrar sesión'),
+                            ),
                           );
                         }
                         return;
@@ -322,7 +348,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       );
                     },
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 12.0,
+                      ),
                       child: Text(
                         'Cerrar Sesión',
                         style: TextStyle(
@@ -356,61 +385,66 @@ class _ProfilePageState extends State<ProfilePage> {
     return Builder(
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        
+
         // Colores pastel para el botón destructivo
-        final Color destructiveIconColor = isDark 
+        final Color destructiveIconColor = isDark
             ? const Color(0xFFFF9999) // Rojo pastel más claro para modo oscuro
             : const Color(0xFFE57373); // Rojo pastel para modo claro
-        
-        final Color destructiveTextColor = isDark 
+
+        final Color destructiveTextColor = isDark
             ? const Color(0xFFFFB3B3) // Rojo pastel muy claro para modo oscuro
             : const Color(0xFFE57373); // Rojo pastel para modo claro
-        
+
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
-            color: isDestructive 
-              ? Colors.transparent // Sin fondo para el botón destructivo
-              : (isDark ? darkBg.withOpacity(0.3) : Colors.grey.withOpacity(0.05)),
+            color: isDestructive
+                ? Colors
+                      .transparent // Sin fondo para el botón destructivo
+                : (isDark
+                      ? darkBg.withOpacity(0.3)
+                      : Colors.grey.withOpacity(0.05)),
             borderRadius: BorderRadius.circular(12),
-            border: isDestructive 
-              ? null // Sin borde para el botón destructivo
-              : Border.all(
-                  color: isDark ? darkTurquoise.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
-                ),
+            border: isDestructive
+                ? null // Sin borde para el botón destructivo
+                : Border.all(
+                    color: isDark
+                        ? darkTurquoise.withOpacity(0.2)
+                        : Colors.grey.withOpacity(0.2),
+                  ),
           ),
           child: ListTile(
             leading: Icon(
               icon,
-              color: isDestructive 
-                ? destructiveIconColor
-                : (isDark ? darkTurquoise : turquoise),
+              color: isDestructive
+                  ? destructiveIconColor
+                  : (isDark ? darkTurquoise : turquoise),
             ),
             title: Text(
               title,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: isDestructive 
-                  ? destructiveTextColor
-                  : (isDark ? darkNavy : navy),
+                color: isDestructive
+                    ? destructiveTextColor
+                    : (isDark ? darkNavy : navy),
               ),
             ),
             subtitle: Text(
               subtitle,
               style: TextStyle(
-                color: isDark 
-                  ? darkNavy.withOpacity(0.7) 
-                  : navy.withOpacity(0.6),
+                color: isDark
+                    ? darkNavy.withOpacity(0.7)
+                    : navy.withOpacity(0.6),
                 fontSize: 12,
               ),
             ),
-            trailing: isDestructive 
-              ? null // Sin flecha para el botón destructivo
-              : Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: isDark ? darkNavy.withOpacity(0.6) : Colors.grey,
-                ),
+            trailing: isDestructive
+                ? null // Sin flecha para el botón destructivo
+                : Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: isDark ? darkNavy.withOpacity(0.6) : Colors.grey,
+                  ),
             onTap: onTap,
           ),
         );
