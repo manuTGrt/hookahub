@@ -114,27 +114,27 @@ class AuthProvider extends ChangeNotifier {
 
   Future<String?> signInGoogle() async {
     try {
-      await _svc.signInWithGoogle().timeout(const Duration(seconds: 4));
+      await _svc.signInWithGoogle();
       return null;
     } on AuthException catch (e) {
       DatabaseHealthProvider.reportFailure(e);
       return e.message;
     } catch (e) {
       DatabaseHealthProvider.reportFailure(e);
-      return 'Error inesperado';
+      return 'Error inesperado: $e';
     }
   }
 
   Future<String?> signInFacebook() async {
     try {
-      await _svc.signInWithFacebook().timeout(const Duration(seconds: 4));
+      await _svc.signInWithFacebook();
       return null;
     } on AuthException catch (e) {
       DatabaseHealthProvider.reportFailure(e);
       return e.message;
     } catch (e) {
       DatabaseHealthProvider.reportFailure(e);
-      return 'Error inesperado';
+      return 'Error inesperado: $e';
     }
   }
 

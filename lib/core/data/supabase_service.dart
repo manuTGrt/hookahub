@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart' as gsi;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -6,6 +7,7 @@ class SupabaseService {
   SupabaseClient get client => Supabase.instance.client;
 
   // Auth API
+
   Future<AuthResponse> signInWithEmail({
     required String email,
     required String password,
@@ -28,7 +30,7 @@ class SupabaseService {
   }
 
   Future<void> signOut() async {
-    // Intentamos hacer sign out también de Google si fue usado
+    // Sign out del proveedor nativo de Google si fue utilizado
     try {
       await gsi.GoogleSignIn.instance.signOut();
     } catch (_) {}
@@ -131,10 +133,13 @@ class SupabaseService {
     );
   }
 
+  /// Inicia sesión con Facebook mediante el flujo OAuth de Supabase.
+  /// Abre un navegador (Custom Tab en Android, ASWebAuthenticationSession en iOS)
+  /// y redirige de vuelta a la app via deep link al completar.
   Future<void> signInWithFacebook() async {
     await client.auth.signInWithOAuth(
       OAuthProvider.facebook,
-      redirectTo: 'io.supabase.flutter://login-callback/',
+      redirectTo: kIsWeb ? null : 'io.supabase.flutter://login-callback/',
     );
   }
 }

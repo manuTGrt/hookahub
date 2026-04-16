@@ -72,6 +72,23 @@
 				<string>com.googleusercontent.apps.372137646373-005982qekmrkbvpfb2dj253ollk3euto</string>
 			</array>
 		</dict>
+	<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb1901960190461955</string>
+			</array>
+		</dict>
+	</array>
+	<key>FacebookAppID</key>
+	<string>1901960190461955</string>
+	<key>FacebookClientToken</key>
+	<string>6742f92dedd7f21c6cd07e817d8eed22</string>
+	<key>FacebookDisplayName</key>
+	<string>Hookahub</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fb-messenger-share-api</string>
 	</array>
 </dict>
 </plist>
