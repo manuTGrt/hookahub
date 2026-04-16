@@ -1,4 +1,4 @@
-package com.example.hookahub
+package com.manutech.hookahub
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine

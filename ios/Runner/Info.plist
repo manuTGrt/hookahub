@@ -63,6 +63,15 @@
 				<string>io.supabase.flutter</string>
 			</array>
 		</dict>
+		<!-- Añadido Scheme para Google Sign In -->
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.372137646373-005982qekmrkbvpfb2dj253ollk3euto</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

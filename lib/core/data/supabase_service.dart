@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart' as gsi;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SupabaseService {
   SupabaseClient get client => Supabase.instance.client;
@@ -25,7 +27,13 @@ class SupabaseService {
     );
   }
 
-  Future<void> signOut() => client.auth.signOut();
+  Future<void> signOut() async {
+    // Intentamos hacer sign out también de Google si fue usado
+    try {
+      await gsi.GoogleSignIn.instance.signOut();
+    } catch (_) {}
+    return client.auth.signOut();
+  }
 
   /// Asegura que exista un perfil para el usuario recién autenticado
   Future<void> ensureProfile({
@@ -69,11 +77,57 @@ class SupabaseService {
     }, onConflict: 'user_id');
   }
 
-  // OAuth
+  // OAuth Google Nativo
   Future<void> signInWithGoogle() async {
-    await client.auth.signInWithOAuth(
-      OAuthProvider.google,
-      redirectTo: 'io.supabase.flutter://login-callback/',
+    final webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
+    final iosClientId = dotenv.env['GOOGLE_IOS_CLIENT_ID'];
+
+    if (webClientId == null || webClientId.isEmpty) {
+      throw const AuthException(
+        'Falta GOOGLE_WEB_CLIENT_ID en el archivo .env. Por favor, configúralo.',
+      );
+    }
+
+    final signInInstance = gsi.GoogleSignIn.instance;
+    await signInInstance.initialize(
+      serverClientId: webClientId,
+      clientId: iosClientId?.isNotEmpty == true ? iosClientId : null,
+    );
+
+    gsi.GoogleSignInAccount googleUser;
+    try {
+      googleUser = await signInInstance.authenticate();
+    } on gsi.GoogleSignInException catch (e) {
+      if (e.code == gsi.GoogleSignInExceptionCode.canceled) {
+        throw const AuthException('El inicio de sesión fue cancelado.');
+      }
+      throw AuthException(
+        'Error al iniciar sesión con Google: ${e.toString()}',
+      );
+    }
+
+    final googleAuth = googleUser.authentication;
+    final idToken = googleAuth.idToken;
+
+    if (idToken == null) {
+      throw const AuthException('No se pudo obtener el ID Token de Google.');
+    }
+
+    // El accessToken opcional se solicita obteniendo la autorización del cliente
+    String? accessToken;
+    try {
+      final authClient = await googleUser.authorizationClient.authorizeScopes(
+        [],
+      );
+      accessToken = authClient.accessToken;
+    } catch (_) {
+      // Ignorar de forma segura si no podemos obtener accessToken
+    }
+
+    await client.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: accessToken,
     );
   }
 

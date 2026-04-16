@@ -302,8 +302,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
         if (tobaccoId != null) {
           // Mostrar pequeño feedback visual si tarda
           final scaffold = ScaffoldMessenger.of(context);
-          
-          final tobacco = await context.read<CatalogProvider>().getTobaccoById(tobaccoId);
+
+          final tobacco = await context.read<CatalogProvider>().getTobaccoById(
+            tobaccoId,
+          );
 
           if (!mounted) return;
 
