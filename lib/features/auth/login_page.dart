@@ -4,6 +4,7 @@ import '../../core/constants.dart';
 import '../../core/theme_provider.dart';
 import '../../widgets/pastel_textfield.dart';
 import '../../widgets/main_navigation.dart';
+import '../../widgets/social_login_button.dart';
 import 'package:hookahub/features/auth/auth_provider.dart';
 import 'presentation/register_page.dart';
 
@@ -151,46 +152,66 @@ class _LoginPageState extends State<LoginPage> {
                         child: const Text('Iniciar sesión'),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
+                    // ── Divider "o continúa con" ──────────────────────────
                     Row(
                       children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () async {
-                              final auth = context.read<AuthProvider>();
-                              final error = await auth.signInGoogle();
-                              if (!mounted) return;
-                              if (error != null) {
-                                ScaffoldMessenger.of(
-                                  context,
-                                ).showSnackBar(SnackBar(content: Text(error)));
-                              }
-                            },
-                            icon: const Icon(Icons.g_mobiledata),
-                            label: const Text('Google'),
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'o continúa con',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.color
+                                  ?.withOpacity(0.5),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () async {
-                              final auth = context.read<AuthProvider>();
-                              final error = await auth.signInFacebook();
-                              if (!mounted) return;
-                              if (error != null) {
-                                ScaffoldMessenger.of(
-                                  context,
-                                ).showSnackBar(SnackBar(content: Text(error)));
-                              }
-                            },
-                            icon: const Icon(Icons.facebook),
-                            label: const Text('Facebook'),
-                          ),
-                        ),
+                        const Expanded(child: Divider()),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    SocialLoginButton(
+                      provider: SocialProvider.google,
+                      onPressed: () async {
+                        final auth = context.read<AuthProvider>();
+                        final error = await auth.signInGoogle();
+                        if (!mounted) return;
+                        if (error != null) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(error)));
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    SocialLoginButton(
+                      provider: SocialProvider.facebook,
+                      onPressed: () async {
+                        final auth = context.read<AuthProvider>();
+                        final error = await auth.signInFacebook();
+                        if (!mounted) return;
+                        if (error != null) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(error)));
+                        }
+                      },
                     ),
                     const SizedBox(height: 8),
                     TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -200,14 +221,6 @@ class _LoginPageState extends State<LoginPage> {
                         );
                       },
                       child: const Text('¿No tienes cuenta? Regístrate'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
                     ),
                     const SizedBox(height: 40),
                   ],
