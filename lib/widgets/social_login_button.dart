@@ -93,6 +93,7 @@ class _SocialLoginButtonState extends State<SocialLoginButton>
         onTapCancel: () => _scaleController.reverse(),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
+          width: double.infinity,
           height: 52,
           decoration: BoxDecoration(
             color: surfaceBg,
@@ -110,26 +111,38 @@ class _SocialLoginButtonState extends State<SocialLoginButton>
                     ),
                   ),
                 )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      _assetPath,
-                      width: 24,
-                      height: 24,
-                      filterQuality: FilterQuality.high,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      _label,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
-                        letterSpacing: 0.2,
+              : Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        _assetPath,
+                        width: 24,
+                        height: 24,
+                        filterQuality: FilterQuality.high,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Text(
+                          _label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          // Clamp text scaling so the button never overflows
+                          // when the user has a large system font size set.
+                          textScaler: MediaQuery.textScalerOf(
+                            context,
+                          ).clamp(maxScaleFactor: 1.2),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
         ),
       ),
