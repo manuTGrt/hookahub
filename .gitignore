@@ -1,64 +1,136 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
+# ===========================================================================
+# HookahHub — Flutter Project .gitignore
+# ===========================================================================
 
-# IntelliJ related
+# ---------------------------------------------------------------------------
+# Sistema Operativo
+# ---------------------------------------------------------------------------
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------------------
+# IDE & Editores
+# ---------------------------------------------------------------------------
+# IntelliJ / Android Studio
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code (descomenta si NO quieres compartir la configuración del equipo)
+# .vscode/
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# History / Atom
+.history
+.atom/
+
+# ---------------------------------------------------------------------------
+# Flutter & Dart
+# ---------------------------------------------------------------------------
+# Herramienta pub
 .dart_tool/
-.flutter-plugins-dependencies
 .pub-cache/
 .pub/
+
+# Registro de plugins (auto-generado)
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Salidas de build
 /build/
+
+# Cobertura de tests
 /coverage/
 
-# Symbolication related
+# Ofuscación y símbolos
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# Web generado
+lib/generated_plugin_registrant.dart
+
+# Documentación generada
+**/doc/api/
+
+# ---------------------------------------------------------------------------
+# Android
+# ---------------------------------------------------------------------------
+# Artefactos de build (¡no commitear!)
+android/build/
+android/.kotlin/
+
+# Outputs de release (también cubiertos por android/.gitignore)
 /android/app/debug
 /android/app/profile
 /android/app/release
 
-# Environment variables (NO SUBIR A GITHUB)
+# Configuración local y claves (también en android/.gitignore)
+/android/local.properties
+/android/key.properties
+*.jks
+*.keystore
+
+# ---------------------------------------------------------------------------
+# iOS / macOS
+# ---------------------------------------------------------------------------
+**/ios/Flutter/.last_build_id
+/ios/.symlinks/
+/ios/Pods/
+
+# ---------------------------------------------------------------------------
+# Variables de entorno y secretos
+# ---------------------------------------------------------------------------
 .env
 .env.local
 .env.*.local
+*.env
+!.env.example
 
-# Archivos de configuración local
-local.properties
-
-# Archivos temporales
-*.tmp
-*.temp
-
-# Python virtual environments
+# ---------------------------------------------------------------------------
+# Python (scripts de automatización)
+# ---------------------------------------------------------------------------
+# Entornos virtuales
 scripts/.venv-images/
 scripts/venv/
 scripts/.venv/
 **/venv/
 **/.venv/
+
+# Caché de Python
+**/__pycache__/
+*.pyc
+*.pyo
+
+# ---------------------------------------------------------------------------
+# Archivos temporales y misceláneos
+# ---------------------------------------------------------------------------
+*.class
+*.log
+*.swp
+*.tmp
+*.temp
+
+# SVN
+.svn/
+
+# Swift Package Manager
+.swiftpm/
+
+# Migración de Flutter
+migrate_working_dir/
+.buildlog/
+.build/
+
+# ---------------------------------------------------------------------------
+# Específico del proyecto
+# ---------------------------------------------------------------------------
+.agents

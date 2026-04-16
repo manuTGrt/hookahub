@@ -130,20 +130,6 @@ class _CommunityPageState extends State<CommunityPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 20),
-
-                        // Título
-                        Text(
-                          'Mezclas de la comunidad',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(
-                                  context,
-                                ).textTheme.headlineSmall?.color,
-                              ),
-                        ),
-
                         const SizedBox(height: 16),
                       ],
                     ),

@@ -22,6 +22,16 @@ class CatalogProvider extends ChangeNotifier {
   final ScrollController _scrollController = ScrollController();
   ScrollController get scrollController => _scrollController;
 
+  void scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   final List<Tobacco> _items = [];
   List<Tobacco> get items => List.unmodifiable(_items);
 
@@ -122,6 +132,23 @@ class CatalogProvider extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error refrescando tabaco individual: $e');
+    }
+  }
+
+  /// Obtiene un tabaco completo por id. Si está cargado localmente lo intenta devolver.
+  Future<Tobacco?> getTobaccoById(String id) async {
+    try {
+      // Primero intentar local
+      try {
+        final local = _items.firstWhere((t) => t.id == id);
+        return local;
+      } catch (_) {}
+
+      // Si no, de red
+      return await _repository.fetchTobaccoById(id);
+    } catch (e) {
+      debugPrint('Error fetching tobacco by id: $e');
+      return null;
     }
   }
 

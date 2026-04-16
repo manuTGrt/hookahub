@@ -15,6 +15,9 @@ enum SortOption {
   /// Por marca A-Z (por brand asc, name asc)
   brandAsc('Marca A-Z', 'brand', true),
 
+  /// Por marca Z-A (por brand desc, name desc)
+  brandDesc('Marca Z-A', 'brand', false),
+
   /// Más populares (por reviews desc, rating desc)
   mostPopular('Populares', 'reviews', false),
 

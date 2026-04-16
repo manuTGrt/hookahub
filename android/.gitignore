@@ -1,14 +1,29 @@
-gradle-wrapper.jar
+# Artefactos de build
+/build/
+
+# Caché de Gradle y Kotlin
 /.gradle
+/.kotlin
+
+# Capturas de profiling
 /captures/
+
+# Wrapper de Gradle (Flutter lo regenera automáticamente)
+gradle-wrapper.jar
 /gradlew
 /gradlew.bat
+
+# Configuración local (específica de cada máquina)
 /local.properties
+
+# Código generado
 GeneratedPluginRegistrant.java
+
+# NDK
 .cxx/
 
-# Remember to never publicly share your keystore.
-# See https://flutter.dev/to/reference-keystore
+# Claves de firma — ¡NUNCA subir al repositorio!
+# Ver: https://flutter.dev/to/reference-keystore
 key.properties
 **/*.keystore
 **/*.jks

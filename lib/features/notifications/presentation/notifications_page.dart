@@ -6,6 +6,8 @@ import '../../../core/models/notification.dart';
 import '../../../core/constants.dart';
 import '../../community/presentation/mix_detail_page.dart';
 import '../../../core/models/mix.dart';
+import '../../catalog/tobacco_detail_page.dart';
+import '../../catalog/presentation/providers/catalog_provider.dart';
 
 /// Página completa de notificaciones
 class NotificationsPage extends StatefulWidget {
@@ -263,10 +265,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   /// Navegar al destino de la notificación
-  void _navigateToNotificationTarget(
+  Future<void> _navigateToNotificationTarget(
     BuildContext context,
     AppNotification notification,
-  ) {
+  ) async {
     // Navegar según el tipo de notificación
     switch (notification.type) {
       case NotificationType.reviewOnMyMix:
@@ -295,13 +297,38 @@ class _NotificationsPageState extends State<NotificationsPage> {
         break;
 
       case NotificationType.newTobacco:
-        // TODO: Navegar a TobaccoDetailPage cuando se implemente
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Navegación a tabaco (por implementar)'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        final tobaccoId = notification.data['tobacco_id'] as String?;
+
+        if (tobaccoId != null) {
+          // Mostrar pequeño feedback visual si tarda
+          final scaffold = ScaffoldMessenger.of(context);
+          
+          final tobacco = await context.read<CatalogProvider>().getTobaccoById(tobaccoId);
+
+          if (!mounted) return;
+
+          if (tobacco != null) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => TobaccoDetailPage(tobacco: tobacco),
+              ),
+            );
+          } else {
+            scaffold.showSnackBar(
+              const SnackBar(
+                content: Text('El tabaco ya no se encuentra disponible'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No se pudo abrir el tabaco (datos incompletos)'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
         break;
 
       default:

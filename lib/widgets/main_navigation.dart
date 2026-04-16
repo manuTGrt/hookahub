@@ -615,6 +615,13 @@ class MainNavigationPageState extends State<MainNavigationPage> {
 
     return GestureDetector(
       onTap: () {
+        if (_currentIndex == index) {
+          if (index == 1) {
+            context.read<CatalogProvider>().scrollToTop();
+          }
+          return;
+        }
+
         // Si el Navigator de la pestaña aún no existe, crearlo ahora (lazy)
         if (_navigatorCache[index] == null) {
           _navigatorCache[index] = _buildTabNavigator(index);

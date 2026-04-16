@@ -54,8 +54,13 @@ class TobaccoRepository {
       // Ordenamiento secundario
       if (sort == SortOption.brandAsc) {
         request = request.order('name', ascending: true);
+      } else if (sort == SortOption.brandDesc) {
+        request = request.order('name', ascending: false);
       }
     }
+
+    // Ordenamiento final por ID para garantizar la estabilidad al paginar
+    request = request.order('id', ascending: true);
 
     final List<dynamic> rows = await request
         .range(offset, offset + limit - 1)

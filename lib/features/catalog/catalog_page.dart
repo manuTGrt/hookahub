@@ -47,16 +47,6 @@ class CatalogPage extends StatelessWidget {
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 20),
-                    Text(
-                      'Catálogo',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).textTheme.headlineSmall?.color,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -363,6 +353,7 @@ class CatalogPage extends StatelessWidget {
       case SortOption.nameDesc:
         return Icons.arrow_downward;
       case SortOption.brandAsc:
+      case SortOption.brandDesc:
         return Icons.business;
       case SortOption.mostPopular:
         return Icons.trending_up;
@@ -386,9 +377,6 @@ class CatalogPage extends StatelessWidget {
     Color baseColor,
   ) {
     // Ajustar tamaños según el factor de escala del texto
-    final iconSize = scaleFactor > 1.5
-        ? 32.0
-        : (scaleFactor > 1.3 ? 36.0 : 40.0);
     final cardPadding = scaleFactor > 1.3 ? 10.0 : 12.0;
     final bool tightSpacing = scaleFactor < 1.3;
 
@@ -427,7 +415,7 @@ class CatalogPage extends StatelessWidget {
               children: [
                 // Imagen placeholder - ocupa la mayor parte del espacio disponible
                 Expanded(
-                  flex: scaleFactor > 1.3 ? 4 : 5,
+                  flex: scaleFactor > 1.3 ? 1 : 4,
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: TobaccoImage(
@@ -443,34 +431,41 @@ class CatalogPage extends StatelessWidget {
 
                 // Contenedor para título y marca con espaciado condicional
                 Expanded(
-                  flex: scaleFactor > 1.3 ? 4 : 2,
+                  flex: scaleFactor > 1.3 ? 1 : 3,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text(
-                        tobacco.name,
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(
-                                context,
-                              ).textTheme.bodyLarge?.color,
-                            ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
+                      Flexible(
+                        flex: 2,
+                        child: Text(
+                          tobacco.name,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyLarge?.color,
+                              ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                       SizedBox(height: tightSpacing ? 2 : 4),
-                      Text(
-                        tobacco.brand,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                      Flexible(
+                        flex: 1,
+                        child: Text(
+                          tobacco.brand,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
