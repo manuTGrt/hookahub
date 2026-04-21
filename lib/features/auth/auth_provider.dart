@@ -125,18 +125,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<String?> signInFacebook() async {
-    try {
-      await _svc.signInWithFacebook();
-      return null;
-    } on AuthException catch (e) {
-      DatabaseHealthProvider.reportFailure(e);
-      return e.message;
-    } catch (e) {
-      DatabaseHealthProvider.reportFailure(e);
-      return 'Error inesperado: $e';
-    }
-  }
+
 
   Future<void> signOut() async {
     try {

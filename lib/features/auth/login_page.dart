@@ -188,20 +188,7 @@ class _LoginPageState extends State<LoginPage> {
                         }
                       },
                     ),
-                    const SizedBox(height: 12),
-                    SocialLoginButton(
-                      provider: SocialProvider.facebook,
-                      onPressed: () async {
-                        final auth = context.read<AuthProvider>();
-                        final error = await auth.signInFacebook();
-                        if (!mounted) return;
-                        if (error != null) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(error)));
-                        }
-                      },
-                    ),
+
                     const SizedBox(height: 8),
                     TextButton(
                       style: TextButton.styleFrom(

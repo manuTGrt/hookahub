@@ -20,7 +20,7 @@ Future<void> main() async {
     await Supabase.initialize(
       url: url,
       anonKey: anonKey,
-      // Para OAuth (Google/Facebook) añadiremos el redirect URL en plataformas más adelante
+      // Para OAuth (Google) el redirect URL se gestiona via deep links en cada plataforma.
       // y podremos pasar opciones adicionales si fuese necesario.
     );
   }

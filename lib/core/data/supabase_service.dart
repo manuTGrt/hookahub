@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart' as gsi;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -133,13 +133,5 @@ class SupabaseService {
     );
   }
 
-  /// Inicia sesión con Facebook mediante el flujo OAuth de Supabase.
-  /// Abre un navegador (Custom Tab en Android, ASWebAuthenticationSession en iOS)
-  /// y redirige de vuelta a la app via deep link al completar.
-  Future<void> signInWithFacebook() async {
-    await client.auth.signInWithOAuth(
-      OAuthProvider.facebook,
-      redirectTo: kIsWeb ? null : 'io.supabase.flutter://login-callback/',
-    );
-  }
+
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// A modern, branded social login button with press animation.
-/// Supports Google and Facebook out of the box via [SocialProvider].
-enum SocialProvider { google, facebook }
+/// Supports Google out of the box via [SocialProvider].
+enum SocialProvider { google }
 
 class SocialLoginButton extends StatefulWidget {
   const SocialLoginButton({
@@ -50,8 +50,6 @@ class _SocialLoginButtonState extends State<SocialLoginButton>
     switch (widget.provider) {
       case SocialProvider.google:
         return 'Continuar con Google';
-      case SocialProvider.facebook:
-        return 'Continuar con Facebook';
     }
   }
 
@@ -59,8 +57,6 @@ class _SocialLoginButtonState extends State<SocialLoginButton>
     switch (widget.provider) {
       case SocialProvider.google:
         return 'assets/logos/google_logo.png';
-      case SocialProvider.facebook:
-        return 'assets/logos/facebook_logo.png';
     }
   }
 
