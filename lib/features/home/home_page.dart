@@ -150,12 +150,13 @@ class _HomePageState extends State<HomePage> {
                     subtitle: 'Mezclas guardadas',
                     color: pastelGreen,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FavoritesPage(),
-                        ),
-                      );
+                      final mainNav = MainNavigationPage.of(context);
+                      if (mainNav != null) {
+                        mainNav.pushInCurrentTab(
+                          'Favoritas',
+                          const FavoritesPage(),
+                        );
+                      }
                     },
                   ),
                 ];
