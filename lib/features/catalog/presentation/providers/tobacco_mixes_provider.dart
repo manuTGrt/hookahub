@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/models/mix.dart';
 import '../../../../core/providers/database_health_provider.dart';
@@ -52,7 +53,7 @@ class TobaccoMixesProvider extends ChangeNotifier {
       _hasMoreData = _mixes.length >= _pageSize;
     } catch (e) {
       _error = 'Error al cargar las mezclas';
-      debugPrint('Error loading tobacco mixes: $e');
+      AppLogger.error('Error loading tobacco mixes: $e');
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       _isLoading = false;
@@ -83,7 +84,7 @@ class TobaccoMixesProvider extends ChangeNotifier {
         _hasMoreData = false;
       }
     } catch (e) {
-      debugPrint('Error loading more tobacco mixes: $e');
+      AppLogger.error('Error loading more tobacco mixes: $e');
       // No seteamos error principal para no bloquear la UI ya cargada
       DatabaseHealthProvider.reportFailure(e);
     } finally {

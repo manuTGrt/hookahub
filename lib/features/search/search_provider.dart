@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -61,7 +62,7 @@ class SearchProvider extends ChangeNotifier {
       _tobaccoResults = results[0] as List<Tobacco>;
       _mixResults = results[1] as List<Mix>;
     } catch (e) {
-      debugPrint('Error en búsqueda: $e');
+      AppLogger.error('Error en búsqueda: $e');
       _tobaccoResults = [];
       _mixResults = [];
       DatabaseHealthProvider.reportFailure(e);
@@ -81,7 +82,7 @@ class SearchProvider extends ChangeNotifier {
         query: query,
       );
     } catch (e) {
-      debugPrint('Error buscando tabacos: $e');
+      AppLogger.error('Error buscando tabacos: $e');
       DatabaseHealthProvider.reportFailure(e);
       return [];
     }
@@ -119,7 +120,7 @@ class SearchProvider extends ChangeNotifier {
         return false;
       }).toList();
     } catch (e) {
-      debugPrint('Error buscando mezclas: $e');
+      AppLogger.error('Error buscando mezclas: $e');
       DatabaseHealthProvider.reportFailure(e);
       return [];
     }

@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/models/review.dart';
 import '../../data/tobacco_reviews_repository.dart';
@@ -36,7 +37,7 @@ class TobaccoReviewsProvider extends ChangeNotifier {
       _reviews = await _repository.fetchReviews(tobaccoId);
     } catch (e) {
       _error = 'Error al cargar las reseñas';
-      debugPrint('Error loading tobacco reviews: $e');
+      AppLogger.error('Error loading tobacco reviews: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -60,7 +61,7 @@ class TobaccoReviewsProvider extends ChangeNotifier {
       // Reload to get the updated list and server-side timestamp
       await loadReviews(_tobaccoId!);
     } catch (e) {
-      debugPrint('Error adding review: $e');
+      AppLogger.error('Error adding review: $e');
       rethrow;
     }
   }

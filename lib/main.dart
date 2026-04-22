@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/utils/app_logger.dart';
 import 'app.dart';
 
 Future<void> main() async {
@@ -15,7 +16,7 @@ Future<void> main() async {
   // Inicializar Supabase
   if (url == null || url.isEmpty || anonKey == null || anonKey.isEmpty) {
     // Continuar sin inicializar para no romper en dev, pero loguear en consola
-    debugPrint('ATENCIÓN: SUPABASE_URL / SUPABASE_ANON_KEY no configurados.');
+    AppLogger.warning('ATENCIÓN: SUPABASE_URL / SUPABASE_ANON_KEY no configurados.');
   } else {
     await Supabase.initialize(
       url: url,

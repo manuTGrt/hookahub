@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -125,7 +126,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
           });
         }
       } catch (e) {
-        debugPrint('Error al recargar mezcla completa: $e');
+        AppLogger.error('Error al recargar mezcla completa: $e');
       }
     }
   }
@@ -139,7 +140,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
         historyProvider.recordView(widget.mix.id, silent: true);
       } catch (e) {
         // Ignorar si el provider no está disponible
-        debugPrint('No se pudo registrar visita en historial: $e');
+        AppLogger.error('No se pudo registrar visita en historial: $e');
       }
     });
   }

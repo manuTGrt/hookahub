@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import '../../../core/data/supabase_service.dart';
 import '../domain/visit_entry.dart';
@@ -19,7 +20,7 @@ class HistoryRepository {
     try {
       final user = _supabase.client.auth.currentUser;
       if (user == null) {
-        debugPrint('No hay usuario autenticado para registrar vista');
+        AppLogger.info('No hay usuario autenticado para registrar vista');
         return false;
       }
 
@@ -34,10 +35,10 @@ class HistoryRepository {
         onConflict: 'user_id,mix_id', // Columnas de la constraint única
       );
 
-      debugPrint('✅ Vista de mezcla registrada/actualizada: $mixId');
+      AppLogger.info('✅ Vista de mezcla registrada/actualizada: $mixId');
       return true;
     } catch (e) {
-      debugPrint('❌ Error al registrar vista de mezcla: $e');
+      AppLogger.error('❌ Error al registrar vista de mezcla: $e');
       return false;
     }
   }
@@ -56,15 +57,15 @@ class HistoryRepository {
     try {
       final user = _supabase.client.auth.currentUser;
       if (user == null) {
-        debugPrint('No hay usuario autenticado');
+        AppLogger.info('No hay usuario autenticado');
         return [];
       }
 
       // Calcular la fecha límite (hace X días)
       final cutoffDate = DateTime.now().subtract(Duration(days: days));
 
-      debugPrint('🔍 Cargando historial para usuario: ${user.id}');
-      debugPrint('🔍 Fecha límite: ${cutoffDate.toIso8601String()}');
+      AppLogger.info('🔍 Cargando historial para usuario: ${user.id}');
+      AppLogger.info('🔍 Fecha límite: ${cutoffDate.toIso8601String()}');
 
       // Consultar vistas con JOIN a mixes para obtener toda la información
       final response = await _supabase.client
@@ -87,20 +88,20 @@ class HistoryRepository {
           .order('viewed_at', ascending: false)
           .limit(limit);
 
-      debugPrint('🔍 Respuesta raw de Supabase: $response');
-      debugPrint('🔍 Tipo de respuesta: ${response.runtimeType}');
-      debugPrint('🔍 Número de registros: ${(response as List).length}');
+      AppLogger.info('🔍 Respuesta raw de Supabase: $response');
+      AppLogger.info('🔍 Tipo de respuesta: ${response.runtimeType}');
+      AppLogger.info('🔍 Número de registros: ${(response as List).length}');
 
       // Convertir respuesta a lista de VisitEntry
       final entries = (response as List).map((data) {
-        debugPrint('🔍 Procesando entrada: $data');
+        AppLogger.info('🔍 Procesando entrada: $data');
         return VisitEntry.fromMap(data as Map<String, dynamic>);
       }).toList();
 
-      debugPrint('✅ Historial cargado: ${entries.length} entradas');
+      AppLogger.info('✅ Historial cargado: ${entries.length} entradas');
       return entries;
     } catch (e) {
-      debugPrint('Error al obtener historial: $e');
+      AppLogger.error('Error al obtener historial: $e');
       return [];
     }
   }
@@ -115,7 +116,7 @@ class HistoryRepository {
     try {
       final user = _supabase.client.auth.currentUser;
       if (user == null) {
-        debugPrint('No hay usuario autenticado');
+        AppLogger.info('No hay usuario autenticado');
         return 0;
       }
 
@@ -129,10 +130,10 @@ class HistoryRepository {
           .select();
 
       final deletedCount = (response as List).length;
-      debugPrint('Eliminadas $deletedCount vistas antiguas');
+      AppLogger.info('Eliminadas $deletedCount vistas antiguas');
       return deletedCount;
     } catch (e) {
-      debugPrint('Error al limpiar historial antiguo: $e');
+      AppLogger.error('Error al limpiar historial antiguo: $e');
       return 0;
     }
   }
@@ -144,16 +145,16 @@ class HistoryRepository {
     try {
       final user = _supabase.client.auth.currentUser;
       if (user == null) {
-        debugPrint('No hay usuario autenticado');
+        AppLogger.info('No hay usuario autenticado');
         return false;
       }
 
       await _supabase.client.from('mix_views').delete().eq('user_id', user.id);
 
-      debugPrint('Historial completo eliminado');
+      AppLogger.info('Historial completo eliminado');
       return true;
     } catch (e) {
-      debugPrint('Error al eliminar historial: $e');
+      AppLogger.error('Error al eliminar historial: $e');
       return false;
     }
   }
@@ -176,7 +177,7 @@ class HistoryRepository {
       // Con la constraint UNIQUE, el conteo directo es el de mezclas únicas
       return (response as List).length;
     } catch (e) {
-      debugPrint('Error al contar visitas únicas: $e');
+      AppLogger.error('Error al contar visitas únicas: $e');
       return 0;
     }
   }

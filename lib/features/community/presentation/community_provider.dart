@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -121,7 +122,7 @@ class CommunityProvider extends ChangeNotifier {
       _isLoaded = true;
     } catch (e) {
       _error = 'Error al cargar las mezclas: $e';
-      debugPrint(_error);
+      AppLogger.error(_error ?? 'Error desconocido');
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       _isLoading = false;
@@ -181,7 +182,7 @@ class CommunityProvider extends ChangeNotifier {
         _hasMoreData = false;
       }
     } catch (e) {
-      debugPrint('Error al cargar más mezclas: $e');
+      AppLogger.error('Error al cargar más mezclas: $e');
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       _isLoadingMore = false;
@@ -351,7 +352,7 @@ class CommunityProvider extends ChangeNotifier {
 
       return newMix;
     } catch (e) {
-      debugPrint('Error al crear mezcla: $e');
+      AppLogger.error('Error al crear mezcla: $e');
       DatabaseHealthProvider.reportFailure(e);
       return null;
     }
@@ -377,7 +378,7 @@ class CommunityProvider extends ChangeNotifier {
       }
       return ok;
     } catch (e) {
-      debugPrint('Error en deleteMix: $e');
+      AppLogger.error('Error en deleteMix: $e');
       DatabaseHealthProvider.reportFailure(e);
       return false;
     }
@@ -412,7 +413,7 @@ class CommunityProvider extends ChangeNotifier {
       }
       return updated;
     } catch (e) {
-      debugPrint('Error en updateMix: $e');
+      AppLogger.error('Error en updateMix: $e');
       DatabaseHealthProvider.reportFailure(e);
       return null;
     }

@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../../core/models/notification.dart';
@@ -69,7 +70,7 @@ class NotificationsProvider extends ChangeNotifier {
       await _updateUnreadCount();
     } catch (e) {
       _error = 'Error al cargar notificaciones';
-      debugPrint('Error en loadNotifications: $e');
+      AppLogger.error('Error en loadNotifications: $e');
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       _isLoading = false;
@@ -98,7 +99,7 @@ class NotificationsProvider extends ChangeNotifier {
         _hasMoreData = moreNotifications.length >= _pageSize;
       }
     } catch (e) {
-      debugPrint('Error en loadMore: $e');
+      AppLogger.error('Error en loadMore: $e');
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       _isLoadingMore = false;
@@ -112,7 +113,7 @@ class NotificationsProvider extends ChangeNotifier {
       _unreadCount = await _repository.getUnreadCount();
       notifyListeners();
     } catch (e) {
-      debugPrint('Error al actualizar contador: $e');
+      AppLogger.error('Error al actualizar contador: $e');
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -131,7 +132,7 @@ class NotificationsProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error al marcar como leída: $e');
+      AppLogger.error('Error al marcar como leída: $e');
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -149,7 +150,7 @@ class NotificationsProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Error al marcar todas como leídas: $e');
+      AppLogger.error('Error al marcar todas como leídas: $e');
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -170,7 +171,7 @@ class NotificationsProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error al eliminar notificación: $e');
+      AppLogger.error('Error al eliminar notificación: $e');
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -184,7 +185,7 @@ class NotificationsProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Error al eliminar notificaciones leídas: $e');
+      AppLogger.error('Error al eliminar notificaciones leídas: $e');
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -196,7 +197,7 @@ class NotificationsProvider extends ChangeNotifier {
     _realtimeSubscription = _repository.subscribeToNotifications().listen(
       _onNewNotification,
       onError: (error) {
-        debugPrint('Error en suscripción Realtime: $error');
+        AppLogger.error('Error en suscripción Realtime: $error');
       },
     );
   }
@@ -217,7 +218,7 @@ class NotificationsProvider extends ChangeNotifier {
 
       notifyListeners();
 
-      debugPrint('Nueva notificación recibida: ${notification.title}');
+      AppLogger.info('Nueva notificación recibida: ${notification.title}');
     }
   }
 

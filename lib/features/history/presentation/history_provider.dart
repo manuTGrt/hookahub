@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -38,13 +39,13 @@ class HistoryProvider extends ChangeNotifier {
   Future<void> load() async {
     // Prevenir llamadas concurrentes
     if (_isLoading) {
-      debugPrint(
+      AppLogger.info(
         '⏳ HistoryProvider: Ya hay una carga en progreso, ignorando nueva llamada',
       );
       return;
     }
 
-    debugPrint('🔄 HistoryProvider: Iniciando carga del historial');
+    AppLogger.info('🔄 HistoryProvider: Iniciando carga del historial');
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -54,14 +55,14 @@ class HistoryProvider extends ChangeNotifier {
       _entries = await _repository.fetchRecentHistory(days: 2);
       _uniqueCount = await _repository.getUniqueVisitedCount(days: 2);
 
-      debugPrint(
+      AppLogger.info(
         '✅ HistoryProvider: Historial cargado - ${_entries.length} entradas, $_uniqueCount únicas',
       );
       _isLoaded = true;
       _error = null;
     } catch (e) {
       _error = 'Error al cargar historial: $e';
-      debugPrint('❌ HistoryProvider: $_error');
+      AppLogger.error('❌ HistoryProvider: $_error');
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       _isLoading = false;
@@ -72,7 +73,7 @@ class HistoryProvider extends ChangeNotifier {
   /// Recarga el historial desde el servidor.
   /// Fuerza una nueva carga completa ignorando el estado previo.
   Future<void> refresh() async {
-    debugPrint('🔄 HistoryProvider: Forzando refresh del historial');
+    AppLogger.info('🔄 HistoryProvider: Forzando refresh del historial');
     _isLoaded = false;
     await load();
   }
@@ -91,7 +92,7 @@ class HistoryProvider extends ChangeNotifier {
         await load();
       }
     } catch (e) {
-      debugPrint('Error al registrar vista: $e');
+      AppLogger.error('Error al registrar vista: $e');
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -111,7 +112,7 @@ class HistoryProvider extends ChangeNotifier {
       return success;
     } catch (e) {
       _error = 'Error al limpiar historial: $e';
-      debugPrint(_error);
+      AppLogger.error(_error ?? 'Error desconocido');
       notifyListeners();
       DatabaseHealthProvider.reportFailure(e);
       return false;
@@ -137,7 +138,7 @@ class HistoryProvider extends ChangeNotifier {
       return deletedCount;
     } catch (e) {
       _error = 'Error al limpiar historial antiguo: $e';
-      debugPrint(_error);
+      AppLogger.error(_error ?? 'Error desconocido');
       notifyListeners();
       DatabaseHealthProvider.reportFailure(e);
       return 0;

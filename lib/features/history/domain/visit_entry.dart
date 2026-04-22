@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 
 /// Representa una entrada en el historial de mezclas visitadas.
@@ -46,14 +47,14 @@ class VisitEntry {
   /// Crea una instancia desde un mapa (respuesta de Supabase)
   factory VisitEntry.fromMap(Map<String, dynamic> map) {
     try {
-      debugPrint('🔍 VisitEntry.fromMap recibió: $map');
+      AppLogger.info('🔍 VisitEntry.fromMap recibió: $map');
 
       // Extraer datos de la mezcla
       final mixData = map['mixes'] as Map<String, dynamic>?;
 
       // Si la mezcla fue eliminada, retornar entrada con datos mínimos
       if (mixData == null || mixData.isEmpty) {
-        debugPrint('⚠️ Mezcla eliminada o sin datos: ${map['mix_id']}');
+        AppLogger.info('⚠️ Mezcla eliminada o sin datos: ${map['mix_id']}');
         return VisitEntry(
           id: map['id'] as String,
           mixId: map['mix_id'] as String,
@@ -102,12 +103,12 @@ class VisitEntry {
         ingredients: ingredients,
       );
 
-      debugPrint('✅ VisitEntry creada: ${entry.mixName}');
+      AppLogger.info('✅ VisitEntry creada: ${entry.mixName}');
       return entry;
     } catch (e, stackTrace) {
-      debugPrint('❌ Error en VisitEntry.fromMap: $e');
-      debugPrint('Stack trace: $stackTrace');
-      debugPrint('Data recibida: $map');
+      AppLogger.error('❌ Error en VisitEntry.fromMap: $e');
+      AppLogger.error('Stack trace: $stackTrace');
+      AppLogger.error('Data recibida: $map');
       rethrow;
     }
   }

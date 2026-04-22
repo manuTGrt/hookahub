@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/mix.dart';
@@ -60,7 +61,7 @@ class UserMixesRepository {
         );
       }).toList();
     } catch (e) {
-      debugPrint('Error al obtener mis mezclas: $e');
+      AppLogger.error('Error al obtener mis mezclas: $e');
       return [];
     }
   }

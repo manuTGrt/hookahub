@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/notification.dart';
@@ -18,7 +19,7 @@ class NotificationsRepository {
     try {
       final user = _supabase.client.auth.currentUser;
       if (user == null) {
-        debugPrint('Usuario no autenticado');
+        AppLogger.info('Usuario no autenticado');
         return [];
       }
 
@@ -33,7 +34,7 @@ class NotificationsRepository {
           .map((json) => AppNotification.fromJson(json))
           .toList();
     } catch (e) {
-      debugPrint('Error al obtener notificaciones: $e');
+      AppLogger.error('Error al obtener notificaciones: $e');
       return [];
     }
   }
@@ -52,7 +53,7 @@ class NotificationsRepository {
 
       return (response as List).length;
     } catch (e) {
-      debugPrint('Error al obtener contador de no leídas: $e');
+      AppLogger.error('Error al obtener contador de no leídas: $e');
       return 0;
     }
   }
@@ -66,7 +67,7 @@ class NotificationsRepository {
           .eq('id', notificationId);
       return true;
     } catch (e) {
-      debugPrint('Error al marcar como leída: $e');
+      AppLogger.error('Error al marcar como leída: $e');
       return false;
     }
   }
@@ -85,7 +86,7 @@ class NotificationsRepository {
 
       return true;
     } catch (e) {
-      debugPrint('Error al marcar todas como leídas: $e');
+      AppLogger.error('Error al marcar todas como leídas: $e');
       return false;
     }
   }
@@ -99,7 +100,7 @@ class NotificationsRepository {
           .eq('id', notificationId);
       return true;
     } catch (e) {
-      debugPrint('Error al eliminar notificación: $e');
+      AppLogger.error('Error al eliminar notificación: $e');
       return false;
     }
   }
@@ -118,7 +119,7 @@ class NotificationsRepository {
 
       return true;
     } catch (e) {
-      debugPrint('Error al eliminar notificaciones leídas: $e');
+      AppLogger.error('Error al eliminar notificaciones leídas: $e');
       return false;
     }
   }
@@ -128,7 +129,7 @@ class NotificationsRepository {
   Stream<AppNotification> subscribeToNotifications() {
     final user = _supabase.client.auth.currentUser;
     if (user == null) {
-      debugPrint('Usuario no autenticado para suscripción');
+      AppLogger.info('Usuario no autenticado para suscripción');
       return const Stream.empty();
     }
 

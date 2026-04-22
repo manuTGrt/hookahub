@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/mix.dart';
@@ -66,7 +67,7 @@ class CommunityRepository {
         color: mixColor,
       );
     } catch (e) {
-      debugPrint('Error al obtener mezcla por ID: $e');
+      AppLogger.error('Error al obtener mezcla por ID: $e');
       return null;
     }
   }
@@ -257,7 +258,7 @@ class CommunityRepository {
         );
       }).toList();
     } catch (e) {
-      debugPrint('Error al obtener mezclas: $e');
+      AppLogger.error('Error al obtener mezclas: $e');
       return [];
     }
   }
@@ -337,7 +338,7 @@ class CommunityRepository {
     try {
       final user = _supabase.client.auth.currentUser;
       if (user == null) {
-        debugPrint('Usuario no autenticado');
+        AppLogger.info('Usuario no autenticado');
         return null;
       }
 
@@ -411,7 +412,7 @@ class CommunityRepository {
         color: mixColor,
       );
     } catch (e) {
-      debugPrint('Error al actualizar mezcla: $e');
+      AppLogger.error('Error al actualizar mezcla: $e');
       return null;
     }
   }
@@ -478,7 +479,7 @@ class CommunityRepository {
         );
       }).toList();
     } catch (e) {
-      debugPrint('Error al obtener favoritas: $e');
+      AppLogger.error('Error al obtener favoritas: $e');
       return [];
     }
   }
@@ -498,7 +499,7 @@ class CommunityRepository {
     try {
       final user = _supabase.client.auth.currentUser;
       if (user == null) {
-        debugPrint('Usuario no autenticado');
+        AppLogger.info('Usuario no autenticado');
         return null;
       }
 
@@ -566,7 +567,7 @@ class CommunityRepository {
         color: mixColor,
       );
     } catch (e) {
-      debugPrint('Error al crear mezcla: $e');
+      AppLogger.error('Error al crear mezcla: $e');
       return null;
     }
   }
@@ -633,7 +634,7 @@ class CommunityRepository {
         'components': components,
       };
     } catch (e) {
-      debugPrint('Error al obtener detalles de mezcla: $e');
+      AppLogger.error('Error al obtener detalles de mezcla: $e');
       return null;
     }
   }
@@ -718,7 +719,7 @@ class CommunityRepository {
 
       return mixes;
     } catch (e) {
-      debugPrint('Error al obtener mezclas relacionadas: $e');
+      AppLogger.error('Error al obtener mezclas relacionadas: $e');
       return [];
     }
   }
@@ -753,7 +754,7 @@ class CommunityRepository {
         };
       }).toList();
     } catch (e) {
-      debugPrint('Error al obtener reseñas: $e');
+      AppLogger.error('Error al obtener reseñas: $e');
       return [];
     }
   }
@@ -767,7 +768,7 @@ class CommunityRepository {
     try {
       final user = _supabase.client.auth.currentUser;
       if (user == null) {
-        debugPrint('Usuario no autenticado');
+        AppLogger.info('Usuario no autenticado');
         return false;
       }
 
@@ -783,7 +784,7 @@ class CommunityRepository {
 
       return true;
     } catch (e) {
-      debugPrint('Error al crear reseña: $e');
+      AppLogger.error('Error al crear reseña: $e');
       return false;
     }
   }
@@ -814,7 +815,7 @@ class CommunityRepository {
           .update({'rating': avgRating, 'reviews': ratings.length})
           .eq('id', mixId);
     } catch (e) {
-      debugPrint('Error al actualizar rating de mezcla: $e');
+      AppLogger.error('Error al actualizar rating de mezcla: $e');
     }
   }
 
@@ -828,7 +829,7 @@ class CommunityRepository {
 
       return true;
     } catch (e) {
-      debugPrint('Error al eliminar reseña: $e');
+      AppLogger.error('Error al eliminar reseña: $e');
       return false;
     }
   }
@@ -851,7 +852,7 @@ class CommunityRepository {
 
       return true;
     } catch (e) {
-      debugPrint('Error al actualizar reseña: $e');
+      AppLogger.error('Error al actualizar reseña: $e');
       return false;
     }
   }
@@ -871,7 +872,7 @@ class CommunityRepository {
       final authorId = res['author_id'] as String?;
       return authorId != null && authorId == user.id;
     } catch (e) {
-      debugPrint('Error al comprobar propiedad de mezcla: $e');
+      AppLogger.error('Error al comprobar propiedad de mezcla: $e');
       return false;
     }
   }
@@ -884,7 +885,7 @@ class CommunityRepository {
       await _supabase.client.from('mixes').delete().eq('id', mixId);
       return true;
     } catch (e) {
-      debugPrint('Error al eliminar mezcla: $e');
+      AppLogger.error('Error al eliminar mezcla: $e');
       return false;
     }
   }

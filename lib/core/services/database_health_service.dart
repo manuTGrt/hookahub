@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/supabase_service.dart';
+import '../utils/app_logger.dart';
 
 class DatabaseHealthService {
   final SupabaseService _supabaseService;
@@ -19,7 +20,7 @@ class DatabaseHealthService {
       // 1. Primero verificar si hay conexión a internet
       final connectivityResult = await _connectivity.checkConnectivity();
       if (connectivityResult.contains(ConnectivityResult.none)) {
-        debugPrint('❌ Healthcheck: Sin conexión a internet');
+        AppLogger.warning('❌ Healthcheck: Sin conexión a internet');
         return false;
       }
 
@@ -33,22 +34,22 @@ class DatabaseHealthService {
             onTimeout: () => throw TimeoutException('Database query timeout'),
           );
 
-      debugPrint('✅ Healthcheck: Conexión exitosa');
+      AppLogger.info('✅ Healthcheck: Conexión exitosa');
       return true;
     } on TimeoutException catch (e) {
-      debugPrint('⏱️ Healthcheck timeout: $e');
+      AppLogger.error('⏱️ Healthcheck timeout: $e');
       return false;
     } on SocketException catch (e) {
-      debugPrint('🌐 Healthcheck sin conexión de red: $e');
+      AppLogger.error('🌐 Healthcheck sin conexión de red: $e');
       return false;
     } on PostgrestException catch (e) {
-      debugPrint('💾 Healthcheck error de BD: ${e.message}');
+      AppLogger.error('💾 Healthcheck error de BD: ${e.message}');
       return false;
     } on AuthException catch (e) {
-      debugPrint('🔒 Healthcheck error de autenticación: ${e.message}');
+      AppLogger.error('🔒 Healthcheck error de autenticación: ${e.message}');
       return false;
     } catch (e) {
-      debugPrint('❌ Healthcheck error genérico: $e');
+      AppLogger.error('❌ Healthcheck error genérico: $e');
       return false;
     }
   }

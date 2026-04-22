@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,7 +40,7 @@ class ThemeProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       // En caso de error, usar tema claro por defecto
-      debugPrint('Error al cargar tema: $e');
+      AppLogger.error('Error al cargar tema: $e');
     }
   }
 
@@ -49,7 +50,7 @@ class ThemeProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_themeKey, isDarkMode);
     } catch (e) {
-      debugPrint('Error al guardar tema: $e');
+      AppLogger.error('Error al guardar tema: $e');
     }
   }
 }

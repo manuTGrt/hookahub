@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -70,7 +71,7 @@ class CatalogProvider extends ChangeNotifier {
       _availableBrands = await _repository.fetchAvailableBrands();
     } catch (e) {
       // Silenciosamente ignorar errores en la carga de marcas
-      debugPrint('Error cargando marcas: $e');
+      AppLogger.error('Error cargando marcas: $e');
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       _isLoadingBrands = false;
@@ -131,7 +132,7 @@ class CatalogProvider extends ChangeNotifier {
         updateItem(updated);
       }
     } catch (e) {
-      debugPrint('Error refrescando tabaco individual: $e');
+      AppLogger.error('Error refrescando tabaco individual: $e');
     }
   }
 
@@ -147,7 +148,7 @@ class CatalogProvider extends ChangeNotifier {
       // Si no, de red
       return await _repository.fetchTobaccoById(id);
     } catch (e) {
-      debugPrint('Error fetching tobacco by id: $e');
+      AppLogger.error('Error fetching tobacco by id: $e');
       return null;
     }
   }
