@@ -179,6 +179,8 @@ class ProfileRepository {
   /// Genera una Signed URL temporal para un path dentro del bucket de avatares.
   Future<String?> createSignedAvatarUrl(String? storagePath) async {
     if (storagePath == null || storagePath.isEmpty) return null;
+    if (storagePath.startsWith('icon:')) return null;
+    
     try {
       final url = await _client.storage
           .from(StorageConfig.avatarsBucket)

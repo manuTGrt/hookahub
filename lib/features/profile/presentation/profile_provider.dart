@@ -48,9 +48,18 @@ class ProfileProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      _profile = await _repo.getCurrentUserProfile();
+      // Lanzar las consultas de base de datos simultáneamente
+      final results = await Future.wait([
+        _repo.getCurrentUserProfile(),
+        _repo.countCurrentUserMixes(),
+      ]);
+
+      _profile = results[0] as Profile?;
+      _mixesCount = results[1] as int;
+
+      // Obtener la URL firmada depende de la carga previa del perfil
       _signedAvatarUrl = await _repo.createSignedAvatarUrl(_profile?.avatarUrl);
-      _mixesCount = await _repo.countCurrentUserMixes();
+      
       DatabaseHealthProvider.reportSuccess();
     } catch (e) {
       _error = 'Error cargando perfil';
