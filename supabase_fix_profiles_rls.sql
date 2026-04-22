@@ -13,7 +13,7 @@ drop policy if exists "Solo el usuario puede ver su perfil" on profiles;
 -- Crear nueva política que permita ver perfiles públicos
 create policy "Los usuarios pueden ver perfiles públicos" on profiles
   for select using (
-    auth.uid() = id  -- Puede ver su propio perfil
+    (select auth.uid()) = id  -- Puede ver su propio perfil
     OR 
     is_public = true -- Puede ver perfiles públicos de otros
   );
@@ -22,7 +22,7 @@ create policy "Los usuarios pueden ver perfiles públicos" on profiles
 -- (Descomenta la siguiente política y comenta la anterior)
 /*
 create policy "Usuarios autenticados pueden ver todos los perfiles" on profiles
-  for select using (auth.role() = 'authenticated');
+  for select using ((select auth.role()) = 'authenticated');
 */
 
 -- Nota: Esta política permite ver los perfiles que tienen is_public = true

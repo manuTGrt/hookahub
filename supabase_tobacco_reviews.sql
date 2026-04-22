@@ -37,17 +37,17 @@ create policy "Reviews are viewable by everyone"
 -- Authenticated users can insert reviews
 create policy "Authenticated users can create reviews"
   on tobacco_reviews for insert
-  with check ( auth.uid() = author_id );
+  with check ( (select auth.uid()) = author_id );
 
 -- Users can can update their own reviews
 create policy "Users can update own reviews"
   on tobacco_reviews for update
-  using ( auth.uid() = author_id );
+  using ( (select auth.uid()) = author_id );
 
 -- Users can delete their own reviews
 create policy "Users can delete own reviews"
   on tobacco_reviews for delete
-  using ( auth.uid() = author_id );
+  using ( (select auth.uid()) = author_id );
 
 -- Function to calculate average rating and review count
 create or replace function update_tobacco_rating()
