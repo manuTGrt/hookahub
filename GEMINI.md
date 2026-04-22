@@ -22,6 +22,11 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
 ## 📁 Estructura y Seguridad del Repositorio
 - Siempre ignorar (`.gitignore`) ficheros como `.env`, `key.properties`, y cualquier `.keystore` o `.jks` que contenga claves criptográficas o IDs críticos en texto plano.
 
+## 🗄️ Base de Datos y Funciones (Supabase)
+### Funciones con "SECURITY DEFINER" (Vulnerabilidad de Search Path)
+- Al crear funciones en PostgreSQL (Supabase) que requieran privilegios elevados (`SECURITY DEFINER`), es **obligatorio** fijar el `search_path` para evitar ataques de inyección y manipulación de funciones (ej. `ALTER FUNCTION nombre_funcion() SET search_path = public;`).
+- Esto mitiga la advertencia del linter de seguridad de Supabase *"Function Search Path Mutable"*.
+
 ## 📝 Logging Centralizado (AppLogger)
 - **Regla Estricta**: Está **PROHIBIDO** el uso directo de `print()` y `debugPrint()` a lo largo de toda la aplicación.
 - **Implementación**: Se debe utilizar siempre la clase estática `AppLogger` (ubicada en `lib/core/utils/app_logger.dart`).
