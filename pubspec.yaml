@@ -68,6 +68,7 @@ dependencies:
   image: ^4.2.0
   timeago: ^3.6.1
   google_sign_in: ^7.2.0
+  logger: ^2.7.0
 
 dev_dependencies:
   flutter_test:
