@@ -253,7 +253,7 @@ class _CreateMixPageState extends State<CreateMixPage> {
 
       if (currentUser == null) {
         if (!mounted) return;
-        Navigator.of(context).pop(); // Cerrar diálogo de carga
+        Navigator.of(context, rootNavigator: true).pop(); // Cerrar diálogo de carga
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Debes iniciar sesión para crear una mezcla.'),
@@ -306,7 +306,7 @@ class _CreateMixPageState extends State<CreateMixPage> {
       }
 
       if (!mounted) return;
-      Navigator.of(context).pop(); // Cerrar diálogo de carga
+      Navigator.of(context, rootNavigator: true).pop(); // Cerrar diálogo de carga
 
       if (resultMix != null) {
         // Retornar a la pantalla anterior con la mezcla creada/editada
@@ -336,7 +336,7 @@ class _CreateMixPageState extends State<CreateMixPage> {
       }
     } catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pop(); // Cerrar diálogo de carga
+      Navigator.of(context, rootNavigator: true).pop(); // Cerrar diálogo de carga
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

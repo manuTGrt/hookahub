@@ -77,8 +77,15 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
 - **Problema**: En la pestaña de Comunidad, las tarjetas de mezclas no mostraban las opciones de edición/borrado porque el `ProfileProvider` cargaba los datos del usuario de forma perezosa (*lazy loading*) solo al entrar a la pestaña de Perfil. Si se visitaba Comunidad primero, el ID de usuario era `null` y la comprobación de autoría fallaba.
 - **Solución (Warm-up)**: Los datos que determinan "permisos" o "propiedad" a lo largo de toda la aplicación deben precargarse proactivamente. Se implementó una carga temprana (*warm-up*) en el `initState` del `MainNavigationPage` (usando `WidgetsBinding.instance.addPostFrameCallback`) para forzar la inicialización de `ProfileProvider` y `FavoritesProvider` al montar la navegación, asegurando que el estado sea consistente globalmente sin importar qué pestaña se visite primero.
 
-## 🐛 Depuración y Herramientas (Tooling)
+## 🧭 Navegación y Diálogos
 
+### Gestión de Diálogos en Navegadores Anidados (Root Navigator)
+- **Problema**: Al mostrar un diálogo de carga global (ej. `showDialog` que por defecto usa el `rootNavigator`) desde una pantalla anidada en un sistema de pestañas (como un `BottomNavigationBar` u otra navegación paralela), al intentar cerrarlo tras finalizar la operación con `Navigator.of(context).pop()`, la aplicación se queda bloqueada con el spinner congelado. Esto ocurre porque Flutter intenta cerrar el diálogo usando el navegador local de la pestaña activa en lugar del navegador raíz que lo originó.
+- **Solución**: Siempre que se cierre programáticamente un diálogo o *bottom sheet* global invocado desde una vista anidada, es **obligatorio** especificar explícitamente el uso del navegador raíz:
+  - ❌ **Incorrecto**: `Navigator.of(context).pop();`
+  - ✅ **Correcto**: `Navigator.of(context, rootNavigator: true).pop();`
+
+## 🐛 Depuración y Herramientas (Tooling)
 ### Desconexión Repentina del Debugger de Flutter
 - **Problema**: Al lanzar la aplicación en modo debug (ej. usando Antigravity o VS Code con el flag `--machine`), la aplicación arranca y es completamente usable en el dispositivo, pero el debugger se detiene de forma abrupta, deja de mostrar logs y se pierde el Hot Reload.
 - **Causa Principal**: El uso de paquetes de logs (como `logger`) configurados con colores (`colors: true`). Los códigos de escape ANSI generados para pintar colores en la terminal interfieren y corrompen el flujo JSON estructurado del protocolo `--machine`. Al fallar el parseo de este JSON, la herramienta de depuración colapsa.
