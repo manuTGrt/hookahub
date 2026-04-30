@@ -9,27 +9,33 @@ class HomeStatsRepository {
   final SupabaseService _supabase;
 
   Future<HomeStats> fetchStats() async {
-    final client = _supabase.client;
+    final response = await _supabase.client
+        .from('app_statistics')
+        .select()
+        .eq('id', 1)
+        .maybeSingle();
 
-    final results = await Future.wait<int>([
-      _count(client, 'tobaccos'),
-      _count(client, 'mixes'),
-      _count(client, 'profiles'),
-    ]);
-
+    if (response == null) return HomeStats.empty;
     return HomeStats(
-      tobaccos: results[0],
-      mixes: results[1],
-      users: results[2],
+      tobaccos: response['total_tobaccos'] as int? ?? 0,
+      mixes: response['total_mixes'] as int? ?? 0,
+      users: response['total_users'] as int? ?? 0,
     );
   }
 
-  Future<int> _count(SupabaseClient client, String table) async {
-    // Nota: para compatibilidad con la versión actual de supabase_flutter
-    // hacemos un select ligero y contamos filas en memoria. Si el dataset
-    // crece, cambiar a una RPC de conteo o a select con opciones de count
-    // cuando la API esté disponible.
-    final response = await client.from(table).select('id');
-    return (response as List).length;
+  Stream<HomeStats> streamStats() {
+    return _supabase.client
+        .from('app_statistics')
+        .stream(primaryKey: ['id'])
+        .eq('id', 1)
+        .map((data) {
+      if (data.isEmpty) return HomeStats.empty;
+      final row = data.first;
+      return HomeStats(
+        tobaccos: row['total_tobaccos'] as int? ?? 0,
+        mixes: row['total_mixes'] as int? ?? 0,
+        users: row['total_users'] as int? ?? 0,
+      );
+    });
   }
 }
