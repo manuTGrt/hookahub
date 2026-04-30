@@ -102,3 +102,16 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
   <key>NSLocalNetworkUsageDescription</key>
   <string>Permitir depuración de Flutter en la red local.</string>
   ```
+
+## 📱 Sistema y Status Bar (iOS / Android)
+
+### Visibilidad de la Barra de Estado Oculta en iOS
+- **Problema**: En iOS, la barra de estado superior (hora, nivel de batería, wifi, etc.) no aparece en ninguna parte de la aplicación (la pantalla se comporta como si estuviera en modo "pantalla completa" o inmersivo).
+- **Causa Principal**: La propiedad `<key>UIStatusBarHidden</key>` está configurada a `<true/>` de forma estática en el archivo `ios/Runner/Info.plist`.
+- **Solución (Nativa)**: Asegurarse de que en `ios/Runner/Info.plist` la clave `UIStatusBarHidden` tenga valor `<false/>`. **Cualquier cambio en este archivo requiere detener por completo la app y recompilar desde Xcode o línea de comandos; el Hot Reload no sirve.**
+
+### Consistencia del Color de la Barra de Estado con el Tema Activo
+- **Problema**: Incluso si la barra es visible nativamente, cuando la aplicación implementa pantallas que no tienen un `AppBar` clásico (ej. layouts personalizados con `SafeArea`), el texto de la barra de estado puede tomar el color por defecto (ej. negro) y resultar ilegible si el usuario tiene activado el tema oscuro (fondo oscuro).
+- **Solución (Arquitectónica Global)**:
+  1. **Configuración en Tema**: Incluir siempre el bloque `appBarTheme` en `ThemeData` dentro del archivo de temas (ej. `lib/core/theme.dart`), forzando `systemOverlayStyle: SystemUiOverlayStyle.dark` en el tema claro, y `SystemUiOverlayStyle.light` en el tema oscuro.
+  2. **Envoltorio en la Raíz**: Para asegurar que el color de la barra aplique en toda la app reactivamente y sobre pantallas personalizadas, es imperativo envolver el contenido del `builder` del `MaterialApp` (ej. en `lib/app.dart`) dentro de un `AnnotatedRegion<SystemUiOverlayStyle>` dinámico.

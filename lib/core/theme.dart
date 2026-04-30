@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'constants.dart';
 
 class AppTheme {
@@ -6,6 +7,12 @@ class AppTheme {
     brightness: Brightness.light,
     primaryColor: turquoise,
     scaffoldBackgroundColor: Colors.white,
+    appBarTheme: const AppBarTheme(
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      elevation: 0,
+    ),
     colorScheme: ColorScheme.light(
       primary: turquoise,
       secondary: turquoiseDark,
@@ -41,6 +48,12 @@ class AppTheme {
     brightness: Brightness.dark,
     primaryColor: darkTurquoise,
     scaffoldBackgroundColor: darkBg,
+    appBarTheme: const AppBarTheme(
+      systemOverlayStyle: SystemUiOverlayStyle.light,
+      backgroundColor: darkBg,
+      foregroundColor: Colors.white,
+      elevation: 0,
+    ),
     colorScheme: ColorScheme.dark(
       primary: darkTurquoise,
       secondary: darkNavy,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'core/theme.dart';
@@ -96,11 +97,23 @@ class HookahubApp extends StatelessWidget {
             home: const AuthGate(),
             debugShowCheckedModeBanner: false,
             builder: (context, child) {
-              return Stack(
-                children: [
-                  child ?? const SizedBox.shrink(),
-                  const DatabaseConnectionBanner(),
-                ],
+              // Determinamos el estilo global de la barra de estado según el tema activo
+              final overlayStyle = themeProvider.themeMode == ThemeMode.dark
+                  ? SystemUiOverlayStyle.light.copyWith(
+                      statusBarColor: Colors.transparent,
+                    )
+                  : SystemUiOverlayStyle.dark.copyWith(
+                      statusBarColor: Colors.transparent,
+                    );
+
+              return AnnotatedRegion<SystemUiOverlayStyle>(
+                value: overlayStyle,
+                child: Stack(
+                  children: [
+                    child ?? const SizedBox.shrink(),
+                    const DatabaseConnectionBanner(),
+                  ],
+                ),
               );
             },
             // Localizations
