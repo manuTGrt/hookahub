@@ -595,6 +595,21 @@ class MainNavigationPageState extends State<MainNavigationPage> {
           break;
       }
     });
+
+    // Cargar dependencias globales críticas al iniciar la app
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      
+      final profileProvider = context.read<ProfileProvider>();
+      if (!profileProvider.isLoaded) {
+        unawaited(profileProvider.load());
+      }
+      
+      final favProvider = context.read<FavoritesProvider>();
+      if (!favProvider.isLoaded) {
+        unawaited(favProvider.load());
+      }
+    });
   }
 
   @override
