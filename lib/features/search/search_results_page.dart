@@ -7,6 +7,9 @@ import '../../widgets/mix_card.dart';
 import '../catalog/tobacco_detail_page.dart';
 import '../community/presentation/mix_detail_page.dart';
 import '../favorites/favorites_provider.dart';
+import '../community/presentation/create_mix_page.dart';
+import '../catalog/presentation/request_tobacco_page.dart';
+import '../../core/data/supabase_service.dart';
 
 /// Página de resultados de búsqueda que muestra tabacos y mezclas
 /// que coincidan con el término de búsqueda.
@@ -333,17 +336,45 @@ class SearchResultsPage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            OutlinedButton.icon(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Volver'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  final userId = SupabaseService().client.auth.currentUser?.id ?? '';
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CreateMixPage(currentUser: userId),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Crear una mezcla', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const RequestTobaccoPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add_shopping_cart),
+                label: const Text('Solicitar un tabaco', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),

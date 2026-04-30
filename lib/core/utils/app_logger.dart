@@ -10,7 +10,7 @@ class AppLogger {
   static final Logger _logger = Logger(
     printer: SimplePrinter(
       printTime: true,
-      colors: true,
+      colors: false, // Desactivado para evitar problemas con el parser JSON del debugger
     ),
     filter: DevelopmentFilter(), // Por defecto logger solo imprime en debug
   );
