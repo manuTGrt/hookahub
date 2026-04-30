@@ -197,7 +197,14 @@ class NotificationsProvider extends ChangeNotifier {
     _realtimeSubscription = _repository.subscribeToNotifications().listen(
       _onNewNotification,
       onError: (error) {
-        AppLogger.error('Error en suscripción Realtime: $error');
+        final errorString = error.toString();
+        if (errorString.contains('RealtimeSubscribeException') || 
+            errorString.contains('RealtimeCloseEvent') ||
+            errorString.contains('InvalidJWTToken')) {
+          AppLogger.warning('Desconexión temporal en suscripción Realtime: $errorString');
+        } else {
+          AppLogger.error('Error en suscripción Realtime', error: error);
+        }
       },
     );
   }

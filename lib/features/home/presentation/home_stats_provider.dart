@@ -57,7 +57,14 @@ class HomeStatsProvider extends ChangeNotifier {
         DatabaseHealthProvider.reportSuccess();
       },
       onError: (e, stack) {
-        AppLogger.error('Error en el stream de estadísticas', error: e, stackTrace: stack);
+        final errorString = e.toString();
+        if (errorString.contains('RealtimeSubscribeException') || 
+            errorString.contains('RealtimeCloseEvent') ||
+            errorString.contains('InvalidJWTToken')) {
+          AppLogger.warning('Desconexión temporal en el stream de estadísticas: $errorString');
+        } else {
+          AppLogger.error('Error en el stream de estadísticas', error: e, stackTrace: stack);
+        }
         DatabaseHealthProvider.reportFailure(e);
       },
     );
