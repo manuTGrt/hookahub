@@ -89,6 +89,44 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
   ```
 - **Import requerido**: Cualquier archivo que use estas constantes debe importar `'../../../core/constants.dart'` (ajustando la ruta relativa según la profundidad del archivo).
 
+### Patrón Completo: Formulario con Envío a Supabase (Solicitud de Tabaco)
+
+Este patrón documenta cómo implementar correctamente una pantalla de formulario que persiste datos en una tabla de Supabase, siguiendo Clean Architecture. Sirve como referencia para cualquier funcionalidad similar (ej. formularios de reporte, solicitudes, feedback).
+
+#### 1. Base de datos (Supabase)
+- **Tabla**: `tobacco_requests` con columnas `id (uuid PK)`, `user_id (FK → auth.users)`, `brand`, `name`, `description`, `flavors` (texto plano), `status` (`pending|approved|rejected`), `created_at`.
+- **RLS**: solo política `INSERT` para rol `authenticated` con `WITH CHECK ((select auth.uid()) = user_id)`. **Sin política `SELECT`** si el usuario no necesita ver historial.
+- Las migraciones SQL se documentan en `supabase/migrations/` con nombre `YYYYMMDD_nombre_migracion.sql`.
+
+#### 2. Repositorio (`data/`)
+- Añadir el método al repositorio existente de la feature (ej. `TobaccoRepository`), no crear uno nuevo, salvo que el dominio sea claramente distinto.
+- El método debe aceptar parámetros nombrados (`required` para campos obligatorios, opcionales para el resto) y usar `.timeout()` consistente con el resto del repositorio.
+- Los campos opcionales que lleguen vacíos se deben filtrar antes del `insert` usando colecciones condicionales `if (campo != null && campo.isNotEmpty) 'col': campo`.
+
+#### 3. Provider con estados sellados (`presentation/providers/`)
+- **Regla Estricta**: nunca usar booleanos fragmentados (`isLoading`, `hasError`). Siempre usar una `sealed class` con los estados necesarios:
+  ```dart
+  sealed class MiFormularioState {}
+  class MiFormularioInitial extends MiFormularioState {}
+  class MiFormularioLoading extends MiFormularioState {}
+  class MiFormularioSuccess extends MiFormularioState {}
+  class MiFormularioError extends MiFormularioState {
+    MiFormularioError(this.message);
+    final String message;
+  }
+  ```
+- El provider obtiene el `user_id` internamente desde `SupabaseService().client.auth.currentUser` y gestiona el caso `null` (usuario no autenticado).
+- Los errores se registran siempre con `AppLogger.error('...', error: e, stackTrace: stack)`.
+- Exponer un método `reset()` para volver al estado `Initial` tras un error.
+
+#### 4. UI (`presentation/`)
+- Usar `ChangeNotifierProvider` creado localmente en la pantalla raíz (patrón igual que `CreateMixPage`), no en el árbol global.
+- Separar la pantalla en dos widgets: uno de "shell" que crea el provider (`StatelessWidget`) y uno interno con el formulario (`StatefulWidget`).
+- **Estado Loading**: deshabilitar el botón (`onPressed: isLoading ? null : callback`) y mostrar `CircularProgressIndicator` dentro del botón con tamaño fijo (`SizedBox(height: 22, width: 22)`).
+- **Estado Success**: mostrar snackbar verde + `Navigator.pop()` con un `await Future.delayed` breve (800ms) para que el usuario vea el mensaje.
+- **Estado Error**: mostrar snackbar rojo con el mensaje del estado + llamar a `provider.reset()` para permitir reenvío.
+- Usar `context.select<MiProvider, bool>(...)` en vez de `Consumer` completo cuando solo se necesita un único campo del estado (más eficiente).
+
 ### Reutilización de Widgets y Grids (Consistencia)
 - **Problema**: Las listas de resultados a menudo utilizan `ListView` genéricos con tarjetas simplificadas, rompiendo la experiencia con pantallas dedicadas como "Catálogo" que utilizan `GridView` más visuales.
 - **Solución**: Se debe mantener la **estricta consistencia visual**. Si en la aplicación principal (ej. "Catálogo") un elemento (ej. Tabaco) se muestra en un formato de cuadrícula (`GridView` con 2 columnas, priorizando la imagen y usando `SliverGridDelegateWithFixedCrossAxisCount` responsivo al `scaleFactor`), los resultados de la búsqueda de ese mismo elemento deben **clonar esa misma distribución y tarjeta de visualización**. No se debe cambiar drásticamente el layout del elemento dependiendo de la pantalla en la que se encuentre el usuario.

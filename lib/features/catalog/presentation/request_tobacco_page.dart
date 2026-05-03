@@ -1,14 +1,33 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants.dart';
+import 'package:provider/provider.dart';
 
-class RequestTobaccoPage extends StatefulWidget {
+import '../../../core/constants.dart';
+import '../../../core/data/supabase_service.dart';
+import '../data/tobacco_repository.dart';
+import 'providers/request_tobacco_provider.dart';
+
+class RequestTobaccoPage extends StatelessWidget {
   const RequestTobaccoPage({super.key});
 
   @override
-  State<RequestTobaccoPage> createState() => _RequestTobaccoPageState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => RequestTobaccoProvider(
+        TobaccoRepository(SupabaseService()),
+      ),
+      child: const _RequestTobaccoView(),
+    );
+  }
 }
 
-class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
+class _RequestTobaccoView extends StatefulWidget {
+  const _RequestTobaccoView();
+
+  @override
+  State<_RequestTobaccoView> createState() => _RequestTobaccoViewState();
+}
+
+class _RequestTobaccoViewState extends State<_RequestTobaccoView> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _brandCtrl = TextEditingController();
@@ -24,14 +43,38 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
     super.dispose();
   }
 
-  void _handleSubmit() {
-    if (_formKey.currentState?.validate() ?? false) {
+  Future<void> _handleSubmit(BuildContext context) async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final provider = context.read<RequestTobaccoProvider>();
+    final success = await provider.submit(
+      brand: _brandCtrl.text,
+      name: _nameCtrl.text,
+      description: _descCtrl.text,
+      flavors: _flavorsCtrl.text,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Próximamente'),
-          backgroundColor: Colors.blue,
+          content: Text('¡Solicitud enviada! La revisaremos pronto.'),
+          backgroundColor: Colors.green,
         ),
       );
+      // Breve pausa para que el usuario vea el snackbar antes de cerrar
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (mounted) Navigator.of(context).pop();
+    } else {
+      final state = provider.state;
+      final message = state is RequestTobaccoError
+          ? state.message
+          : 'Error desconocido. Inténtalo de nuevo.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+      provider.reset();
     }
   }
 
@@ -100,6 +143,10 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isLoading = context.select<RequestTobaccoProvider, bool>(
+      (p) => p.state is RequestTobaccoLoading,
+    );
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -130,7 +177,7 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
                   label: 'Marca',
                   hint: 'Ej: Adalya, Al Fakher...',
                   validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Campo obligatorio' : null,
+                      (v == null || v.trim().isEmpty) ? 'Campo obligatorio' : null,
                 ),
                 const SizedBox(height: 24),
                 _buildField(
@@ -138,7 +185,7 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
                   label: 'Nombre del tabaco',
                   hint: 'Ej: Love 66, Double Apple...',
                   validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Campo obligatorio' : null,
+                      (v == null || v.trim().isEmpty) ? 'Campo obligatorio' : null,
                 ),
                 const SizedBox(height: 24),
                 _buildField(
@@ -154,18 +201,30 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
                   hint: 'Ej: Sandía, Melón, Maracuyá...',
                 ),
                 const SizedBox(height: 48),
-                FilledButton.icon(
-                  onPressed: _handleSubmit,
-                  label: const Text(
-                    'Solicitar tabaco',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                FilledButton(
+                  onPressed: isLoading ? null : () => _handleSubmit(context),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Solicitar tabaco',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ],
             ),

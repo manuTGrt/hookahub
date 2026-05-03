@@ -156,4 +156,27 @@ class TobaccoRepository {
 
     return brands;
   }
+
+  /// Envía una solicitud de nuevo tabaco al catálogo.
+  /// Solo requiere [brand] y [name]; [description] y [flavors] son opcionales.
+  Future<void> submitTobaccoRequest({
+    required String userId,
+    required String brand,
+    required String name,
+    String? description,
+    String? flavors,
+  }) async {
+    final client = _supabase.client;
+    await client
+        .from('tobacco_requests')
+        .insert({
+          'user_id': userId,
+          'brand': brand,
+          'name': name,
+          if (description != null && description.isNotEmpty)
+            'description': description,
+          if (flavors != null && flavors.isNotEmpty) 'flavors': flavors,
+        })
+        .timeout(const Duration(seconds: 8));
+  }
 }
