@@ -61,6 +61,34 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
   - Se mostrarán las pestañas **únicamente** si hay resultados en ambas categorías (`showTabs = listaA.isNotEmpty && listaB.isNotEmpty`).
   - Si solo hay resultados de un tipo, se prescinde del `TabBar` para simplificar la interfaz.
 
+### Sistema de Colores Global: Formularios y Pantallas (Regla de Oro)
+- **Regla Estricta**: Está **PROHIBIDO** usar colores hexadecimales hardcodeados (`Color(0xFF...)`) para los elementos de formulario o el fondo de pantallas. Siempre se deben usar las constantes centralizadas definidas en `lib/core/constants.dart`.
+- **Tabla de constantes obligatorias**:
+
+  | Elemento | Constante (dark) | Constante (light) |
+  |---|---|---|
+  | `fillColor` de campos de texto | `fieldDark` → `Color(0xFF26343A)` | `fieldLight` → `Color(0xFFE0F7F4)` |
+  | Color de labels/etiquetas | `darkNavy` → `Color(0xFFB2DFDB)` | `navy` → `Color(0xFF23404A)` |
+  | Color de borde de campos | `turquoiseDark` (siempre, en ambos temas) | `turquoiseDark` |
+  | Fondo del `Scaffold` | `theme.scaffoldBackgroundColor` (siempre explícito) | `theme.scaffoldBackgroundColor` |
+
+- **Patrón de implementación correcto** para cualquier campo de formulario:
+  ```dart
+  // ✅ Correcto
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final fillColor = isDark ? fieldDark : fieldLight;
+  const borderColor = turquoiseDark;
+  // En el label:
+  color: isDark ? darkNavy : navy,
+  ```
+  ```dart
+  // ❌ Incorrecto
+  final fillColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+  final borderColor = Theme.of(context).primaryColor;
+  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
+  ```
+- **Import requerido**: Cualquier archivo que use estas constantes debe importar `'../../../core/constants.dart'` (ajustando la ruta relativa según la profundidad del archivo).
+
 ### Reutilización de Widgets y Grids (Consistencia)
 - **Problema**: Las listas de resultados a menudo utilizan `ListView` genéricos con tarjetas simplificadas, rompiendo la experiencia con pantallas dedicadas como "Catálogo" que utilizan `GridView` más visuales.
 - **Solución**: Se debe mantener la **estricta consistencia visual**. Si en la aplicación principal (ej. "Catálogo") un elemento (ej. Tabaco) se muestra en un formato de cuadrícula (`GridView` con 2 columnas, priorizando la imagen y usando `SliverGridDelegateWithFixedCrossAxisCount` responsivo al `scaleFactor`), los resultados de la búsqueda de ese mismo elemento deben **clonar esa misma distribución y tarjeta de visualización**. No se debe cambiar drásticamente el layout del elemento dependiendo de la pantalla en la que se encuentre el usuario.

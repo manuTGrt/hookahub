@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants.dart';
 
 class RequestTobaccoPage extends StatefulWidget {
   const RequestTobaccoPage({super.key});
@@ -42,8 +43,8 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
     String? Function(String?)? validator,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fillColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
-    final borderColor = Theme.of(context).primaryColor;
+    final fillColor = isDark ? fieldDark : fieldLight;
+    const borderColor = turquoiseDark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,7 +54,7 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
+            color: isDark ? darkNavy : navy,
           ),
         ),
         const SizedBox(height: 8),
@@ -64,18 +65,23 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5),
+              color: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.color?.withOpacity(0.5),
             ),
             filled: true,
             fillColor: fillColor,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderColor, width: 1.5),
+              borderSide: const BorderSide(color: borderColor, width: 1.5),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderColor, width: 2.2),
+              borderSide: const BorderSide(color: borderColor, width: 2.2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -93,9 +99,14 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Solicitar un Tabaco', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Solicitar un Tabaco',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -118,14 +129,16 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
                   controller: _brandCtrl,
                   label: 'Marca',
                   hint: 'Ej: Adalya, Al Fakher...',
-                  validator: (v) => (v == null || v.isEmpty) ? 'Campo obligatorio' : null,
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Campo obligatorio' : null,
                 ),
                 const SizedBox(height: 24),
                 _buildField(
                   controller: _nameCtrl,
                   label: 'Nombre del tabaco',
                   hint: 'Ej: Love 66, Double Apple...',
-                  validator: (v) => (v == null || v.isEmpty) ? 'Campo obligatorio' : null,
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Campo obligatorio' : null,
                 ),
                 const SizedBox(height: 24),
                 _buildField(
@@ -143,11 +156,15 @@ class _RequestTobaccoPageState extends State<RequestTobaccoPage> {
                 const SizedBox(height: 48),
                 FilledButton.icon(
                   onPressed: _handleSubmit,
-                  icon: const Icon(Icons.send),
-                  label: const Text('Solicitar tabaco', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'Solicitar tabaco',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
               ],
