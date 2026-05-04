@@ -131,6 +131,25 @@ Este patrón documenta cómo implementar correctamente una pantalla de formulari
 - **Problema**: Las listas de resultados a menudo utilizan `ListView` genéricos con tarjetas simplificadas, rompiendo la experiencia con pantallas dedicadas como "Catálogo" que utilizan `GridView` más visuales.
 - **Solución**: Se debe mantener la **estricta consistencia visual**. Si en la aplicación principal (ej. "Catálogo") un elemento (ej. Tabaco) se muestra en un formato de cuadrícula (`GridView` con 2 columnas, priorizando la imagen y usando `SliverGridDelegateWithFixedCrossAxisCount` responsivo al `scaleFactor`), los resultados de la búsqueda de ese mismo elemento deben **clonar esa misma distribución y tarjeta de visualización**. No se debe cambiar drásticamente el layout del elemento dependiendo de la pantalla en la que se encuentre el usuario.
 
+### Sistema de Notificaciones (Toasts)
+Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones enriquecidas con `toastification`, optimizado para la estética premium de HookaHub.
+
+1. **Implementación de `AppToast` (Custom Widget)**:
+   - Se utiliza `toastification.showCustom()` para tener control total sobre el widget renderizado (`_AppToastWidget`).
+   - **Regla Estética**: Queda prohibido el uso de sombras (`boxShadow`), bordes con degradados, barras laterales de acento o indicadores de arrastre (puntos). El diseño debe ser plano, limpio y con bordes sólidos.
+   - **Identificación por Tipo**: La distinción entre Éxito, Error e Información se realiza mediante:
+     - El color del borde sólido (procedente de `constants.dart`).
+     - El icono circular tintado.
+     - Un "label" de tipo en mayúsculas con el color de acento correspondiente.
+2. **Gestión de Colores y Contraste**:
+   - Para garantizar la legibilidad en ambos temas, se utiliza `Color.alphaBlend` para mezclar el color de acento con el fondo de superficie (`surfaceDark` o `surfaceLight`), creando un color de fondo opaco y suave que no compromete el contraste del texto.
+   - **Modernización**: Se debe preferir el uso de `.withValues(alpha: X)` sobre `.withOpacity(X)` para cumplir con las directrices actuales de Flutter.
+
+### Correcciones de Contraste en Modo Oscuro
+- **Formularios**: Al detectar bajo contraste en etiquetas (`labels`) sobre fondos oscuros, se debe evitar el uso de colores fijos como `darkNavy` si no proporcionan suficiente legibilidad. En su lugar, usar `Theme.of(context).textTheme.bodyLarge` o colores de la paleta `teal` clara para el modo oscuro.
+- **Bordes de Input**: En modo oscuro, los bordes de los campos deben usar `darkTurquoise` para ser visibles contra el fondo `fieldDark`.
+- **Componentes de Navegación**: En el `TabBar`, el `labelColor` debe ser dinámico (ej. `navy` en light, `white` en dark) para asegurar que el texto sea legible sobre el indicador turquesa.
+
 ## 🔄 Arquitectura de Datos y Sincronización
 
 ### Estadísticas Globales en Tiempo Real (La "Bala de Plata")

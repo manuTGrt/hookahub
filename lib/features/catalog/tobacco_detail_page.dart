@@ -12,6 +12,7 @@ import '../community/presentation/mix_detail_page.dart';
 import 'data/tobacco_reviews_repository.dart';
 import 'presentation/providers/tobacco_reviews_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/utils/app_toast.dart';
 
 class TobaccoDetailPage extends StatelessWidget {
   const TobaccoDetailPage({super.key, required this.tobacco});
@@ -131,9 +132,9 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   // Igual que MixCard: fondo tintado y borde con el color base (corazón)
-                  color: Theme.of(context).primaryColor.withOpacity(0.05),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
                   border: Border.all(
-                    color: Theme.of(context).primaryColor.withOpacity(0.2),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Column(
@@ -149,7 +150,7 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
                           // Degradado partiendo del color del "corazón" (mismo que MixCard)
                           colors: [
                             Theme.of(context).primaryColor,
-                            Theme.of(context).primaryColor.withOpacity(0.5),
+                            Theme.of(context).primaryColor.withValues(alpha: 0.5),
                           ],
                         ),
                       ),
@@ -365,9 +366,7 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
 
   void _handleSubmitReview() async {
     if (_reviewController.text.trim().isEmpty || _newRating <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Añade comentario y puntuación')),
-      );
+      AppToast.showInfo(context, 'Añade comentario y puntuación');
       return;
     }
 
@@ -375,9 +374,7 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
     final user = supabase.auth.currentUser;
 
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Debes iniciar sesión para reseñar')),
-      );
+      AppToast.showInfo(context, 'Debes iniciar sesión para reseñar');
       return;
     }
 
@@ -395,15 +392,11 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Reseña publicada')));
+        AppToast.showSuccess(context, 'Reseña publicada');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al publicar: $e')));
+        AppToast.showError(context, 'Error al publicar: $e');
       }
     }
   }
@@ -425,7 +418,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brandStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: Colors.white.withOpacity(0.9),
+      color: Colors.white.withValues(alpha: 0.9),
       letterSpacing: 0.5,
     );
     final nameStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -454,9 +447,9 @@ class _Header extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.35),
+                  Colors.black.withValues(alpha: 0.35),
                   Colors.transparent,
-                  Colors.black.withOpacity(0.45),
+                  Colors.black.withValues(alpha: 0.45),
                 ],
               ),
             ),
@@ -513,7 +506,7 @@ class _CircleButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.35),
+          color: Colors.black.withValues(alpha: 0.35),
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white24),
         ),
@@ -535,10 +528,10 @@ class _ReviewStats extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.06),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).primaryColor.withOpacity(0.12),
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
         ),
       ),
       child: Row(
@@ -557,7 +550,7 @@ class _ReviewStats extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -583,14 +576,14 @@ class _ReviewForm extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.06),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.2),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -667,10 +660,10 @@ class _ReviewTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.05),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).primaryColor.withOpacity(0.12),
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
         ),
       ),
       child: Column(
@@ -718,7 +711,7 @@ class _ReviewTile extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.color?.withOpacity(0.6),
+                  ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                 ),
               ),
             ],

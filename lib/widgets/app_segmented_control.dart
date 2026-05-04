@@ -51,7 +51,7 @@ class AppSegmentedControl extends StatelessWidget {
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(radius),
-          border: Border.all(color: theme.dividerColor.withOpacity(0.3)),
+          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.3)),
         ),
         padding: padding,
         child: Row(
@@ -105,7 +105,7 @@ class _SegmentButton extends StatelessWidget {
     final style = Theme.of(context).textTheme.bodyMedium;
     final fillColor = useFilledActive
         ? (selected ? primary : Colors.transparent)
-        : (selected ? primary.withOpacity(0.12) : Colors.transparent);
+        : (selected ? primary.withValues(alpha: 0.12) : Colors.transparent);
     final textColor = useFilledActive
         ? (selected ? Colors.white : inactiveColor)
         : (selected ? primary : inactiveColor);

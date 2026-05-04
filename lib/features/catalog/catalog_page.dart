@@ -93,7 +93,7 @@ class CatalogPage extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(
                           context,
-                        ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -131,7 +131,7 @@ class CatalogPage extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(
                             context,
-                          ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                          ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                         ),
                       );
                     }
@@ -158,7 +158,7 @@ class CatalogPage extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
-              color: Theme.of(context).primaryColor.withOpacity(0.15),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.15),
               width: 1,
             ),
           ),
@@ -229,7 +229,7 @@ class CatalogPage extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Theme.of(context).primaryColor.withOpacity(0.08)
+                        ? Theme.of(context).primaryColor.withValues(alpha: 0.08)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -247,7 +247,7 @@ class CatalogPage extends StatelessWidget {
                               ? Theme.of(context).primaryColor
                               : Theme.of(
                                   context,
-                                ).textTheme.bodyMedium?.color?.withOpacity(0.3),
+                                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.3),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -273,7 +273,7 @@ class CatalogPage extends StatelessWidget {
                           size: 16,
                           color: Theme.of(
                             context,
-                          ).primaryColor.withOpacity(0.6),
+                          ).primaryColor.withValues(alpha: 0.6),
                         ),
                     ],
                   ),
@@ -288,20 +288,20 @@ class CatalogPage extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Theme.of(context).primaryColor.withOpacity(0.15),
-                Theme.of(context).primaryColor.withOpacity(0.10),
+                Theme.of(context).primaryColor.withValues(alpha: 0.15),
+                Theme.of(context).primaryColor.withValues(alpha: 0.10),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Theme.of(context).primaryColor.withOpacity(0.4),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -402,10 +402,10 @@ class CatalogPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            color: color.withOpacity(0.05), // igual que MixCard
+            color: color.withValues(alpha: 0.05), // igual que MixCard
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
             ), // igual que MixCard
           ),
           child: Padding(
@@ -460,7 +460,7 @@ class CatalogPage extends StatelessWidget {
                               ?.copyWith(
                                 color: Theme.of(
                                   context,
-                                ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                               ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -508,7 +508,7 @@ class CatalogPage extends StatelessWidget {
                                           .textTheme
                                           .bodyMedium
                                           ?.color
-                                          ?.withOpacity(0.5),
+                                          ?.withValues(alpha: 0.5),
                                     ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -531,7 +531,7 @@ class CatalogPage extends StatelessWidget {
                                           .textTheme
                                           .bodyMedium
                                           ?.color
-                                          ?.withOpacity(0.5),
+                                          ?.withValues(alpha: 0.5),
                                     ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -608,7 +608,7 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: Theme.of(context).primaryColor.withOpacity(0.15),
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
@@ -646,7 +646,7 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                                 Icons.clear,
                                 color: Theme.of(
                                   context,
-                                ).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                                 size: 20,
                               ),
                               onPressed: () {
@@ -660,7 +660,7 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                         borderSide: BorderSide(
                           color: Theme.of(
                             context,
-                          ).primaryColor.withOpacity(0.3),
+                          ).primaryColor.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
@@ -668,7 +668,7 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                         borderSide: BorderSide(
                           color: Theme.of(
                             context,
-                          ).primaryColor.withOpacity(0.3),
+                          ).primaryColor.withValues(alpha: 0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -728,7 +728,7 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                                           .textTheme
                                           .bodyMedium
                                           ?.color
-                                          ?.withOpacity(0.5),
+                                          ?.withValues(alpha: 0.5),
                                     ),
                               ),
                             ),
@@ -779,7 +779,7 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).primaryColor.withOpacity(0.08)
+              ? Theme.of(context).primaryColor.withValues(alpha: 0.08)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
@@ -794,7 +794,7 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                   ? Theme.of(context).primaryColor
                   : Theme.of(
                       context,
-                    ).textTheme.bodyMedium?.color?.withOpacity(0.3),
+                    ).textTheme.bodyMedium?.color?.withValues(alpha: 0.3),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -812,7 +812,7 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
               Icon(
                 icon,
                 size: 16,
-                color: Theme.of(context).primaryColor.withOpacity(0.6),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.6),
               ),
           ],
         ),
@@ -835,20 +835,20 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).primaryColor.withOpacity(0.15),
-              Theme.of(context).primaryColor.withOpacity(0.10),
+              Theme.of(context).primaryColor.withValues(alpha: 0.15),
+              Theme.of(context).primaryColor.withValues(alpha: 0.10),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Theme.of(context).primaryColor.withOpacity(0.4),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

@@ -62,9 +62,9 @@ class TobaccoCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: accent.withOpacity(0.05),
+          color: accent.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accent.withOpacity(0.2)),
+          border: Border.all(color: accent.withValues(alpha: 0.2)),
         ),
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -106,7 +106,7 @@ class TobaccoCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(
                             context,
-                          ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                          ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -125,7 +125,7 @@ class TobaccoCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   color: Theme.of(
                     context,
-                  ).textTheme.bodyLarge?.color?.withOpacity(0.8),
+                  ).textTheme.bodyLarge?.color?.withValues(alpha: 0.8),
                 ),
               ),
               const SizedBox(height: 4),
@@ -140,7 +140,7 @@ class TobaccoCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   color: Theme.of(
                     context,
-                  ).textTheme.bodyLarge?.color?.withOpacity(0.8),
+                  ).textTheme.bodyLarge?.color?.withValues(alpha: 0.8),
                 ),
               ),
               const SizedBox(height: 4),
@@ -155,7 +155,7 @@ class TobaccoCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: accent.withOpacity(0.2),
+                          color: accent.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -196,7 +196,7 @@ class TobaccoCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(
                             context,
-                          ).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                          ).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                         ),
                         overflow: TextOverflow.ellipsis,
                         softWrap: false,
@@ -213,7 +213,7 @@ class TobaccoCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(
                             context,
-                          ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                          ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                         ),
                         overflow: TextOverflow.ellipsis,
                         softWrap: false,

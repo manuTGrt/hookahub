@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../features/history/presentation/history_provider.dart';
+import '../core/utils/app_toast.dart';
 
 /// Widget de debug para probar el historial
 /// Útil para diagnosticar problemas de carga
@@ -104,11 +105,7 @@ class HistoryDebugWidget extends StatelessWidget {
         onPressed: () async {
           await provider.load();
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Recargado: ${provider.entries.length} entradas'),
-              ),
-            );
+            AppToast.showInfo(context, 'Recargado: ${provider.entries.length} entradas');
           }
         },
         child: const Icon(Icons.play_arrow),

@@ -71,7 +71,7 @@ class _SocialLoginButtonState extends State<SocialLoginButton>
 
     // Border uses the app's primary turquoise (same as inputs/buttons)
     final Color primaryColor = Theme.of(context).primaryColor;
-    final Color borderColor = primaryColor.withOpacity(isDark ? 0.55 : 0.40);
+    final Color borderColor = primaryColor.withValues(alpha: isDark ? 0.55 : 0.40);
 
     final Color textColor =
         isDark ? const Color(0xFFDFEFED) : const Color(0xFF1A2326);

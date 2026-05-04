@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
 import 'core/theme.dart';
 import 'core/theme_provider.dart';
 import 'core/providers/database_health_provider.dart';
@@ -108,11 +109,13 @@ class HookahubApp extends StatelessWidget {
 
               return AnnotatedRegion<SystemUiOverlayStyle>(
                 value: overlayStyle,
-                child: Stack(
-                  children: [
-                    child ?? const SizedBox.shrink(),
-                    const DatabaseConnectionBanner(),
-                  ],
+                child: ToastificationWrapper(
+                  child: Stack(
+                    children: [
+                      child ?? const SizedBox.shrink(),
+                      const DatabaseConnectionBanner(),
+                    ],
+                  ),
                 ),
               );
             },

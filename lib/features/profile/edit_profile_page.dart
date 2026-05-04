@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart' as fp;
 import 'dart:io' show Platform;
 import 'package:image_cropper/image_cropper.dart';
+import '../../core/utils/app_toast.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -144,18 +145,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _onBirthDateChanged(picked);
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Debes ser mayor de 18 años para usar esta aplicación',
-              ),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
+          AppToast.showError(context, 'Debes ser mayor de 18 años para usar esta aplicación',);
         }
       }
     }
@@ -283,8 +273,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? darkNavy.withOpacity(0.3)
-                      : Colors.grey.withOpacity(0.3),
+                      ? darkNavy.withValues(alpha: 0.3)
+                      : Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -348,12 +338,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 if (!mounted) return;
                                 setState(() => _isLoading = false);
                                 if (err != null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(err),
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
+                                  AppToast.showInfo(context, err);
                                   return;
                                 }
                                 // Reflejar selección en el estado padre para la cabecera
@@ -371,15 +356,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   color: isSelected
                                       ? (isDark ? darkTurquoise : turquoise)
                                       : (isDark
-                                            ? darkBg.withOpacity(0.5)
-                                            : Colors.grey.withOpacity(0.1)),
+                                            ? darkBg.withValues(alpha: 0.5)
+                                            : Colors.grey.withValues(alpha: 0.1)),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
                                         ? (isDark ? darkTurquoise : turquoise)
                                         : (isDark
-                                              ? darkNavy.withOpacity(0.2)
-                                              : Colors.grey.withOpacity(0.3)),
+                                              ? darkNavy.withValues(alpha: 0.2)
+                                              : Colors.grey.withValues(alpha: 0.3)),
                                     width: 2,
                                   ),
                                 ),
@@ -427,30 +412,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             if (!mounted) return;
                             setState(() => _isLoading = false);
                             if (err != null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(err),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
+                              AppToast.showInfo(context, err);
                             } else {
                               Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Foto actualizada'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
+                              AppToast.showInfo(context, 'Foto actualizada');
                             }
                           } catch (e) {
                             if (!mounted) return;
                             setState(() => _isLoading = false);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('No se pudo procesar la imagen'),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
+                            AppToast.showInfo(context, 'No se pudo procesar la imagen');
                           }
                         },
                       ),
@@ -482,16 +452,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
         decoration: BoxDecoration(
           color: isSelected
               ? (isDark
-                    ? darkTurquoise.withOpacity(0.1)
-                    : turquoise.withOpacity(0.1))
+                    ? darkTurquoise.withValues(alpha: 0.1)
+                    : turquoise.withValues(alpha: 0.1))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? (isDark ? darkTurquoise : turquoise)
                 : (isDark
-                      ? darkNavy.withOpacity(0.2)
-                      : Colors.grey.withOpacity(0.3)),
+                      ? darkNavy.withValues(alpha: 0.2)
+                      : Colors.grey.withValues(alpha: 0.3)),
             width: 2,
           ),
         ),
@@ -503,7 +473,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   : Icons.radio_button_unchecked,
               color: isSelected
                   ? (isDark ? darkTurquoise : turquoise)
-                  : (isDark ? darkNavy.withOpacity(0.6) : Colors.grey),
+                  : (isDark ? darkNavy.withValues(alpha: 0.6) : Colors.grey),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -523,8 +493,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark
-                          ? darkNavy.withOpacity(0.7)
-                          : navy.withOpacity(0.6),
+                          ? darkNavy.withValues(alpha: 0.7)
+                          : navy.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -553,28 +523,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (!mounted) return;
     setState(() => _isLoading = false);
     if (err == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Perfil actualizado exitosamente'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
+      AppToast.showSuccess(context, 'Perfil actualizado exitosamente');
       setState(() => _hasChanges = false);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(err),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
+      AppToast.showError(context, err);
     }
   }
 
@@ -599,7 +551,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           content: Text(
             '¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer y perderás todos tus datos.',
             style: TextStyle(
-              color: isDark ? darkNavy.withOpacity(0.8) : navy.withOpacity(0.7),
+              color: isDark ? darkNavy.withValues(alpha: 0.8) : navy.withValues(alpha: 0.7),
             ),
           ),
           actions: [
@@ -609,8 +561,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 'Cancelar',
                 style: TextStyle(
                   color: isDark
-                      ? darkNavy.withOpacity(0.7)
-                      : navy.withOpacity(0.6),
+                      ? darkNavy.withValues(alpha: 0.7)
+                      : navy.withValues(alpha: 0.6),
                 ),
               ),
             ),
@@ -618,12 +570,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               onPressed: () {
                 Navigator.of(context).pop();
                 // Aquí implementarías la lógica de eliminación
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Funcionalidad de eliminación próximamente'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                AppToast.showInfo(context, 'Funcionalidad de eliminación próximamente');
               },
               child: const Text(
                 'Eliminar',
@@ -661,7 +608,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         hintText: hintText,
         hintStyle: TextStyle(
           color: (Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black)
-              .withOpacity(0.5),
+              .withValues(alpha: 0.5),
         ),
         filled: true,
         fillColor: isDark ? fieldDark : fieldLight,
@@ -983,8 +930,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isDark
-                              ? darkTurquoise.withOpacity(0.8)
-                              : turquoise.withOpacity(0.8),
+                              ? darkTurquoise.withValues(alpha: 0.8)
+                              : turquoise.withValues(alpha: 0.8),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(

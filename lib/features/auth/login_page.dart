@@ -7,6 +7,7 @@ import '../../widgets/main_navigation.dart';
 import '../../widgets/social_login_button.dart';
 import 'package:hookahub/features/auth/auth_provider.dart';
 import 'presentation/register_page.dart';
+import '../../core/utils/app_toast.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -72,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
                           Shadow(
                             color: Theme.of(
                               context,
-                            ).primaryColor.withOpacity(0.18),
+                            ).primaryColor.withValues(alpha: 0.18),
                             blurRadius: 6,
                             offset: const Offset(2, 2),
                           ),
@@ -86,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
                         fontSize: 18,
                         color: Theme.of(
                           context,
-                        ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(height: 40),
@@ -137,9 +138,7 @@ class _LoginPageState extends State<LoginPage> {
                           final error = await auth.signInEmail(email, password);
                           if (!mounted) return;
                           if (error != null) {
-                            ScaffoldMessenger.of(
-                              context,
-                            ).showSnackBar(SnackBar(content: Text(error)));
+                            AppToast.showError(context, error);
                           } else {
                             Navigator.pushReplacement(
                               context,
@@ -167,7 +166,7 @@ class _LoginPageState extends State<LoginPage> {
                                   .textTheme
                                   .bodyMedium
                                   ?.color
-                                  ?.withOpacity(0.5),
+                                  ?.withValues(alpha: 0.5),
                             ),
                           ),
                         ),
@@ -182,9 +181,7 @@ class _LoginPageState extends State<LoginPage> {
                         final error = await auth.signInGoogle();
                         if (!mounted) return;
                         if (error != null) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(error)));
+                          AppToast.showError(context, error);
                         }
                       },
                     ),
@@ -194,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextButton.styleFrom(
                         foregroundColor: Theme.of(
                           context,
-                        ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                         textStyle: const TextStyle(
                           fontWeight: FontWeight.normal,
                         ),

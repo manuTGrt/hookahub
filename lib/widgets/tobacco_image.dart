@@ -57,14 +57,14 @@ class TobaccoImage extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: effectiveColor.withOpacity(0.15),
+        color: effectiveColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: Center(
         child: Icon(
           Icons.local_fire_department,
           size: _getIconSize(context),
-          color: effectiveColor.withOpacity(0.5),
+          color: effectiveColor.withValues(alpha: 0.5),
         ),
       ),
     );
@@ -76,14 +76,14 @@ class TobaccoImage extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.05),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: Center(
         child: CircularProgressIndicator(
           strokeWidth: 2,
           valueColor: AlwaysStoppedAnimation<Color>(
-            Theme.of(context).primaryColor.withOpacity(0.3),
+            Theme.of(context).primaryColor.withValues(alpha: 0.3),
           ),
         ),
       ),

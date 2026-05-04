@@ -5,6 +5,7 @@ import '../../../core/constants.dart';
 import '../../../core/data/supabase_service.dart';
 import '../data/tobacco_repository.dart';
 import 'providers/request_tobacco_provider.dart';
+import '../../../core/utils/app_toast.dart';
 
 class RequestTobaccoPage extends StatelessWidget {
   const RequestTobaccoPage({super.key});
@@ -57,12 +58,7 @@ class _RequestTobaccoViewState extends State<_RequestTobaccoView> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Solicitud enviada! La revisaremos pronto.'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      AppToast.showSuccess(context, '¡Solicitud enviada! La revisaremos pronto.');
       // Breve pausa para que el usuario vea el snackbar antes de cerrar
       await Future.delayed(const Duration(milliseconds: 800));
       if (mounted) Navigator.of(context).pop();
@@ -71,9 +67,7 @@ class _RequestTobaccoViewState extends State<_RequestTobaccoView> {
       final message = state is RequestTobaccoError
           ? state.message
           : 'Error desconocido. Inténtalo de nuevo.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.red),
-      );
+      AppToast.showError(context, message);
       provider.reset();
     }
   }
@@ -85,9 +79,11 @@ class _RequestTobaccoViewState extends State<_RequestTobaccoView> {
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final fillColor = isDark ? fieldDark : fieldLight;
-    const borderColor = turquoiseDark;
+    final borderColor = isDark ? darkTurquoise : turquoiseDark;
+    final labelColor = isDark ? (theme.textTheme.bodyLarge?.color ?? Colors.white) : navy;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +93,7 @@ class _RequestTobaccoViewState extends State<_RequestTobaccoView> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: isDark ? darkNavy : navy,
+            color: labelColor,
           ),
         ),
         const SizedBox(height: 8),
@@ -108,9 +104,7 @@ class _RequestTobaccoViewState extends State<_RequestTobaccoView> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.color?.withOpacity(0.5),
+              color: theme.textTheme.bodyLarge?.color?.withValues(alpha: 0.45),
             ),
             filled: true,
             fillColor: fillColor,
@@ -120,19 +114,19 @@ class _RequestTobaccoViewState extends State<_RequestTobaccoView> {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: borderColor, width: 1.5),
+              borderSide: BorderSide(color: borderColor.withValues(alpha: 0.6), width: 1.5),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: borderColor, width: 2.2),
+              borderSide: BorderSide(color: borderColor, width: 2.2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Colors.red, width: 1.5),
+              borderSide: const BorderSide(color: warningRed, width: 1.5),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Colors.red, width: 2.2),
+              borderSide: const BorderSide(color: warningRed, width: 2.2),
             ),
           ),
         ),

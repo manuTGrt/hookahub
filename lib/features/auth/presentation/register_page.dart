@@ -3,6 +3,7 @@ import '../../../core/constants.dart';
 import '../../../widgets/pastel_textfield.dart';
 import 'package:provider/provider.dart';
 import 'package:hookahub/features/auth/auth_provider.dart';
+import '../../../core/utils/app_toast.dart';
 
 class PastelPasswordField extends StatelessWidget {
   final TextEditingController controller;
@@ -35,7 +36,7 @@ class PastelPasswordField extends StatelessWidget {
         prefixIcon: Icon(Icons.lock_outline, color: iconColor ?? turquoiseDark),
         hintText: hintText,
         hintStyle: TextStyle(
-          color: (textColor ?? Colors.black).withOpacity(0.5),
+          color: (textColor ?? Colors.black).withValues(alpha: 0.5),
         ),
         filled: true,
         fillColor: fillColor ?? Colors.white,
@@ -559,9 +560,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           if (!mounted) return;
                           if (error != null) {
                             setState(() => _isLoading = false);
-                            ScaffoldMessenger.of(
-                              context,
-                            ).showSnackBar(SnackBar(content: Text(error)));
+                            AppToast.showError(context, error);
                             return;
                           }
                           // ensureProfile también se ejecutará al recibir la sesión
@@ -570,13 +569,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             _showErrors = false;
                             _triedRegister = false;
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Registro exitoso. Revisa tu correo si se requiere verificación.',
-                              ),
-                            ),
-                          );
+                          AppToast.showInfo(context, 'Registro exitoso. Revisa tu correo si se requiere verificación.',);
                           Navigator.pop(context);
                         },
                   child: _isLoading

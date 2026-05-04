@@ -128,7 +128,7 @@ class _CommunityPageState extends State<CommunityPage> {
                               size: 64,
                               color: Theme.of(
                                 context,
-                              ).primaryColor.withOpacity(0.5),
+                              ).primaryColor.withValues(alpha: 0.5),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -185,18 +185,18 @@ class _CommunityPageState extends State<CommunityPage> {
           provider.toggleFavoritesOnly();
         }
       },
-      selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+      selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
       checkmarkColor: Theme.of(context).primaryColor,
       labelStyle: TextStyle(
         color: isSelected
             ? Theme.of(context).primaryColor
-            : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+            : Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
       side: BorderSide(
         color: isSelected
             ? Theme.of(context).primaryColor
-            : Theme.of(context).dividerColor.withOpacity(0.3),
+            : Theme.of(context).dividerColor.withValues(alpha: 0.3),
       ),
     );
   }
@@ -244,15 +244,15 @@ class _CommunityPageState extends State<CommunityPage> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).primaryColor.withOpacity(0.15),
-              Theme.of(context).primaryColor.withOpacity(0.10),
+              Theme.of(context).primaryColor.withValues(alpha: 0.15),
+              Theme.of(context).primaryColor.withValues(alpha: 0.10),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Theme.of(context).primaryColor.withOpacity(0.4),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
             width: 1.5,
           ),
         ),
@@ -306,15 +306,15 @@ class _CommunityPageState extends State<CommunityPage> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).primaryColor.withOpacity(0.15),
-              Theme.of(context).primaryColor.withOpacity(0.10),
+              Theme.of(context).primaryColor.withValues(alpha: 0.15),
+              Theme.of(context).primaryColor.withValues(alpha: 0.10),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Theme.of(context).primaryColor.withOpacity(0.4),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
             width: 1.5,
           ),
         ),
@@ -416,7 +416,7 @@ class _CommunityPageState extends State<CommunityPage> {
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).dividerColor.withOpacity(0.5),
+                      color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),

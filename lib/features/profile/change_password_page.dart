@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/constants.dart';
+import '../../core/utils/app_toast.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -62,31 +63,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       await Future.delayed(const Duration(seconds: 2));
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Contraseña cambiada exitosamente'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
+        AppToast.showSuccess(context, 'Contraseña cambiada exitosamente');
 
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cambiar contraseña: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
+        AppToast.showError(context, 'Error al cambiar contraseña: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -116,13 +99,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         suffixIcon: IconButton(
           icon: Icon(
             obscureText ? Icons.visibility_off : Icons.visibility,
-            color: isDark ? darkNavy.withOpacity(0.6) : navy.withOpacity(0.6),
+            color: isDark ? darkNavy.withValues(alpha: 0.6) : navy.withValues(alpha: 0.6),
           ),
           onPressed: onToggleVisibility,
         ),
         hintText: hintText,
         hintStyle: TextStyle(
-          color: isDark ? darkNavy.withOpacity(0.6) : navy.withOpacity(0.5),
+          color: isDark ? darkNavy.withValues(alpha: 0.6) : navy.withValues(alpha: 0.5),
         ),
         filled: true,
         fillColor: isDark ? fieldDark : fieldLight,
@@ -178,13 +161,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? darkTurquoise.withOpacity(0.1)
-                      : turquoise.withOpacity(0.1),
+                      ? darkTurquoise.withValues(alpha: 0.1)
+                      : turquoise.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isDark
-                        ? darkTurquoise.withOpacity(0.3)
-                        : turquoise.withOpacity(0.3),
+                        ? darkTurquoise.withValues(alpha: 0.3)
+                        : turquoise.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
@@ -200,8 +183,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         'Tu nueva contraseña debe tener al menos 8 caracteres e incluir una mayúscula, una minúscula y un número.',
                         style: TextStyle(
                           color: isDark
-                              ? darkNavy.withOpacity(0.8)
-                              : navy.withOpacity(0.7),
+                              ? darkNavy.withValues(alpha: 0.8)
+                              : navy.withValues(alpha: 0.7),
                           fontSize: 14,
                         ),
                       ),

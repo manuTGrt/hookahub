@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants.dart';
 import '../../core/theme_provider.dart';
+import '../../core/utils/app_toast.dart';
 
 /// Página de configuración donde el usuario puede ajustar
 /// las preferencias de la aplicación
@@ -260,25 +261,17 @@ class SettingsPage extends StatelessWidget {
           await launchUrl(storeUrl, mode: LaunchMode.externalApplication);
         } else {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('No se pudo abrir la tienda de aplicaciones'),
-              ),
-            );
+            AppToast.showInfo(context, 'No se pudo abrir la tienda de aplicaciones');
           }
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al abrir la tienda: $e')),
-          );
+          AppToast.showError(context, 'Error al abrir la tienda: $e');
         }
       }
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Plataforma no soportada')),
-        );
+        AppToast.showInfo(context, 'Plataforma no soportada');
       }
     }
   }
@@ -358,17 +351,11 @@ class SettingsPage extends StatelessWidget {
       }
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo abrir ninguna app de correo'),
-          ),
-        );
+        AppToast.showInfo(context, 'No se pudo abrir ninguna app de correo');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al abrir correo: $e')));
+        AppToast.showError(context, 'Error al abrir correo: $e');
       }
     }
   }

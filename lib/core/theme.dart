@@ -31,7 +31,7 @@ class AppTheme {
       fillColor: fieldLight,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: turquoise.withOpacity(0.4), width: 1.5),
+        borderSide: BorderSide(color: turquoise.withValues(alpha: 0.4), width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -39,7 +39,7 @@ class AppTheme {
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: turquoise.withOpacity(0.4), width: 1.5),
+        borderSide: BorderSide(color: turquoise.withValues(alpha: 0.4), width: 1.5),
       ),
     ),
   );
@@ -74,7 +74,7 @@ class AppTheme {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(
-          color: darkTurquoise.withOpacity(0.4),
+          color: darkTurquoise.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
@@ -85,7 +85,7 @@ class AppTheme {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(
-          color: darkTurquoise.withOpacity(0.4),
+          color: darkTurquoise.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),

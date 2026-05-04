@@ -17,9 +17,11 @@ import '../../../widgets/app_segmented_control.dart';
 import 'community_provider.dart';
 import 'create_mix_page.dart';
 import '../../catalog/data/tobacco_repository.dart';
+import '../data/community_repository.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../history/presentation/history_provider.dart';
 import '../../../core/providers/database_health_provider.dart';
+import '../../../core/utils/app_toast.dart';
 
 /// Convierte una cadena a Title Case (primera letra de cada palabra en mayúscula).
 String _toTitleCase(String text) {
@@ -213,6 +215,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
     }
 
     try {
+      if (!mounted) return;
       final repository = context.read<CommunityProvider>().repository;
       final tobaccoNames = _components.map((c) => c.tobacco).toList();
 
@@ -374,7 +377,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
                         strokeWidth: 28,
                         backgroundColor: Theme.of(
                           context,
-                        ).dividerColor.withOpacity(0.15),
+                        ).dividerColor.withValues(alpha: 0.15),
                         center: _DonutCenter(mix: _currentMix),
                       ),
                     ),
@@ -519,24 +522,19 @@ class _MixDetailPageState extends State<MixDetailPage> {
     if (confirmed != true) return;
 
     try {
+      if (!mounted) return;
       final provider = context.read<CommunityProvider>();
       final ok = await provider.deleteMix(widget.mix.id);
       if (!mounted) return;
       if (ok) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Mezcla eliminada')));
+        AppToast.showSuccess(context, 'Mezcla eliminada');
         Navigator.of(context).maybePop();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo eliminar la mezcla')),
-        );
+        AppToast.showError(context, 'No se pudo eliminar la mezcla');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al eliminar la mezcla')),
-        );
+        AppToast.showError(context, 'Error al eliminar la mezcla');
       }
     }
   }
@@ -569,7 +567,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -582,8 +580,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
                   onDelete: () => _handleDeleteReview(r.id),
                   onEdit: () => _handleEditReview(r),
                 ),
-              )
-              .toList(),
+              ),
       ],
     );
   }
@@ -612,27 +609,22 @@ class _MixDetailPageState extends State<MixDetailPage> {
     if (confirmed != true) return;
 
     try {
+      if (!mounted) return;
       final repository = context.read<CommunityProvider>().repository;
       final success = await repository.deleteReview(reviewId, widget.mix.id);
 
       if (!mounted) return;
 
       if (success) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Reseña eliminada')));
+        AppToast.showSuccess(context, 'Reseña eliminada');
         await _loadReviews();
         // Ya no necesitamos llamar a _updateMixRating aquí, el repositorio lo hace
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al eliminar reseña')),
-        );
+        AppToast.showError(context, 'Error al eliminar reseña');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al eliminar reseña')),
-        );
+        AppToast.showError(context, 'Error al eliminar reseña');
       }
     }
   }
@@ -684,53 +676,28 @@ class _MixDetailPageState extends State<MixDetailPage> {
             TextButton(
               onPressed: () async {
                 if (dialogController.text.trim().isEmpty || dialogRating <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Añade comentario y puntuación'),
-                    ),
-                  );
+                  AppToast.showInfo(context, 'Añade comentario y puntuación');
                   return;
                 }
-
-                try {
-                  final repository = context
-                      .read<CommunityProvider>()
-                      .repository;
-                  final success = await repository.updateReview(
-                    reviewId: review.id,
-                    mixId: widget.mix.id,
-                    rating: dialogRating,
-                    comment: dialogController.text.trim(),
-                  );
-
-                  if (!mounted) return;
-
+                
+                final repository = CommunityRepository(SupabaseService());
+                final success = await repository.updateReview(
+                  mixId: widget.mix.id,
+                  reviewId: review.id,
+                  rating: dialogRating,
+                  comment: dialogController.text.trim(),
+                );
+                if (!context.mounted) return;
+                
+                if (success) {
+                  AppToast.showSuccess(context, 'Reseña actualizada');
                   dialogController.dispose();
                   Navigator.of(context).pop();
-
-                  if (success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Reseña actualizada')),
-                    );
-                    await _loadReviews();
-                    // Ya no necesitamos llamar a _updateMixRating aquí, el repositorio lo hace
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Error al actualizar reseña'),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    dialogController.dispose();
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Error al actualizar reseña'),
-                      ),
-                    );
-                  }
+                  // We need a way to reload reviews, wait, let's just close dialog, the parent page will probably reload or needs setState. 
+                  // Oh, wait, the original code had: await _loadReviews(); 
+                  await _loadReviews();
+                } else {
+                  AppToast.showError(context, 'Error al actualizar reseña');
                 }
               },
               child: const Text('Guardar'),
@@ -743,9 +710,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
 
   void _handleSubmitReview() {
     if (_reviewController.text.trim().isEmpty || _newRating <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Añade comentario y puntuación')),
-      );
+      AppToast.showInfo(context, 'Añade comentario y puntuación');
       return;
     }
 
@@ -767,9 +732,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
       if (!mounted) return;
 
       if (success) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Reseña publicada')));
+        AppToast.showSuccess(context, 'Reseña publicada');
 
         // Limpiar formulario
         setState(() {
@@ -780,15 +743,11 @@ class _MixDetailPageState extends State<MixDetailPage> {
         // Recargar reseñas (el repositorio ya actualizó el rating de la mezcla)
         await _loadReviews();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al publicar reseña')),
-        );
+        AppToast.showError(context, 'Error al publicar reseña');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al publicar reseña')),
-        );
+        AppToast.showError(context, 'Error al publicar reseña');
       }
     }
   }
@@ -1000,7 +959,7 @@ class _HeaderArea extends StatelessWidget {
                 Text(
                   mix.author,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: textColor.withOpacity(0.9),
+                    color: textColor.withValues(alpha: 0.9),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1050,13 +1009,13 @@ class _LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = color.withOpacity(0.12);
+    final bg = color.withValues(alpha: 0.12);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1138,7 +1097,7 @@ class _DonutPainter extends CustomPainter {
       ..strokeWidth = strokeWidth;
 
     // fondo
-    if (backgroundColor.opacity > 0) {
+    if (backgroundColor.a > 0) {
       paint.color = backgroundColor;
       canvas.drawArc(
         rect.deflate(strokeWidth / 2),
@@ -1185,7 +1144,7 @@ class _DonutCenter extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          '${mix.rating > 0 ? mix.rating.toStringAsFixed(1) : '—'}',
+          mix.rating > 0 ? mix.rating.toStringAsFixed(1) : '—',
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -1199,7 +1158,7 @@ class _DonutCenter extends StatelessWidget {
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(
               context,
-            ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+            ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -1233,7 +1192,7 @@ class _RelatedMixes extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
             ),
           ),
         ),
@@ -1286,14 +1245,14 @@ class _ReviewForm extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.06),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.2),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1383,10 +1342,10 @@ class _ReviewTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.05),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).primaryColor.withOpacity(0.12),
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
         ),
       ),
       child: Column(
@@ -1475,7 +1434,7 @@ class _ReviewTile extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(
                   context,
-                ).textTheme.bodySmall?.color?.withOpacity(0.6),
+                ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
               ),
             ),
           ),

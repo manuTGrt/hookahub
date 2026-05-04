@@ -10,6 +10,7 @@ import 'community_provider.dart';
 import '../domain/community_filters.dart';
 import '../../../core/data/supabase_service.dart';
 import 'create_mix_page.dart';
+import '../../../core/utils/app_toast.dart';
 
 class CommunityPage extends StatefulWidget {
   const CommunityPage({super.key});
@@ -150,7 +151,7 @@ class _CommunityPageState extends State<CommunityPage> {
                               size: 64,
                               color: Theme.of(
                                 context,
-                              ).primaryColor.withOpacity(0.5),
+                              ).primaryColor.withValues(alpha: 0.5),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -214,7 +215,7 @@ class _CommunityPageState extends State<CommunityPage> {
                               ?.copyWith(
                                 color: Theme.of(
                                   context,
-                                ).textTheme.bodySmall?.color?.withOpacity(0.6),
+                                ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                               ),
                         ),
                       ),
@@ -247,18 +248,18 @@ class _CommunityPageState extends State<CommunityPage> {
           provider.toggleFavoritesOnly();
         }
       },
-      selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+      selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
       checkmarkColor: Theme.of(context).primaryColor,
       labelStyle: TextStyle(
         color: isSelected
             ? Theme.of(context).primaryColor
-            : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+            : Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
       side: BorderSide(
         color: isSelected
             ? Theme.of(context).primaryColor
-            : Theme.of(context).dividerColor.withOpacity(0.3),
+            : Theme.of(context).dividerColor.withValues(alpha: 0.3),
       ),
     );
   }
@@ -276,7 +277,7 @@ class _CommunityPageState extends State<CommunityPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
-              color: Theme.of(context).primaryColor.withOpacity(0.15),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.15),
               width: 1,
             ),
           ),
@@ -343,7 +344,7 @@ class _CommunityPageState extends State<CommunityPage> {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Theme.of(context).primaryColor.withOpacity(0.08)
+                        ? Theme.of(context).primaryColor.withValues(alpha: 0.08)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -361,7 +362,7 @@ class _CommunityPageState extends State<CommunityPage> {
                               ? Theme.of(context).primaryColor
                               : Theme.of(
                                   context,
-                                ).textTheme.bodyMedium?.color?.withOpacity(0.3),
+                                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.3),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -387,7 +388,7 @@ class _CommunityPageState extends State<CommunityPage> {
                           size: 16,
                           color: Theme.of(
                             context,
-                          ).primaryColor.withOpacity(0.6),
+                          ).primaryColor.withValues(alpha: 0.6),
                         ),
                     ],
                   ),
@@ -402,20 +403,20 @@ class _CommunityPageState extends State<CommunityPage> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Theme.of(context).primaryColor.withOpacity(0.15),
-                Theme.of(context).primaryColor.withOpacity(0.10),
+                Theme.of(context).primaryColor.withValues(alpha: 0.15),
+                Theme.of(context).primaryColor.withValues(alpha: 0.10),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Theme.of(context).primaryColor.withOpacity(0.4),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -511,9 +512,7 @@ class _CommunityPageState extends State<CommunityPage> {
               );
               if (updated != null && context.mounted) {
                 context.read<CommunityProvider>().updateMix(updated);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Mezcla actualizada')),
-                );
+                AppToast.showInfo(context, 'Mezcla actualizada');
               }
             }
           : null,
@@ -544,15 +543,9 @@ class _CommunityPageState extends State<CommunityPage> {
                 if (!context.mounted) return;
                 if (success) {
                   context.read<CommunityProvider>().refresh();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Mezcla eliminada')),
-                  );
+                  AppToast.showInfo(context, 'Mezcla eliminada');
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('No se pudo eliminar la mezcla'),
-                    ),
-                  );
+                  AppToast.showError(context, 'No se pudo eliminar la mezcla');
                 }
               }
             }
@@ -626,7 +619,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: Theme.of(context).primaryColor.withOpacity(0.15),
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
@@ -661,7 +654,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                                 Icons.clear,
                                 color: Theme.of(
                                   context,
-                                ).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                                 size: 20,
                               ),
                               onPressed: () {
@@ -675,7 +668,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                         borderSide: BorderSide(
                           color: Theme.of(
                             context,
-                          ).primaryColor.withOpacity(0.3),
+                          ).primaryColor.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
@@ -683,7 +676,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                         borderSide: BorderSide(
                           color: Theme.of(
                             context,
-                          ).primaryColor.withOpacity(0.3),
+                          ).primaryColor.withValues(alpha: 0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -750,7 +743,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                                                 .textTheme
                                                 .bodyMedium
                                                 ?.color
-                                                ?.withOpacity(0.5),
+                                                ?.withValues(alpha: 0.5),
                                           ),
                                     ),
                                   ),
@@ -799,7 +792,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).primaryColor.withOpacity(0.08)
+              ? Theme.of(context).primaryColor.withValues(alpha: 0.08)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
@@ -814,7 +807,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                   ? Theme.of(context).primaryColor
                   : Theme.of(
                       context,
-                    ).textTheme.bodyMedium?.color?.withOpacity(0.3),
+                    ).textTheme.bodyMedium?.color?.withValues(alpha: 0.3),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -832,7 +825,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
               Icon(
                 icon,
                 size: 16,
-                color: Theme.of(context).primaryColor.withOpacity(0.6),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.6),
               ),
           ],
         ),
@@ -854,20 +847,20 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).primaryColor.withOpacity(0.15),
-              Theme.of(context).primaryColor.withOpacity(0.10),
+              Theme.of(context).primaryColor.withValues(alpha: 0.15),
+              Theme.of(context).primaryColor.withValues(alpha: 0.10),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Theme.of(context).primaryColor.withOpacity(0.4),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

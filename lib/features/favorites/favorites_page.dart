@@ -11,6 +11,7 @@ import '../community/presentation/mix_detail_page.dart';
 import '../community/presentation/create_mix_page.dart';
 import '../../core/data/supabase_service.dart';
 import 'favorites_provider.dart';
+import '../../core/utils/app_toast.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -100,11 +101,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                     );
                                 if (updated != null && context.mounted) {
                                   fav.updateFavorite(updated);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Mezcla actualizada'),
-                                    ),
-                                  );
+                                  AppToast.showInfo(context, 'Mezcla actualizada');
                                 }
                               }
                             : null,
@@ -141,19 +138,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                   if (!context.mounted) return;
                                   if (success) {
                                     fav.removeFavorite(mix.id);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Mezcla eliminada'),
-                                      ),
-                                    );
+                                    AppToast.showInfo(context, 'Mezcla eliminada');
                                   } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'No se pudo eliminar la mezcla',
-                                        ),
-                                      ),
-                                    );
+                                    AppToast.showError(context, 'No se pudo eliminar la mezcla');
                                   }
                                 }
                               }
@@ -210,8 +197,8 @@ class _Top5Section extends StatelessWidget {
                 Icons.info_outline,
                 size: 18,
                 color: isDark
-                    ? darkNavy.withOpacity(0.7)
-                    : navy.withOpacity(0.6),
+                    ? darkNavy.withValues(alpha: 0.7)
+                    : navy.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -272,11 +259,7 @@ class _Top5Section extends StatelessWidget {
                                   context
                                       .read<FavoritesProvider>()
                                       .updateFavorite(updated);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Mezcla actualizada'),
-                                    ),
-                                  );
+                                  AppToast.showInfo(context, 'Mezcla actualizada');
                                 }
                               }
                             : null,
@@ -312,22 +295,10 @@ class _Top5Section extends StatelessWidget {
                                   );
                                   if (!context.mounted) return;
                                   if (success) {
-                                    context
-                                        .read<FavoritesProvider>()
-                                        .removeFavorite(mix.id);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Mezcla eliminada'),
-                                      ),
-                                    );
+                                    context.read<FavoritesProvider>().removeFavorite(mix.id);
+                                    AppToast.showInfo(context, 'Mezcla eliminada');
                                   } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'No se pudo eliminar la mezcla',
-                                        ),
-                                      ),
-                                    );
+                                    AppToast.showError(context, 'No se pudo eliminar la mezcla');
                                   }
                                 }
                               }
@@ -361,13 +332,13 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark
-            ? darkBg.withOpacity(0.3)
-            : Theme.of(context).primaryColor.withOpacity(0.05),
+            ? darkBg.withValues(alpha: 0.3)
+            : Theme.of(context).primaryColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isDark
-              ? darkTurquoise.withOpacity(0.2)
-              : Theme.of(context).primaryColor.withOpacity(0.2),
+              ? darkTurquoise.withValues(alpha: 0.2)
+              : Theme.of(context).primaryColor.withValues(alpha: 0.2),
         ),
       ),
       child: Row(

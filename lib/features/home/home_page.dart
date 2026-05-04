@@ -44,15 +44,15 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Theme.of(context).primaryColor.withOpacity(0.1),
-                    Theme.of(context).primaryColor.withOpacity(0.05),
+                    Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    Theme.of(context).primaryColor.withValues(alpha: 0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                 ),
               ),
               child: Column(
@@ -71,7 +71,7 @@ class _HomePageState extends State<HomePage> {
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Theme.of(
                         context,
-                      ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -169,10 +169,10 @@ class _HomePageState extends State<HomePage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.05),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                 ),
               ),
               child: Consumer<HomeStatsProvider>(
@@ -230,7 +230,7 @@ class _HomePageState extends State<HomePage> {
                                 ?.copyWith(
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.error.withOpacity(0.8),
+                                  ).colorScheme.error.withValues(alpha: 0.8),
                                 ),
                           ),
                         ),
@@ -283,31 +283,31 @@ class _HomePageState extends State<HomePage> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isDark
-                  ? [color.withOpacity(0.1), color.withOpacity(0.05)]
+                  ? [color.withValues(alpha: 0.1), color.withValues(alpha: 0.05)]
                   : [
-                      color.withOpacity(0.08),
-                      color.withOpacity(0.15),
-                      color.withOpacity(0.08),
+                      color.withValues(alpha: 0.08),
+                      color.withValues(alpha: 0.15),
+                      color.withValues(alpha: 0.08),
                     ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? color.withOpacity(0.3) : color.withOpacity(0.4),
+              color: isDark ? color.withValues(alpha: 0.3) : color.withValues(alpha: 0.4),
               width: 1.5,
             ),
             boxShadow: isDark
                 ? null
                 : [
                     BoxShadow(
-                      color: color.withOpacity(0.2),
+                      color: color.withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                       spreadRadius: 0,
                     ),
                     BoxShadow(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       blurRadius: 8,
                       offset: const Offset(0, -2),
                       spreadRadius: 0,
@@ -318,8 +318,8 @@ class _HomePageState extends State<HomePage> {
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
-              splashColor: color.withOpacity(0.2),
-              highlightColor: color.withOpacity(0.1),
+              splashColor: color.withValues(alpha: 0.2),
+              highlightColor: color.withValues(alpha: 0.1),
               onTap: onTap,
               child: Padding(
                 padding: EdgeInsets.all(cardPadding),
@@ -331,14 +331,14 @@ class _HomePageState extends State<HomePage> {
                       padding: EdgeInsets.all(containerPadding),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? color.withOpacity(0.2)
-                            : color.withOpacity(0.15),
+                            ? color.withValues(alpha: 0.2)
+                            : color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: isDark
                             ? null
                             : [
                                 BoxShadow(
-                                  color: color.withOpacity(0.3),
+                                  color: color.withValues(alpha: 0.3),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -347,7 +347,7 @@ class _HomePageState extends State<HomePage> {
                       child: Icon(
                         icon,
                         size: iconSize,
-                        color: isDark ? color.withOpacity(0.9) : color,
+                        color: isDark ? color.withValues(alpha: 0.9) : color,
                       ),
                     ),
                     SizedBox(height: iconBottomSpacing),
@@ -371,7 +371,7 @@ class _HomePageState extends State<HomePage> {
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(
                           context,
-                        ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                         fontWeight: FontWeight.w500,
                         height: 1.2,
                       ),
@@ -407,7 +407,7 @@ class _HomePageState extends State<HomePage> {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+              ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -504,7 +504,7 @@ class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
                           Theme.of(context).scaffoldBackgroundColor,
                           Theme.of(
                             context,
-                          ).scaffoldBackgroundColor.withOpacity(0.0),
+                          ).scaffoldBackgroundColor.withValues(alpha: 0.0),
                         ],
                       ),
                     ),
@@ -528,7 +528,7 @@ class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
                           Theme.of(context).scaffoldBackgroundColor,
                           Theme.of(
                             context,
-                          ).scaffoldBackgroundColor.withOpacity(0.0),
+                          ).scaffoldBackgroundColor.withValues(alpha: 0.0),
                         ],
                       ),
                     ),

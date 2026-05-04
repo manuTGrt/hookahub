@@ -60,9 +60,9 @@ class MixCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            color: mixColor.withOpacity(0.05),
+            color: mixColor.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: mixColor.withOpacity(0.2)),
+            border: Border.all(color: mixColor.withValues(alpha: 0.2)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -109,7 +109,7 @@ class MixCard extends StatelessWidget {
                                       .textTheme
                                       .bodyMedium
                                       ?.color
-                                      ?.withOpacity(0.6),
+                                      ?.withValues(alpha: 0.6),
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -164,7 +164,7 @@ class MixCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: Theme.of(
                       context,
-                    ).textTheme.bodyLarge?.color?.withOpacity(0.8),
+                    ).textTheme.bodyLarge?.color?.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -179,7 +179,7 @@ class MixCard extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: mixColor.withOpacity(0.2),
+                            color: mixColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -231,7 +231,7 @@ class MixCard extends StatelessWidget {
                                             .textTheme
                                             .bodyMedium
                                             ?.color
-                                            ?.withOpacity(0.5),
+                                            ?.withValues(alpha: 0.5),
                                       ),
                                   overflow: TextOverflow.ellipsis,
                                   softWrap: false,
@@ -255,7 +255,7 @@ class MixCard extends StatelessWidget {
                                             .textTheme
                                             .bodyMedium
                                             ?.color
-                                            ?.withOpacity(0.6),
+                                            ?.withValues(alpha: 0.6),
                                       ),
                                   overflow: TextOverflow.ellipsis,
                                   softWrap: false,

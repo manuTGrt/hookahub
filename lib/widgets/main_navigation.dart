@@ -10,6 +10,7 @@ import '../features/community/presentation/community_page.dart';
 import '../features/community/presentation/community_provider.dart';
 import '../features/community/domain/community_filters.dart';
 import '../features/community/presentation/create_mix_page.dart';
+import '../features/catalog/presentation/request_tobacco_page.dart';
 import '../features/profile/profile_page.dart';
 import '../features/profile/presentation/profile_provider.dart';
 import '../core/providers/database_health_provider.dart';
@@ -148,10 +149,10 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                           ? [
                               Theme.of(
                                 context,
-                              ).scaffoldBackgroundColor.withOpacity(0.95),
+                              ).scaffoldBackgroundColor.withValues(alpha: 0.95),
                               Theme.of(
                                 context,
-                              ).scaffoldBackgroundColor.withOpacity(0.95),
+                              ).scaffoldBackgroundColor.withValues(alpha: 0.95),
                             ]
                           : [
                               Theme.of(context).primaryColor,
@@ -163,8 +164,8 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                     boxShadow: [
                       BoxShadow(
                         color: isDark
-                            ? Theme.of(context).primaryColor.withOpacity(0.2)
-                            : Theme.of(context).primaryColor.withOpacity(0.3),
+                            ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
+                            : Theme.of(context).primaryColor.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -184,8 +185,8 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                 color: isDark
                                     ? Theme.of(
                                         context,
-                                      ).primaryColor.withOpacity(0.2)
-                                    : Colors.white.withOpacity(0.2),
+                                      ).primaryColor.withValues(alpha: 0.2)
+                                    : Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: IconButton(
@@ -278,7 +279,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                           filled: true,
                                           fillColor: isDark
                                               ? Theme.of(context).cardColor
-                                              : Colors.white.withOpacity(0.95),
+                                              : Colors.white.withValues(alpha: 0.95),
                                           prefixIcon: Icon(
                                             Icons.search,
                                             color: Theme.of(
@@ -310,7 +311,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                             borderSide: BorderSide(
                                               color: Theme.of(
                                                 context,
-                                              ).dividerColor.withOpacity(0.3),
+                                              ).dividerColor.withValues(alpha: 0.3),
                                             ),
                                           ),
                                           enabledBorder: OutlineInputBorder(
@@ -320,7 +321,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                             borderSide: BorderSide(
                                               color: Theme.of(
                                                 context,
-                                              ).dividerColor.withOpacity(0.2),
+                                              ).dividerColor.withValues(alpha: 0.2),
                                             ),
                                           ),
                                           focusedBorder: OutlineInputBorder(
@@ -361,7 +362,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                                   Shadow(
                                                     color: Theme.of(context)
                                                         .primaryColor
-                                                        .withOpacity(0.3),
+                                                        .withValues(alpha: 0.3),
                                                     blurRadius: 2,
                                                     offset: const Offset(0, 1),
                                                   ),
@@ -386,8 +387,8 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                       color: isDark
                                           ? Theme.of(
                                               context,
-                                            ).primaryColor.withOpacity(0.2)
-                                          : Colors.white.withOpacity(0.2),
+                                            ).primaryColor.withValues(alpha: 0.2)
+                                          : Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: IconButton(
@@ -412,14 +413,46 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                   ),
                                   const SizedBox(width: 8),
                                 ],
+                                // Botón de solicitar tabaco (solo en pestaña Catálogo)
+                                if (_currentIndex == 1 && !_isSearching) ...[
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? Theme.of(
+                                              context,
+                                            ).primaryColor.withValues(alpha: 0.2)
+                                          : Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: IconButton(
+                                      tooltip: 'Solicitar un tabaco',
+                                      icon: Icon(
+                                        Icons.playlist_add_rounded,
+                                        color: isDark
+                                            ? Theme.of(context).primaryColor
+                                            : Colors.white,
+                                        size: 26,
+                                      ),
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const RequestTobaccoPage(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
                                 // Botón de búsqueda
                                 Container(
                                   decoration: BoxDecoration(
                                     color: isDark
                                         ? Theme.of(
                                             context,
-                                          ).primaryColor.withOpacity(0.2)
-                                        : Colors.white.withOpacity(0.2),
+                                          ).primaryColor.withValues(alpha: 0.2)
+                                        : Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: IconButton(
@@ -476,8 +509,8 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                       color: isDark
                                           ? Theme.of(
                                               context,
-                                            ).primaryColor.withOpacity(0.2)
-                                          : Colors.white.withOpacity(0.2),
+                                            ).primaryColor.withValues(alpha: 0.2)
+                                          : Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: NotificationIcon(isDark: isDark),
@@ -514,7 +547,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
             color: Theme.of(context).scaffoldBackgroundColor,
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).primaryColor.withOpacity(0.2),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
@@ -651,7 +684,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
           color: isActive
-              ? Theme.of(context).primaryColor.withOpacity(0.1)
+              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -666,7 +699,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                   ? Theme.of(context).primaryColor
                   : Theme.of(
                       context,
-                    ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                    ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
             ),
             const SizedBox(height: 4),
             Text(
@@ -679,7 +712,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                     ? Theme.of(context).primaryColor
                     : Theme.of(
                         context,
-                      ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
               ),
             ),
           ],

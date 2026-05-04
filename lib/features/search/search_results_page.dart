@@ -49,8 +49,8 @@ class SearchResultsPage extends StatelessWidget {
             gradient: LinearGradient(
               colors: isDark
                   ? [
-                      Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
-                      Theme.of(context).scaffoldBackgroundColor.withOpacity(0.95),
+                      Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.95),
+                      Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.95),
                     ]
                   : [
                       Theme.of(context).primaryColor,
@@ -62,8 +62,8 @@ class SearchResultsPage extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: isDark
-                    ? Theme.of(context).primaryColor.withOpacity(0.2)
-                    : Theme.of(context).primaryColor.withOpacity(0.3),
+                    ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
+                    : Theme.of(context).primaryColor.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -80,8 +80,8 @@ class SearchResultsPage extends StatelessWidget {
                   Container(
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Theme.of(context).primaryColor.withOpacity(0.2)
-                          : Colors.white.withOpacity(0.2),
+                          ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
+                          : Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
@@ -120,7 +120,7 @@ class SearchResultsPage extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: TabBar(
@@ -129,7 +129,7 @@ class SearchResultsPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         color: Theme.of(context).primaryColor,
                       ),
-                      labelColor: isDark ? Colors.black : Colors.white,
+                      labelColor: Colors.white,
                       unselectedLabelColor: Theme.of(context).textTheme.bodyLarge?.color,
                       labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                       dividerColor: Colors.transparent,
@@ -177,10 +177,10 @@ class SearchResultsPage extends StatelessWidget {
           vertical: 12,
         ),
         decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor.withOpacity(0.08),
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Theme.of(context).primaryColor.withOpacity(0.2),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
           ),
         ),
         child: Row(
@@ -212,7 +212,7 @@ class SearchResultsPage extends StatelessWidget {
                             .textTheme
                             .bodyMedium
                             ?.color
-                            ?.withOpacity(0.7),
+                            ?.withValues(alpha: 0.7),
                       ),
                     ),
                     TextSpan(
@@ -284,9 +284,9 @@ class SearchResultsPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            color: color.withOpacity(0.05),
+            color: color.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.2)),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
           ),
           child: Padding(
             padding: EdgeInsets.all(cardPadding),
@@ -331,7 +331,7 @@ class SearchResultsPage extends StatelessWidget {
                         child: Text(
                           tobacco.brand,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                               ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -364,7 +364,7 @@ class SearchResultsPage extends StatelessWidget {
                               child: Text(
                                 '(${tobacco.reviews})',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                                     ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -378,7 +378,7 @@ class SearchResultsPage extends StatelessWidget {
                               child: Text(
                                 'Sin valoraciones',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                                     ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -441,7 +441,7 @@ class SearchResultsPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.15),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: Theme.of(context).primaryColor, size: 20),
@@ -458,7 +458,7 @@ class SearchResultsPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -483,13 +483,13 @@ class SearchResultsPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.search_off,
                 size: 64,
-                color: Theme.of(context).primaryColor.withOpacity(0.5),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 24),
@@ -505,7 +505,7 @@ class SearchResultsPage extends StatelessWidget {
             Text(
               'Intenta buscar con otras palabras clave o verifica la ortografía',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),

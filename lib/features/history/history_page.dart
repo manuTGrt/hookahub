@@ -8,6 +8,7 @@ import '../community/presentation/mix_detail_page.dart';
 import '../favorites/favorites_provider.dart';
 import 'presentation/history_provider.dart';
 import 'domain/visit_entry.dart';
+import '../../core/utils/app_toast.dart';
 
 /// Página que muestra el historial de mezclas visitadas en los últimos 2 días.
 /// Las mezclas se agrupan por día (Hoy, Ayer, Hace 2 días) y se ordenan
@@ -65,7 +66,7 @@ class _HistoryPageState extends State<HistoryPage> {
             Icon(
               Icons.error_outline,
               size: 64,
-              color: isDark ? darkNavy.withOpacity(0.5) : navy.withOpacity(0.5),
+              color: isDark ? darkNavy.withValues(alpha: 0.5) : navy.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -77,8 +78,8 @@ class _HistoryPageState extends State<HistoryPage> {
               historyProvider.error!,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: isDark
-                    ? darkNavy.withOpacity(0.7)
-                    : navy.withOpacity(0.6),
+                    ? darkNavy.withValues(alpha: 0.7)
+                    : navy.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),
@@ -102,7 +103,7 @@ class _HistoryPageState extends State<HistoryPage> {
             Icon(
               Icons.history,
               size: 80,
-              color: isDark ? darkNavy.withOpacity(0.5) : navy.withOpacity(0.5),
+              color: isDark ? darkNavy.withValues(alpha: 0.5) : navy.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -118,8 +119,8 @@ class _HistoryPageState extends State<HistoryPage> {
                 'Las mezclas que visites aparecerán aquí',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: isDark
-                      ? darkNavy.withOpacity(0.7)
-                      : navy.withOpacity(0.6),
+                      ? darkNavy.withValues(alpha: 0.7)
+                      : navy.withValues(alpha: 0.6),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -167,8 +168,8 @@ class _HistoryPageState extends State<HistoryPage> {
                       '(${group.value.length})',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: isDark
-                            ? darkNavy.withOpacity(0.6)
-                            : navy.withOpacity(0.5),
+                            ? darkNavy.withValues(alpha: 0.6)
+                            : navy.withValues(alpha: 0.5),
                       ),
                     ),
                   ],
@@ -206,16 +207,16 @@ class _HistoryPageState extends State<HistoryPage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
-              ? [darkTurquoise.withOpacity(0.2), darkNavy.withOpacity(0.1)]
-              : [turquoise.withOpacity(0.1), turquoiseDark.withOpacity(0.05)],
+              ? [darkTurquoise.withValues(alpha: 0.2), darkNavy.withValues(alpha: 0.1)]
+              : [turquoise.withValues(alpha: 0.1), turquoiseDark.withValues(alpha: 0.05)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isDark
-              ? darkTurquoise.withOpacity(0.3)
-              : turquoise.withOpacity(0.2),
+              ? darkTurquoise.withValues(alpha: 0.3)
+              : turquoise.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -242,8 +243,8 @@ class _HistoryPageState extends State<HistoryPage> {
                   'Visitadas en los últimos 2 días',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isDark
-                        ? darkNavy.withOpacity(0.7)
-                        : navy.withOpacity(0.6),
+                        ? darkNavy.withValues(alpha: 0.7)
+                        : navy.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -332,16 +333,9 @@ class _HistoryPageState extends State<HistoryPage> {
               final success = await provider.clearAll();
 
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      success
+                AppToast.showError(context, success
                           ? 'Historial borrado correctamente'
-                          : 'Error al borrar el historial',
-                    ),
-                    backgroundColor: success ? Colors.green : Colors.red,
-                  ),
-                );
+                          : 'Error al borrar el historial',);
               }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -357,16 +351,9 @@ class _HistoryPageState extends State<HistoryPage> {
     final deletedCount = await provider.clearOld(days: 7);
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            deletedCount > 0
+      AppToast.showSuccess(context, deletedCount > 0
                 ? 'Se eliminaron $deletedCount ${deletedCount == 1 ? 'entrada antigua' : 'entradas antiguas'}'
-                : 'No hay entradas antiguas para eliminar',
-          ),
-          backgroundColor: deletedCount > 0 ? Colors.green : Colors.orange,
-        ),
-      );
+                : 'No hay entradas antiguas para eliminar',);
     }
   }
 }

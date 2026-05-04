@@ -35,7 +35,7 @@ class PastelTextField extends StatelessWidget {
         prefixIcon: Icon(icon, color: iconColor ?? turquoiseDark),
         hintText: hintText,
         hintStyle: TextStyle(
-          color: (textColor ?? Colors.black).withOpacity(0.5),
+          color: (textColor ?? Colors.black).withValues(alpha: 0.5),
         ),
         filled: true,
         fillColor: fillColor ?? Colors.white,

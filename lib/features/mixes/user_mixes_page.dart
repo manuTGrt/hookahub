@@ -9,6 +9,7 @@ import '../community/data/community_repository.dart';
 import 'presentation/user_mixes_provider.dart';
 import '../../core/data/supabase_service.dart';
 import '../../core/models/mix.dart';
+import '../../core/utils/app_toast.dart';
 
 class UserMixesPage extends StatefulWidget {
   const UserMixesPage({super.key});
@@ -180,11 +181,7 @@ class _UserMixesPageState extends State<UserMixesPage> {
                                   );
                               if (updated != null && context.mounted) {
                                 provider.refresh();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Mezcla actualizada'),
-                                  ),
-                                );
+                                AppToast.showInfo(context, 'Mezcla actualizada');
                               }
                             },
                             onDelete: () async {
@@ -219,19 +216,9 @@ class _UserMixesPageState extends State<UserMixesPage> {
                                 if (!context.mounted) return;
                                 if (success) {
                                   provider.refresh();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Mezcla eliminada'),
-                                    ),
-                                  );
+                                  AppToast.showInfo(context, 'Mezcla eliminada');
                                 } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'No se pudo eliminar la mezcla',
-                                      ),
-                                    ),
-                                  );
+                                  AppToast.showInfo(context, 'No se pudo eliminar la mezcla',);
                                 }
                               }
                             },
@@ -288,7 +275,7 @@ class _EmptyMyMixesState extends StatelessWidget {
             Icon(
               Icons.science_outlined,
               size: 64,
-              color: Theme.of(context).primaryColor.withOpacity(0.5),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(

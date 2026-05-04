@@ -8,6 +8,7 @@ import '../../community/presentation/mix_detail_page.dart';
 import '../../../core/models/mix.dart';
 import '../../catalog/tobacco_detail_page.dart';
 import '../../catalog/presentation/providers/catalog_provider.dart';
+import '../../../core/utils/app_toast.dart';
 
 /// Página completa de notificaciones
 class NotificationsPage extends StatefulWidget {
@@ -65,14 +66,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 onPressed: () async {
                   await provider.markAllAsRead();
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Todas las notificaciones marcadas como leídas',
-                        ),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    AppToast.showInfo(context, 'Todas las notificaciones marcadas como leídas',);
                   }
                 },
               );
@@ -106,12 +100,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 if (confirmed == true && mounted) {
                   await context.read<NotificationsProvider>().deleteAllRead();
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Notificaciones eliminadas'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    AppToast.showInfo(context, 'Notificaciones eliminadas');
                   }
                 }
               }
@@ -148,8 +137,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       Icons.error_outline,
                       size: 64,
                       color: isDark
-                          ? darkNavy.withOpacity(0.5)
-                          : navy.withOpacity(0.5),
+                          ? darkNavy.withValues(alpha: 0.5)
+                          : navy.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -163,8 +152,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       provider.error!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: isDark
-                            ? darkNavy.withOpacity(0.7)
-                            : navy.withOpacity(0.6),
+                            ? darkNavy.withValues(alpha: 0.7)
+                            : navy.withValues(alpha: 0.6),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -190,8 +179,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     Icons.notifications_none,
                     size: 80,
                     color: isDark
-                        ? darkNavy.withOpacity(0.5)
-                        : navy.withOpacity(0.5),
+                        ? darkNavy.withValues(alpha: 0.5)
+                        : navy.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -205,8 +194,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     'Te notificaremos cuando haya actividad',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: isDark
-                          ? darkNavy.withOpacity(0.7)
-                          : navy.withOpacity(0.6),
+                          ? darkNavy.withValues(alpha: 0.7)
+                          : navy.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -301,8 +290,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
         if (tobaccoId != null) {
           // Mostrar pequeño feedback visual si tarda
-          final scaffold = ScaffoldMessenger.of(context);
-
           final tobacco = await context.read<CatalogProvider>().getTobaccoById(
             tobaccoId,
           );
@@ -316,31 +303,16 @@ class _NotificationsPageState extends State<NotificationsPage> {
               ),
             );
           } else {
-            scaffold.showSnackBar(
-              const SnackBar(
-                content: Text('El tabaco ya no se encuentra disponible'),
-                duration: Duration(seconds: 2),
-              ),
-            );
+            AppToast.showInfo(context, 'El tabaco ya no se encuentra disponible');
           }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No se pudo abrir el tabaco (datos incompletos)'),
-              duration: Duration(seconds: 2),
-            ),
-          );
+          AppToast.showInfo(context, 'No se pudo abrir el tabaco (datos incompletos)');
         }
         break;
 
       default:
         // Para otros tipos, mostrar mensaje
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Notificación: ${notification.title}'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        AppToast.showInfo(context, 'Notificación: ${notification.title}');
     }
   }
 }
@@ -381,15 +353,15 @@ class NotificationTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: notification.isRead
-                ? (isDark ? darkNavy.withOpacity(0.2) : navy.withOpacity(0.1))
+                ? (isDark ? darkNavy.withValues(alpha: 0.2) : navy.withValues(alpha: 0.1))
                 : (isDark
-                      ? darkTurquoise.withOpacity(0.4)
-                      : turquoise.withOpacity(0.3)),
+                      ? darkTurquoise.withValues(alpha: 0.4)
+                      : turquoise.withValues(alpha: 0.3)),
             width: notification.isRead ? 1 : 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: (isDark ? Colors.black : navy).withOpacity(0.05),
+              color: (isDark ? Colors.black : navy).withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -410,7 +382,7 @@ class NotificationTile extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: notification.color.withOpacity(0.15),
+                      color: notification.color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -460,8 +432,8 @@ class NotificationTile extends StatelessWidget {
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: isDark
-                                    ? darkNavy.withOpacity(0.8)
-                                    : navy.withOpacity(0.7),
+                                    ? darkNavy.withValues(alpha: 0.8)
+                                    : navy.withValues(alpha: 0.7),
                               ),
                         ),
                         const SizedBox(height: 8),
@@ -471,8 +443,8 @@ class NotificationTile extends StatelessWidget {
                               Icons.access_time,
                               size: 14,
                               color: isDark
-                                  ? darkNavy.withOpacity(0.6)
-                                  : navy.withOpacity(0.5),
+                                  ? darkNavy.withValues(alpha: 0.6)
+                                  : navy.withValues(alpha: 0.5),
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -483,8 +455,8 @@ class NotificationTile extends StatelessWidget {
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: isDark
-                                        ? darkNavy.withOpacity(0.6)
-                                        : navy.withOpacity(0.5),
+                                        ? darkNavy.withValues(alpha: 0.6)
+                                        : navy.withValues(alpha: 0.5),
                                   ),
                             ),
                           ],
