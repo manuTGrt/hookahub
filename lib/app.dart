@@ -27,6 +27,7 @@ import 'features/catalog/data/tobacco_repository.dart';
 import 'features/catalog/presentation/providers/catalog_provider.dart';
 import 'features/notifications/data/notifications_repository.dart';
 import 'features/notifications/presentation/notifications_provider.dart';
+import 'features/onboarding/presentation/onboarding_provider.dart';
 import 'widgets/database_banner.dart';
 import 'l10n/app_localizations.dart';
 
@@ -38,6 +39,7 @@ class HookahubApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => OnboardingProvider()),
         ChangeNotifierProvider(
           create: (_) => DatabaseHealthProvider(
             healthService: DatabaseHealthService(SupabaseService()),
