@@ -2,7 +2,7 @@ name: hookahub
 description: "Aplicación para encontrar y compartir las mejores mezclas de cachimba."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -36,32 +36,32 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  
+
   # Provider for state management
   provider: ^6.1.2
-  
+
   # SharedPreferences for storing user preferences
   shared_preferences: ^2.2.3
-  
+
   # Internationalization
   intl: ^0.20.2
-  
+
   # Sharing
-  share_plus: ^10.0.2
-  
+  share_plus: ^13.3.0
+
   # URL Launcher for opening external links
   url_launcher: ^6.3.1
-  
+
   # Cached network images for better performance
   cached_network_image: ^3.3.1
-  
+
   flutter_native_splash: ^2.4.6
   supabase_flutter: ^2.10.3
-  connectivity_plus: ^6.0.5
+  connectivity_plus: ^7.3.1
   flutter_dotenv: ^6.0.0
   image_picker: ^1.1.2
-  file_picker: ^8.0.3
-  image_cropper: ^8.1.0
+  file_picker: ^12.1.2
+  image_cropper: ^12.2.1
   flutter_image_compress: ^2.3.0
   path_provider: ^2.1.4
   path: ^1.8.3
@@ -80,10 +80,10 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
-  
+  flutter_lints: ^6.0.0
+
   # Plugin para generar iconos automáticamente
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.4
 
 # Configuración del icono de la aplicación
 flutter_launcher_icons:
@@ -128,12 +128,11 @@ flutter_native_splash:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-  
+
   # Enable generation of localized Strings from arb files
   generate: true
 

@@ -145,7 +145,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _onBirthDateChanged(picked);
       } else {
         if (mounted) {
-          AppToast.showError(context, 'Debes ser mayor de 18 años para usar esta aplicación',);
+          AppToast.showError(
+            context,
+            'Debes ser mayor de 18 años para usar esta aplicación',
+          );
         }
       }
     }
@@ -172,12 +175,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
         return picked?.path;
       } else {
-        final result = await fp.FilePicker.platform.pickFiles(
-          type: fp.FileType.image,
-          allowMultiple: false,
-          withData: false,
-        );
-        return result?.files.single.path;
+        final file = await fp.FilePicker.pickFile(type: fp.FileType.image);
+        return file?.path;
       }
     } catch (_) {
       return null;
@@ -357,14 +356,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                       ? (isDark ? darkTurquoise : turquoise)
                                       : (isDark
                                             ? darkBg.withValues(alpha: 0.5)
-                                            : Colors.grey.withValues(alpha: 0.1)),
+                                            : Colors.grey.withValues(
+                                                alpha: 0.1,
+                                              )),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
                                         ? (isDark ? darkTurquoise : turquoise)
                                         : (isDark
                                               ? darkNavy.withValues(alpha: 0.2)
-                                              : Colors.grey.withValues(alpha: 0.3)),
+                                              : Colors.grey.withValues(
+                                                  alpha: 0.3,
+                                                )),
                                     width: 2,
                                   ),
                                 ),
@@ -420,7 +423,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           } catch (e) {
                             if (!mounted) return;
                             setState(() => _isLoading = false);
-                            AppToast.showInfo(context, 'No se pudo procesar la imagen');
+                            AppToast.showInfo(
+                              context,
+                              'No se pudo procesar la imagen',
+                            );
                           }
                         },
                       ),
@@ -551,7 +557,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           content: Text(
             '¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer y perderás todos tus datos.',
             style: TextStyle(
-              color: isDark ? darkNavy.withValues(alpha: 0.8) : navy.withValues(alpha: 0.7),
+              color: isDark
+                  ? darkNavy.withValues(alpha: 0.8)
+                  : navy.withValues(alpha: 0.7),
             ),
           ),
           actions: [
@@ -570,7 +578,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
               onPressed: () {
                 Navigator.of(context).pop();
                 // Aquí implementarías la lógica de eliminación
-                AppToast.showInfo(context, 'Funcionalidad de eliminación próximamente');
+                AppToast.showInfo(
+                  context,
+                  'Funcionalidad de eliminación próximamente',
+                );
               },
               child: const Text(
                 'Eliminar',
