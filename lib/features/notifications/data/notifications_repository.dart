@@ -1,5 +1,4 @@
 import 'package:hookahub/core/utils/app_logger.dart';
-import 'package:flutter/foundation.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/notification.dart';
 

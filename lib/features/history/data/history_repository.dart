@@ -1,5 +1,4 @@
 import 'package:hookahub/core/utils/app_logger.dart';
-import 'package:flutter/material.dart';
 import '../../../core/data/supabase_service.dart';
 import '../domain/visit_entry.dart';
 

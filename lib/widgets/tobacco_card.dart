@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'tobacco_image.dart';
 
 /// Tarjeta de tabaco reutilizable con aspecto similar a MixCard, pero
 /// mostrando lista de sabores en lugar de ingredientes de mezcla.
@@ -29,13 +28,13 @@ class TobaccoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String _toTitleCase(String input) {
+    String toTitleCase(String input) {
       if (input.trim().isEmpty) return input.trim();
       return input.trim().substring(0, 1).toUpperCase() +
           input.trim().substring(1).toLowerCase();
     }
 
-    String _toTitleCaseSpaces(String input) {
+    String toTitleCaseSpaces(String input) {
       if (input.trim().isEmpty) return input.trim();
       final buffer = StringBuffer();
       bool capitalizeNext = true;
@@ -90,7 +89,7 @@ class TobaccoCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _toTitleCase(name),
+                        toTitleCase(name),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
@@ -102,7 +101,7 @@ class TobaccoCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        _toTitleCase(brand),
+                        toTitleCase(brand),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(
                             context,
@@ -114,7 +113,7 @@ class TobaccoCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (trailing != null) trailing!,
+                ?trailing,
               ],
             ),
             const SizedBox(height: 12),
@@ -130,7 +129,7 @@ class TobaccoCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                _toTitleCase(description!),
+                toTitleCase(description!),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ] else if (flavors != null && flavors!.isNotEmpty) ...[
@@ -159,7 +158,7 @@ class TobaccoCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          _toTitleCaseSpaces(f),
+                          toTitleCaseSpaces(f),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 fontWeight: FontWeight.w500,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/models/tobacco.dart';
 import '../../core/models/mix.dart';
-import '../../widgets/tobacco_card.dart';
 import '../../widgets/tobacco_image.dart';
 import '../../widgets/mix_card.dart';
 import '../catalog/tobacco_detail_page.dart';
@@ -49,8 +48,12 @@ class SearchResultsPage extends StatelessWidget {
             gradient: LinearGradient(
               colors: isDark
                   ? [
-                      Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.95),
-                      Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.95),
+                      Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor.withValues(alpha: 0.95),
+                      Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor.withValues(alpha: 0.95),
                     ]
                   : [
                       Theme.of(context).primaryColor,
@@ -80,14 +83,18 @@ class SearchResultsPage extends StatelessWidget {
                   Container(
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
+                          ? Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
                       icon: Icon(
                         Icons.arrow_back,
-                        color: isDark ? Theme.of(context).primaryColor : Colors.white,
+                        color: isDark
+                            ? Theme.of(context).primaryColor
+                            : Colors.white,
                         size: 26,
                       ),
                       onPressed: () => Navigator.of(context).pop(),
@@ -100,7 +107,9 @@ class SearchResultsPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Theme.of(context).primaryColor : Colors.white,
+                        color: isDark
+                            ? Theme.of(context).primaryColor
+                            : Colors.white,
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -120,7 +129,9 @@ class SearchResultsPage extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: TabBar(
@@ -130,7 +141,9 @@ class SearchResultsPage extends StatelessWidget {
                         color: Theme.of(context).primaryColor,
                       ),
                       labelColor: Colors.white,
-                      unselectedLabelColor: Theme.of(context).textTheme.bodyLarge?.color,
+                      unselectedLabelColor: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.color,
                       labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                       dividerColor: Colors.transparent,
                       tabs: [
@@ -146,9 +159,15 @@ class SearchResultsPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: _buildSectionHeader(
                       context,
-                      icon: tobaccos.isNotEmpty ? Icons.local_fire_department : Icons.people,
-                      title: tobaccos.isNotEmpty ? 'Tabacos' : 'Mezclas de la Comunidad',
-                      count: tobaccos.isNotEmpty ? tobaccos.length : mixes.length,
+                      icon: tobaccos.isNotEmpty
+                          ? Icons.local_fire_department
+                          : Icons.people,
+                      title: tobaccos.isNotEmpty
+                          ? 'Tabacos'
+                          : 'Mezclas de la Comunidad',
+                      count: tobaccos.isNotEmpty
+                          ? tobaccos.length
+                          : mixes.length,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -161,7 +180,9 @@ class SearchResultsPage extends StatelessWidget {
                             _buildMixesList(context),
                           ],
                         )
-                      : (tobaccos.isNotEmpty ? _buildTobaccoList(context) : _buildMixesList(context)),
+                      : (tobaccos.isNotEmpty
+                            ? _buildTobaccoList(context)
+                            : _buildMixesList(context)),
                 ),
               ],
             ),
@@ -172,10 +193,7 @@ class SearchResultsPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
@@ -185,19 +203,15 @@ class SearchResultsPage extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.search,
-              color: Theme.of(context).primaryColor,
-              size: 20,
-            ),
+            Icon(Icons.search, color: Theme.of(context).primaryColor, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: RichText(
                 text: TextSpan(
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                      ),
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
                   children: [
                     TextSpan(
                       text: totalResults == 1
@@ -208,11 +222,9 @@ class SearchResultsPage extends StatelessWidget {
                       text: ' para ',
                       style: TextStyle(
                         fontWeight: FontWeight.normal,
-                        color: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.color
-                            ?.withValues(alpha: 0.7),
+                        color: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
                     ),
                     TextSpan(
@@ -270,7 +282,8 @@ class SearchResultsPage extends StatelessWidget {
     final Color color = baseColor;
 
     return Semantics(
-      label: '${tobacco.name} de ${tobacco.brand}, calificación ${tobacco.rating} con ${tobacco.reviews} reseñas',
+      label:
+          '${tobacco.name} de ${tobacco.brand}, calificación ${tobacco.rating} con ${tobacco.reviews} reseñas',
       button: true,
       enabled: true,
       child: InkWell(
@@ -316,9 +329,12 @@ class SearchResultsPage extends StatelessWidget {
                         flex: 2,
                         child: Text(
                           tobacco.name,
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyLarge?.color,
                               ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -330,8 +346,13 @@ class SearchResultsPage extends StatelessWidget {
                         flex: 1,
                         child: Text(
                           tobacco.brand,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.color
+                                    ?.withValues(alpha: 0.6),
                               ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -347,24 +368,37 @@ class SearchResultsPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ...(() {
-                        final hasRating = (tobacco.rating > 0) && (tobacco.reviews > 0);
+                        final hasRating =
+                            (tobacco.rating > 0) && (tobacco.reviews > 0);
                         if (hasRating) {
                           return [
-                            Icon(Icons.star, size: scaleFactor > 1.3 ? 14 : 16, color: color),
+                            Icon(
+                              Icons.star,
+                              size: scaleFactor > 1.3 ? 14 : 16,
+                              color: color,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               tobacco.rating.toString(),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge?.color,
                                   ),
                             ),
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
                                 '(${tobacco.reviews})',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.color
+                                          ?.withValues(alpha: 0.5),
                                     ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -372,13 +406,22 @@ class SearchResultsPage extends StatelessWidget {
                           ];
                         } else {
                           return [
-                            Icon(Icons.star_border, size: scaleFactor > 1.3 ? 14 : 16, color: color),
+                            Icon(
+                              Icons.star_border,
+                              size: scaleFactor > 1.3 ? 14 : 16,
+                              color: color,
+                            ),
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
                                 'Sin valoraciones',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.color
+                                          ?.withValues(alpha: 0.5),
                                     ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -401,7 +444,7 @@ class SearchResultsPage extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: mixes.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final mix = mixes[index];
         final favProvider = context.watch<FavoritesProvider>();
@@ -419,11 +462,9 @@ class SearchResultsPage extends StatelessWidget {
             }
           },
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => MixDetailPage(mix: mix),
-              ),
-            );
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)));
           },
         );
       },
@@ -505,7 +546,9 @@ class SearchResultsPage extends StatelessWidget {
             Text(
               'Intenta buscar con otras palabras clave o verifica la ortografía',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),
@@ -514,7 +557,8 @@ class SearchResultsPage extends StatelessWidget {
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: () {
-                  final userId = SupabaseService().client.auth.currentUser?.id ?? '';
+                  final userId =
+                      SupabaseService().client.auth.currentUser?.id ?? '';
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => CreateMixPage(currentUser: userId),
@@ -522,7 +566,10 @@ class SearchResultsPage extends StatelessWidget {
                   );
                 },
                 icon: const Icon(Icons.add),
-                label: const Text('Crear una mezcla', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'Crear una mezcla',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -543,7 +590,10 @@ class SearchResultsPage extends StatelessWidget {
                   );
                 },
                 icon: const Icon(Icons.add_shopping_cart),
-                label: const Text('Solicitar un tabaco', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'Solicitar un tabaco',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(

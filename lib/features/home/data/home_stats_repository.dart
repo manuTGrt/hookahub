@@ -1,5 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../../core/data/supabase_service.dart';
 import '../domain/home_stats.dart';
 
@@ -29,13 +27,13 @@ class HomeStatsRepository {
         .stream(primaryKey: ['id'])
         .eq('id', 1)
         .map((data) {
-      if (data.isEmpty) return HomeStats.empty;
-      final row = data.first;
-      return HomeStats(
-        tobaccos: row['total_tobaccos'] as int? ?? 0,
-        mixes: row['total_mixes'] as int? ?? 0,
-        users: row['total_users'] as int? ?? 0,
-      );
-    });
+          if (data.isEmpty) return HomeStats.empty;
+          final row = data.first;
+          return HomeStats(
+            tobaccos: row['total_tobaccos'] as int? ?? 0,
+            mixes: row['total_mixes'] as int? ?? 0,
+            users: row['total_users'] as int? ?? 0,
+          );
+        });
   }
 }

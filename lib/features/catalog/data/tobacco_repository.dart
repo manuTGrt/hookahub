@@ -41,7 +41,6 @@ class TobaccoRepository {
     final sort = filter?.sortOption ?? SortOption.newest;
 
     // Validar que el campo existe en la tabla
-    // TODO: Descomentar cuando se ejecute la migración SQL que añade rating/reviews
     if (sort == SortOption.mostPopular) {
       request = request.order('reviews', ascending: false);
       request = request.order('rating', ascending: false);

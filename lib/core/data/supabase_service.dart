@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart' as gsi;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -132,6 +131,4 @@ class SupabaseService {
       accessToken: accessToken,
     );
   }
-
-
 }

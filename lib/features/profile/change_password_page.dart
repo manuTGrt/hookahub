@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../core/constants.dart';
 import '../../core/utils/app_toast.dart';
 
@@ -69,7 +68,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       }
     } catch (e) {
       if (mounted) {
-        AppToast.showError(context, 'Error al cambiar contraseña: ${e.toString()}');
+        AppToast.showError(
+          context,
+          'Error al cambiar contraseña: ${e.toString()}',
+        );
       }
     } finally {
       if (mounted) {
@@ -99,13 +101,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         suffixIcon: IconButton(
           icon: Icon(
             obscureText ? Icons.visibility_off : Icons.visibility,
-            color: isDark ? darkNavy.withValues(alpha: 0.6) : navy.withValues(alpha: 0.6),
+            color: isDark
+                ? darkNavy.withValues(alpha: 0.6)
+                : navy.withValues(alpha: 0.6),
           ),
           onPressed: onToggleVisibility,
         ),
         hintText: hintText,
         hintStyle: TextStyle(
-          color: isDark ? darkNavy.withValues(alpha: 0.6) : navy.withValues(alpha: 0.5),
+          color: isDark
+              ? darkNavy.withValues(alpha: 0.6)
+              : navy.withValues(alpha: 0.5),
         ),
         filled: true,
         fillColor: isDark ? fieldDark : fieldLight,
