@@ -50,91 +50,168 @@ class SettingsPage extends StatelessWidget {
   Widget _buildThemeSection(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        final isDark = themeProvider.isDarkMode;
+        final currentMode = themeProvider.themeMode;
+        final theme = Theme.of(context);
+        final primaryColor = theme.primaryColor;
+
+        final String themeDescription = switch (currentMode) {
+          ThemeMode.light => 'Modo claro forzado',
+          ThemeMode.dark => 'Modo oscuro forzado',
+          ThemeMode.system => 'Sincronizado con el sistema',
+        };
+
+        final IconData themeIcon = switch (currentMode) {
+          ThemeMode.light => Icons.light_mode,
+          ThemeMode.dark => Icons.dark_mode,
+          ThemeMode.system => Icons.brightness_auto,
+        };
 
         return Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+              color: primaryColor.withValues(alpha: 0.2),
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
+                color: theme.shadowColor.withValues(alpha: 0.08),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: Column(
-            children: [
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    isDark ? Icons.dark_mode : Icons.light_mode,
-                    color: Theme.of(context).primaryColor,
-                    size: 24,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Encabezado con Icono y Estado
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        themeIcon,
+                        color: primaryColor,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tema de la aplicación',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                              color: theme.textTheme.bodyLarge?.color,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            themeDescription,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // SegmentedButton Material 3 con protección contra fuentes grandes
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<ThemeMode>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment<ThemeMode>(
+                        value: ThemeMode.light,
+                        icon: Icon(Icons.light_mode_outlined, size: 18),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Claro',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      ButtonSegment<ThemeMode>(
+                        value: ThemeMode.dark,
+                        icon: Icon(Icons.dark_mode_outlined, size: 18),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Oscuro',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      ButtonSegment<ThemeMode>(
+                        value: ThemeMode.system,
+                        icon: Icon(Icons.brightness_auto_outlined, size: 18),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Auto',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                    selected: {currentMode},
+                    onSelectionChanged: (Set<ThemeMode> newSelection) {
+                      if (newSelection.isNotEmpty) {
+                        themeProvider.setThemeMode(newSelection.first);
+                      }
+                    },
+                    style: ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: WidgetStatePropertyAll(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                title: Text(
-                  'Tema de la aplicación',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                ),
-                subtitle: Text(
-                  isDark ? 'Modo oscuro activado' : 'Modo claro activado',
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                  ),
-                ),
-                trailing: Switch.adaptive(
-                  value: isDark,
-                  activeThumbColor: Theme.of(context).primaryColor,
-                  onChanged: (value) {
-                    themeProvider.toggleTheme(value);
-                  },
-                ),
-              ),
-              const Divider(height: 1),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
+
+                const SizedBox(height: 12),
+                Row(
                   children: [
                     Icon(
                       Icons.info_outline,
-                      size: 16,
-                      color: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                      size: 14,
+                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'El tema se aplicará en toda la aplicación y se guardará tu preferencia',
+                        'Automático adapta el tema según el modo del sistema operativo.',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

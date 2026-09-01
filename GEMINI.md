@@ -145,10 +145,16 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
    - Para garantizar la legibilidad en ambos temas, se utiliza `Color.alphaBlend` para mezclar el color de acento con el fondo de superficie (`surfaceDark` o `surfaceLight`), creando un color de fondo opaco y suave que no compromete el contraste del texto.
    - **Modernización**: Se debe preferir el uso de `.withValues(alpha: X)` sobre `.withOpacity(X)` para cumplir con las directrices actuales de Flutter.
 
-### Correcciones de Contraste en Modo Oscuro
-- **Formularios**: Al detectar bajo contraste en etiquetas (`labels`) sobre fondos oscuros, se debe evitar el uso de colores fijos como `darkNavy` si no proporcionan suficiente legibilidad. En su lugar, usar `Theme.of(context).textTheme.bodyLarge` o colores de la paleta `teal` clara para el modo oscuro.
-- **Bordes de Input**: En modo oscuro, los bordes de los campos deben usar `darkTurquoise` para ser visibles contra el fondo `fieldDark`.
-- **Componentes de Navegación**: En el `TabBar`, el `labelColor` debe ser dinámico (ej. `navy` en light, `white` en dark) para asegurar que el texto sea legible sobre el indicador turquesa.
+### Gestión de Temas (Claro, Oscuro, Sistema), SegmentedButton y Botón Cíclico
+- **Problema**: El uso de un `Switch` binario limita la personalización a forzar claro u oscuro, impidiendo que la app se sincronice automáticamente con el brillo del sistema operativo del usuario. Además, en pantallas de Login o espacios reducidos, un selector complejo satura la interfaz, y en pantallas pequeñas o con tamaños de texto aumentados (accesibilidad), componentes horizontales como `SegmentedButton` pueden desbordar (*RenderFlex overflow*).
+- **Solución Arquitectónica**:
+  1. **ThemeProvider (`ThemeMode`)**: Maneja el enum nativo `ThemeMode` (`system`, `light`, `dark`), persistiendo el valor como `String` en `SharedPreferences` con retrocompatibilidad para booleanos previos.
+  2. **Detección Efectiva de Brillo**: Para componentes globales (ej. `AnnotatedRegion<SystemUiOverlayStyle>` en `MaterialApp.builder`) o colores de formularios (`PastelTextField`), la evaluación del brillo debe hacerse mediante `Theme.of(context).brightness == Brightness.dark` en lugar de comparar estrictamente contra `ThemeMode.dark`, asegurando que el modo del sistema refleje el estilo visual y barra de estado correctos.
+  3. **SegmentedButton Resistente a Overflows (Pantalla de Ajustes)**:
+     - Configurar `showSelectedIcon: false` para evitar que el checkmark desplace o reduzca el espacio horizontal útil.
+     - Envolver las etiquetas de texto en `FittedBox(fit: BoxFit.scaleDown)` con `maxLines: 1` y `overflow: TextOverflow.ellipsis` para garantizar escalabilidad limpia bajo cualquier escala de fuente.
+  4. **Selector Cíclico Compacto (Pantalla de Login / Auth)**:
+     - En pantallas de autenticación o con espacio reducido en el `AppBar`, sustituir switches o botones anchos por un `IconButton` que cicla ordenadamente entre los 3 modos (**Sistema ➔ Claro ➔ Oscuro ➔ Sistema**), mostrando dinámicamente el icono del estado activo (`Icons.brightness_auto`, `Icons.light_mode`, `Icons.dark_mode`).
 
 ## 🔄 Arquitectura de Datos y Sincronización
 

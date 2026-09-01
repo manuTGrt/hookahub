@@ -25,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        final bool isDark = themeProvider.isDarkMode;
+        final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -34,21 +34,25 @@ class _LoginPageState extends State<LoginPage> {
             elevation: 0,
             actions: [
               Padding(
-                padding: const EdgeInsets.only(right: 12.0, top: 8.0),
-                child: Row(
-                  children: [
-                    Icon(
-                      isDark ? Icons.dark_mode : Icons.light_mode,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    Switch.adaptive(
-                      value: isDark,
-                      activeColor: Theme.of(context).primaryColor,
-                      onChanged: (val) {
-                        themeProvider.toggleTheme(val);
-                      },
-                    ),
-                  ],
+                padding: const EdgeInsets.only(right: 8.0),
+                child: IconButton(
+                  tooltip: 'Cambiar tema',
+                  icon: Icon(
+                    switch (themeProvider.themeMode) {
+                      ThemeMode.light => Icons.light_mode,
+                      ThemeMode.dark => Icons.dark_mode,
+                      ThemeMode.system => Icons.brightness_auto,
+                    },
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  onPressed: () {
+                    final nextMode = switch (themeProvider.themeMode) {
+                      ThemeMode.system => ThemeMode.light,
+                      ThemeMode.light => ThemeMode.dark,
+                      ThemeMode.dark => ThemeMode.system,
+                    };
+                    themeProvider.setThemeMode(nextMode);
+                  },
                 ),
               ),
             ],

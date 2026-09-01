@@ -101,7 +101,8 @@ class HookahubApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             builder: (context, child) {
               // Determinamos el estilo global de la barra de estado según el tema activo
-              final overlayStyle = themeProvider.themeMode == ThemeMode.dark
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              final overlayStyle = isDark
                   ? SystemUiOverlayStyle.light.copyWith(
                       statusBarColor: Colors.transparent,
                     )
