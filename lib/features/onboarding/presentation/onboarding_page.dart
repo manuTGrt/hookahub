@@ -58,127 +58,142 @@ class _OnboardingPageState extends State<OnboardingPage> {
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Column(
-                  children: [
-                    // ── Barra Superior: Indicador de marca y botón 'Saltar' ──
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0,
-                        vertical: 12.0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Hookahub',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2,
-                              color: primary,
+            child: MediaQuery.withClampedTextScaling(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.3,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Column(
+                    children: [
+                      // ── Barra Superior: Indicador de marca y botón 'Saltar' ──
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 8.0,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Hookahub',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.2,
+                                  color: primary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          AnimatedOpacity(
-                            duration: const Duration(milliseconds: 250),
-                            opacity: provider.isLastPage ? 0.0 : 1.0,
-                            child: TextButton(
-                              onPressed: provider.isLastPage
-                                  ? null
-                                  : () => _finishOnboarding(provider),
-                              style: TextButton.styleFrom(
-                                foregroundColor: isDark ? darkNavy : navy,
-                                textStyle: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                            const SizedBox(width: 12),
+                            AnimatedOpacity(
+                              duration: const Duration(milliseconds: 250),
+                              opacity: provider.isLastPage ? 0.0 : 1.0,
+                              child: TextButton(
+                                onPressed: provider.isLastPage
+                                    ? null
+                                    : () => _finishOnboarding(provider),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: isDark ? darkNavy : navy,
+                                  textStyle: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: const Text('Saltar'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // ── Carrusel Principal (PageView) ──
+                      Expanded(
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: items.length,
+                          onPageChanged: provider.setCurrentIndex,
+                          itemBuilder: (context, index) {
+                            return _buildPageSlide(
+                              context: context,
+                              item: items[index],
+                              isDark: isDark,
+                              primary: primary,
+                              constraints: constraints,
+                            );
+                          },
+                        ),
+                      ),
+
+                      // ── Barra Inferior: Indicadores de Página y Botones de Acción ──
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 16.0,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Indicadores de Puntos (Dots)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                items.length,
+                                (index) => _buildDot(
+                                  index: index,
+                                  currentIndex: provider.currentIndex,
+                                  primary: primary,
+                                  isDark: isDark,
                                 ),
                               ),
-                              child: const Text('Saltar'),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
+                            const SizedBox(height: 20),
 
-                    // ── Carrusel Principal (PageView) ──
-                    Expanded(
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: items.length,
-                        onPageChanged: provider.setCurrentIndex,
-                        itemBuilder: (context, index) {
-                          return _buildPageSlide(
-                            context: context,
-                            item: items[index],
-                            isDark: isDark,
-                            primary: primary,
-                            constraints: constraints,
-                          );
-                        },
-                      ),
-                    ),
-
-                    // ── Barra Inferior: Indicadores de Página y Botones de Acción ──
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0,
-                        vertical: 20.0,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Indicadores de Puntos (Dots)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(
-                              items.length,
-                              (index) => _buildDot(
-                                index: index,
-                                currentIndex: provider.currentIndex,
-                                primary: primary,
-                                isDark: isDark,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 28),
-
-                          // Botón de Acción Principal (CTA)
-                          SizedBox(
-                            width: double.infinity,
-                            height: 54,
-                            child: ElevatedButton(
-                              onPressed: () => _nextPage(provider),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primary,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                            // Botón de Acción Principal (CTA)
+                            SizedBox(
+                              width: double.infinity,
+                              height: 54,
+                              child: ElevatedButton(
+                                onPressed: () => _nextPage(provider),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primary,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
-                              ),
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 200),
-                                child: Text(
-                                  provider.isLastPage
-                                      ? 'Comenzar experiencia'
-                                      : 'Siguiente',
-                                  key: ValueKey<bool>(provider.isLastPage),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 200),
+                                  child: Text(
+                                    provider.isLastPage
+                                        ? 'Comenzar experiencia'
+                                        : 'Siguiente',
+                                    key: ValueKey<bool>(provider.isLastPage),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         );
@@ -194,7 +209,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     required Color primary,
     required BoxConstraints constraints,
   }) {
-    final isCompact = constraints.maxHeight < 680;
+    final isCompact = constraints.maxHeight < 700;
     final cardBg = isDark ? fieldDark : fieldLight;
     final titleColor = isDark ? Colors.white : navy;
     final descColor = isDark
@@ -207,12 +222,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(height: isCompact ? 10 : 24),
+          SizedBox(height: isCompact ? 8 : 16),
 
           // ── Contenedor Heroico / Ilustración ──
           Container(
-            width: isCompact ? 180 : 220,
-            height: isCompact ? 180 : 220,
+            width: isCompact ? 140 : 180,
+            height: isCompact ? 140 : 180,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: cardBg,
@@ -229,10 +244,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ],
             ),
             child: Center(
-              child: Icon(item.icon, size: isCompact ? 76 : 96, color: primary),
+              child: Icon(
+                item.icon,
+                size: isCompact ? 64 : 84,
+                color: primary,
+              ),
             ),
           ),
-          SizedBox(height: isCompact ? 20 : 32),
+          SizedBox(height: isCompact ? 16 : 24),
 
           // ── Badge de Categoría ──
           Container(
@@ -255,32 +274,32 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           // ── Título Emocional ──
           Text(
             item.title,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: isCompact ? 24 : 28,
+              fontSize: isCompact ? 22 : 26,
               fontWeight: FontWeight.w800,
               color: titleColor,
               height: 1.2,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // ── Cuerpo de Texto (UX Copy) ──
           Text(
             item.description,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: isCompact ? 14 : 15,
+              fontSize: isCompact ? 13 : 15,
               color: descColor,
               height: 1.45,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
           // ── Chips de Características Relevantes ──
           Wrap(
@@ -289,6 +308,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
             alignment: WrapAlignment.center,
             children: item.highlights.map((tag) {
               return Container(
+                constraints: BoxConstraints(
+                  maxWidth: constraints.maxWidth - 48,
+                ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 6,
@@ -305,14 +327,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.check_circle_rounded, size: 14, color: primary),
+                    Icon(
+                      Icons.check_circle_rounded,
+                      size: 14,
+                      color: primary,
+                    ),
                     const SizedBox(width: 6),
-                    Text(
-                      tag,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? darkNavy : navy,
+                    Flexible(
+                      child: Text(
+                        tag,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? darkNavy : navy,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
