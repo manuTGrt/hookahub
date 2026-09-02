@@ -3,19 +3,22 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import '../../../core/providers/database_health_provider.dart';
+import '../../auth/auth_provider.dart';
 import '../data/history_repository.dart';
 import '../domain/visit_entry.dart';
 
 /// Provider para gestionar el estado del historial de mezclas visitadas.
 /// Utiliza [HistoryRepository] para interactuar con Supabase.
 class HistoryProvider extends ChangeNotifier {
-  HistoryProvider(this._repository) {
+  HistoryProvider(this._repository, {AuthProvider? auth}) : _auth = auth {
+    _auth?.addSignOutListener(clear);
     _reconnectedSub = DatabaseHealthProvider.instance.onReconnected.listen((_) {
       unawaited(refresh());
     });
   }
 
   final HistoryRepository _repository;
+  final AuthProvider? _auth;
   StreamSubscription<void>? _reconnectedSub;
 
   // Estado de carga
@@ -26,6 +29,16 @@ class HistoryProvider extends ChangeNotifier {
   // Datos del historial
   List<VisitEntry> _entries = [];
   int _uniqueCount = 0;
+
+  /// Limpia el historial en memoria al cerrar sesión
+  void clear() {
+    _entries = [];
+    _uniqueCount = 0;
+    _isLoaded = false;
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
+  }
 
   // Getters
   bool get isLoading => _isLoading;
@@ -141,6 +154,7 @@ class HistoryProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _auth?.removeSignOutListener(clear);
     _reconnectedSub?.cancel();
     super.dispose();
   }

@@ -3,19 +3,28 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../../core/models/notification.dart';
 import '../../../core/providers/database_health_provider.dart';
+import '../../auth/auth_provider.dart';
 import '../data/notifications_repository.dart';
 
 /// Provider para gestionar el estado de las notificaciones
 class NotificationsProvider extends ChangeNotifier {
-  NotificationsProvider(this._repository) {
-    _init();
+  NotificationsProvider(this._repository, {AuthProvider? auth}) : _auth = auth {
+    if (_repository.hasActiveUser) {
+      _init();
+    }
+    _auth?.addSignInListener(_handleSignIn);
+    _auth?.addSignOutListener(_handleSignOut);
+
     _reconnectedSub = DatabaseHealthProvider.instance.onReconnected.listen((_) {
-      unawaited(loadNotifications(refresh: true));
-      _subscribeToRealtime();
+      if (_repository.hasActiveUser) {
+        unawaited(loadNotifications(refresh: true));
+        _subscribeToRealtime();
+      }
     });
   }
 
   final NotificationsRepository _repository;
+  final AuthProvider? _auth;
   StreamSubscription<void>? _reconnectedSub;
 
   List<AppNotification> _notifications = [];
@@ -38,6 +47,35 @@ class NotificationsProvider extends ChangeNotifier {
   bool get hasMoreData => _hasMoreData;
   String? get error => _error;
   bool get hasNotifications => _notifications.isNotEmpty;
+
+  void _handleSignIn() {
+    unawaited(onUserAuthenticated());
+  }
+
+  void _handleSignOut() {
+    cancelSubscriptionsAndClear();
+  }
+
+  /// Cancela suscripciones Realtime y purga los datos del usuario en memoria
+  void cancelSubscriptionsAndClear() {
+    _realtimeSubscription?.cancel();
+    _realtimeSubscription = null;
+    _notifications = [];
+    _unreadCount = 0;
+    _currentOffset = 0;
+    _hasMoreData = true;
+    _isLoading = false;
+    _isLoadingMore = false;
+    _error = null;
+    notifyListeners();
+    AppLogger.info('NotificationsProvider: Suscripciones canceladas y estado purgado');
+  }
+
+  /// Inicializa la carga y suscripción cuando el usuario se autentica
+  Future<void> onUserAuthenticated() async {
+    await loadNotifications(refresh: true);
+    _subscribeToRealtime();
+  }
 
   /// Inicialización: cargar notificaciones y suscribirse a Realtime
   Future<void> _init() async {
@@ -231,6 +269,8 @@ class NotificationsProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _auth?.removeSignInListener(_handleSignIn);
+    _auth?.removeSignOutListener(_handleSignOut);
     _realtimeSubscription?.cancel();
     _reconnectedSub?.cancel();
     super.dispose();

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/data/supabase_service.dart';
 import '../../core/providers/database_health_provider.dart';
+import '../../core/utils/app_logger.dart';
 
 class AuthProvider extends ChangeNotifier {
   AuthProvider(this._svc) {
@@ -33,6 +34,12 @@ class AuthProvider extends ChangeNotifier {
               : null,
           bio: metadata?['bio']?.toString(),
         );
+
+        if (ev == AuthChangeEvent.signedIn) {
+          _notifySignIn();
+        }
+      } else if (ev == AuthChangeEvent.signedOut || _session == null) {
+        _notifySignOut();
       }
       notifyListeners();
     });
@@ -43,9 +50,52 @@ class AuthProvider extends ChangeNotifier {
   Session? _session;
   StreamSubscription<AuthState>? _sub;
 
+  final List<VoidCallback> _signInListeners = [];
+  final List<VoidCallback> _signOutListeners = [];
+
   Session? get session => _session;
   User? get user => _session?.user;
   bool get isAuthenticated => user != null;
+
+  /// Registra un listener que se ejecutará cuando el usuario inicie sesión
+  void addSignInListener(VoidCallback listener) {
+    _signInListeners.add(listener);
+  }
+
+  /// Desregistra un listener de inicio de sesión
+  void removeSignInListener(VoidCallback listener) {
+    _signInListeners.remove(listener);
+  }
+
+  /// Registra un listener que se ejecutará cuando el usuario cierre sesión
+  void addSignOutListener(VoidCallback listener) {
+    _signOutListeners.add(listener);
+  }
+
+  /// Desregistra un listener de cierre de sesión
+  void removeSignOutListener(VoidCallback listener) {
+    _signOutListeners.remove(listener);
+  }
+
+  void _notifySignIn() {
+    for (final listener in List<VoidCallback>.of(_signInListeners)) {
+      try {
+        listener();
+      } catch (e, stack) {
+        AppLogger.error('Error en listener de inicio de sesión', error: e, stackTrace: stack);
+      }
+    }
+  }
+
+  void _notifySignOut() {
+    for (final listener in List<VoidCallback>.of(_signOutListeners)) {
+      try {
+        listener();
+      } catch (e, stack) {
+        AppLogger.error('Error en listener de cierre de sesión', error: e, stackTrace: stack);
+      }
+    }
+  }
 
   Future<String?> signInEmail(String email, String password) async {
     try {
@@ -125,20 +175,24 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-
-
   Future<void> signOut() async {
     try {
       await _svc.signOut().timeout(const Duration(seconds: 4));
     } catch (e) {
       DatabaseHealthProvider.reportFailure(e);
       // Ignorar error de signOut, ya que el token local se borrará de todos modos
+    } finally {
+      _session = null;
+      _notifySignOut();
+      notifyListeners();
     }
   }
 
   @override
   void dispose() {
     _sub?.cancel();
+    _signInListeners.clear();
+    _signOutListeners.clear();
     super.dispose();
   }
 }

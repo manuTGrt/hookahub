@@ -45,14 +45,16 @@ class HookahubApp extends StatelessWidget {
             healthService: DatabaseHealthService(SupabaseService()),
           ),
         ),
+        ChangeNotifierProvider(create: (_) => AuthProvider(SupabaseService())),
         ChangeNotifierProvider(
-          create: (_) =>
-              HomeStatsProvider(HomeStatsRepository(SupabaseService())),
+          create: (context) => HomeStatsProvider(
+            HomeStatsRepository(SupabaseService()),
+            auth: context.read<AuthProvider>(),
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => FavoritesProvider(FavoritesRepository()),
         ),
-        ChangeNotifierProvider(create: (_) => AuthProvider(SupabaseService())),
         ChangeNotifierProxyProvider<AuthProvider, ProfileProvider>(
           create: (context) => ProfileProvider(
             repository: ProfileRepository(SupabaseService()),
@@ -70,11 +72,16 @@ class HookahubApp extends StatelessWidget {
               CommunityProvider(CommunityRepository(SupabaseService())),
         ),
         ChangeNotifierProvider(
-          create: (_) =>
-              UserMixesProvider(UserMixesRepository(SupabaseService())),
+          create: (context) => UserMixesProvider(
+            UserMixesRepository(SupabaseService()),
+            auth: context.read<AuthProvider>(),
+          ),
         ),
         ChangeNotifierProvider(
-          create: (_) => HistoryProvider(HistoryRepository(SupabaseService())),
+          create: (context) => HistoryProvider(
+            HistoryRepository(SupabaseService()),
+            auth: context.read<AuthProvider>(),
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => SearchProvider(
@@ -86,8 +93,10 @@ class HookahubApp extends StatelessWidget {
           create: (_) => CatalogProvider(TobaccoRepository(SupabaseService())),
         ),
         ChangeNotifierProvider(
-          create: (_) =>
-              NotificationsProvider(NotificationsRepository(SupabaseService())),
+          create: (context) => NotificationsProvider(
+            NotificationsRepository(SupabaseService()),
+            auth: context.read<AuthProvider>(),
+          ),
         ),
       ],
       child: Consumer<ThemeProvider>(

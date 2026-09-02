@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 
 import '../../../core/providers/database_health_provider.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../auth/auth_provider.dart';
 import '../data/home_stats_repository.dart';
 import '../domain/home_stats.dart';
 
 class HomeStatsProvider extends ChangeNotifier {
-  HomeStatsProvider(this._repository);
+  HomeStatsProvider(this._repository, {AuthProvider? auth}) : _auth = auth {
+    _auth?.addSignOutListener(cancelSubscription);
+  }
 
   final HomeStatsRepository _repository;
+  final AuthProvider? _auth;
   StreamSubscription<HomeStats>? _subscription;
 
   HomeStats _stats = HomeStats.empty;
@@ -70,10 +74,17 @@ class HomeStatsProvider extends ChangeNotifier {
     );
   }
 
+  /// Cancela la suscripción al stream de estadísticas (ej. al cerrar sesión)
+  void cancelSubscription() {
+    _subscription?.cancel();
+    _subscription = null;
+  }
+
   Future<void> refresh() => load(force: true);
 
   @override
   void dispose() {
+    _auth?.removeSignOutListener(cancelSubscription);
     _subscription?.cancel();
     super.dispose();
   }

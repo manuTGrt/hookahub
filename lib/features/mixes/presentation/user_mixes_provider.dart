@@ -1,12 +1,16 @@
 import 'package:flutter/foundation.dart';
 import '../../../core/models/mix.dart';
 import '../../../core/providers/database_health_provider.dart';
+import '../../auth/auth_provider.dart';
 import '../data/user_mixes_repository.dart';
 
 class UserMixesProvider extends ChangeNotifier {
-  UserMixesProvider(this._repo);
+  UserMixesProvider(this._repo, {AuthProvider? auth}) : _auth = auth {
+    _auth?.addSignOutListener(clear);
+  }
 
   final UserMixesRepository _repo;
+  final AuthProvider? _auth;
 
   bool _isLoading = false;
   bool _isLoadingMore = false;
@@ -17,6 +21,18 @@ class UserMixesProvider extends ChangeNotifier {
   bool _hasMore = true;
 
   List<Mix> _mixes = [];
+
+  /// Limpia los datos locales del usuario al cerrar sesión
+  void clear() {
+    _mixes = [];
+    _offset = 0;
+    _hasMore = true;
+    _isLoaded = false;
+    _isLoading = false;
+    _isLoadingMore = false;
+    _error = null;
+    notifyListeners();
+  }
 
   bool get isLoading => _isLoading;
   bool get isLoadingMore => _isLoadingMore;
@@ -78,5 +94,11 @@ class UserMixesProvider extends ChangeNotifier {
       _isLoadingMore = false;
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _auth?.removeSignOutListener(clear);
+    super.dispose();
   }
 }

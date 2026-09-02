@@ -174,6 +174,21 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   - Todo `ChangeNotifier` o `StatefulWidget` que mantenga suscripciones a `Stream`, controladores o temporizadores (`Timer`) **debe** sobrescribir explícitamente `@override void dispose()` a nivel de clase.
   - Cancelar todas las suscripciones (`_sub?.cancel()`), cerrar controladores y siempre invocar `super.dispose()` al final.
 
+### Cancelación de Suscripciones Realtime y Purga de Estado en Logout/Login (Regla de Oro)
+- **Problema**: Los providers registrados en el `MultiProvider` raíz (`app.dart`) son singletons de larga duración que persisten incluso tras el cierre de sesión (`signOut()`). Si un provider mantiene un `StreamSubscription` a canales Realtime de Supabase (ej. `NotificationsProvider` escuchando la tabla `notifications` para el `user_id` del usuario) o datos en memoria (`UserMixesProvider`, `HistoryProvider`, `ProfileProvider`):
+  1. La conexión WebSocket Realtime permanece abierta en segundo plano consumiendo ancho de banda, batería y generando reconexiones fallidas con tokens expirados.
+  2. Al iniciar sesión otro usuario, se produce fuga de datos cruzada en memoria (*data leak*) hasta que se completen nuevas peticiones.
+  3. Si la app arranca sin sesión, el stream retorna vacío y nunca vuelve a re-suscribirse tras el Login.
+- **Solución Arquitectónica**:
+  1. **AuthProvider como emisor de ciclo de vida**: `AuthProvider` expone `addSignInListener` / `removeSignInListener` y `addSignOutListener` / `removeSignOutListener`, disparándolos ante cambios en `onAuthStateChange` y en `signOut()`.
+  2. **Inyección de AuthProvider**: Los providers dependientes reciben `AuthProvider? auth` en su constructor, registrando sus handlers (`auth?.addSignOutListener(clear)` o `cancelSubscriptionsAndClear()`, y `auth?.addSignInListener(onUserAuthenticated)`).
+  3. **Métodos `clear()` / `cancelSubscriptionsAndClear()` obligatorios**:
+     - Cancelar explícitamente `_realtimeSubscription?.cancel()` y asignarlo a `null`.
+     - Purgar todas las colecciones en memoria (`_notifications = []`, `_mixes = []`, `_entries = []`, `_profile = null`).
+     - Resetear indicadores (`unreadCount = 0`, `isLoaded = false`, etc.) y notificar a los listeners.
+  4. **Protección en Reconexión**: Los listeners de reconexión (`DatabaseHealthProvider.instance.onReconnected`) deben condicionar cualquier `fetch` o re-suscripción a la existencia de un usuario activo (`hasActiveUser`).
+  5. **Limpieza en `dispose()`**: Siempre desregistrar los listeners de `AuthProvider` en el `@override void dispose()`.
+
 
 ## 🧭 Navegación y Diálogos
 

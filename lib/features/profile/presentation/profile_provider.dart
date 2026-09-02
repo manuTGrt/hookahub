@@ -12,6 +12,7 @@ class ProfileProvider extends ChangeNotifier {
     required AuthProvider auth,
   }) : _repo = repository,
        _auth = auth {
+    _auth.addSignOutListener(clear);
     _reconnectedSub = DatabaseHealthProvider.instance.onReconnected.listen((_) {
       // La navegación principal decide refrescar el tab visible
       unawaited(load());
@@ -28,6 +29,17 @@ class ProfileProvider extends ChangeNotifier {
   String? _signedAvatarUrl;
   int _mixesCount = 0;
   bool _hasLoadedOnce = false;
+
+  /// Limpia los datos de perfil en memoria al cerrar sesión
+  void clear() {
+    _profile = null;
+    _loading = false;
+    _error = null;
+    _signedAvatarUrl = null;
+    _mixesCount = 0;
+    _hasLoadedOnce = false;
+    notifyListeners();
+  }
 
   Profile? get profile => _profile;
   bool get isLoading => _loading;
@@ -128,6 +140,7 @@ class ProfileProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _auth.removeSignOutListener(clear);
     _reconnectedSub?.cancel();
     super.dispose();
   }

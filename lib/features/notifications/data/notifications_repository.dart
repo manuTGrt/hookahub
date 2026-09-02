@@ -8,6 +8,9 @@ class NotificationsRepository {
 
   final SupabaseService _supabase;
 
+  /// Retorna true si hay un usuario autenticado activamente
+  bool get hasActiveUser => _supabase.client.auth.currentUser != null;
+
   /// Obtiene las notificaciones del usuario autenticado
   /// [limit] cantidad de notificaciones a obtener
   /// [offset] desde qué posición empezar (para paginación)
