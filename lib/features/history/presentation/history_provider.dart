@@ -125,12 +125,6 @@ class HistoryProvider extends ChangeNotifier {
       final deletedCount = await _repository.clearOldHistory(days: days);
 
       if (deletedCount > 0) {
-        @override
-        void dispose() {
-          _reconnectedSub?.cancel();
-          super.dispose();
-        }
-
         // Recargar historial después de la limpieza
         await load();
       }
@@ -143,6 +137,12 @@ class HistoryProvider extends ChangeNotifier {
       DatabaseHealthProvider.reportFailure(e);
       return 0;
     }
+  }
+
+  @override
+  void dispose() {
+    _reconnectedSub?.cancel();
+    super.dispose();
   }
 
   /// Agrupa las entradas del historial por día.

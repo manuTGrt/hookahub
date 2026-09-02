@@ -168,6 +168,13 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
 - **Problema**: En la pestaña de Comunidad, las tarjetas de mezclas no mostraban las opciones de edición/borrado porque el `ProfileProvider` cargaba los datos del usuario de forma perezosa (*lazy loading*) solo al entrar a la pestaña de Perfil. Si se visitaba Comunidad primero, el ID de usuario era `null` y la comprobación de autoría fallaba.
 - **Solución (Warm-up)**: Los datos que determinan "permisos" o "propiedad" a lo largo de toda la aplicación deben precargarse proactivamente. Se implementó una carga temprana (*warm-up*) en el `initState` del `MainNavigationPage` (usando `WidgetsBinding.instance.addPostFrameCallback`) para forzar la inicialización de `ProfileProvider` y `FavoritesProvider` al montar la navegación, asegurando que el estado sea consistente globalmente sin importar qué pestaña se visite primero.
 
+### Gestión de Suscripciones y Prevención de Fugas de Memoria (Lifecycle & dispose)
+- **Problema**: Declarar métodos de ciclo de vida (`dispose`) de forma anidada dentro de métodos o bloques condicionales (en lugar de como método miembro de clase) impide que `ChangeNotifier.dispose()` sea sobrescrito. Si el provider se suscribe a Streams de singletons o servicios globales (ej. `DatabaseHealthProvider.instance.onReconnected`), la suscripción nunca se cancela, reteniendo la instancia del provider en memoria de por vida (Memory Leak) y provocando excepciones de `notifyListeners()` sobre objetos destruidos.
+- **Solución (Regla de Oro)**:
+  - Todo `ChangeNotifier` o `StatefulWidget` que mantenga suscripciones a `Stream`, controladores o temporizadores (`Timer`) **debe** sobrescribir explícitamente `@override void dispose()` a nivel de clase.
+  - Cancelar todas las suscripciones (`_sub?.cancel()`), cerrar controladores y siempre invocar `super.dispose()` al final.
+
+
 ## 🧭 Navegación y Diálogos
 
 ### Gestión de Diálogos en Navegadores Anidados (Root Navigator)
