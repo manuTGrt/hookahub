@@ -259,3 +259,32 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
        Tried to use context.select inside a SliverList/SliderGridView.
        ```
      - **Regla Estricta**: Para utilizar `context.select` dentro de un `itemBuilder`, es **obligatorio** extraer el contenido del elemento a un `StatelessWidget` dedicado (ej. `_SearchMixItem`, `_CommunityMixItem`, `_UserMixItem`) o envolver el retorno en un `Builder(builder: (context) { ... })` para proveer un `BuildContext` hijo aislado.
+
+## ⚡ Manejo Seguro de Asincronía y Ciclo de Vida (`use_build_context_synchronously`)
+
+### Async Gaps y Guardas con `context.mounted` (Regla de Oro)
+- **Problema**: Cuando una operación asíncrona (`await`) se ejecuta (ej. peticiones a Supabase, `Future.delayed`, login, navegación), el hilo cede el control. Si el usuario sale de la pantalla durante ese tiempo y luego el código invoca `context` (en `Navigator`, `AppToast`, o `context.read<T>()`), Flutter lanza la excepción:
+  `Unhandled Exception: Looking up a deactivated widget's ancestor is unsafe`.
+  Asimismo, en Flutter 3.7+, si una función o closure recibe `BuildContext context` como argumento (o en el método `build`), comprobar únicamente `if (!mounted) return;` genera la advertencia estática `unrelated 'mounted' check`, ya que `this.mounted` pertenece a la clase `State` y no garantiza que el `BuildContext` local específico siga montado.
+- **Solución Arquitectónica**:
+  1. **Guarda obligatoria con `context.mounted`**: Tras cualquier `await`, siempre se debe verificar el montaje del contexto antes de consumirlo:
+     ```dart
+     final result = await _repository.fetchData();
+     if (!context.mounted) return;
+     AppToast.showSuccess(context, 'Operación exitosa');
+     ```
+  2. **Combinación en `StatefulWidget`**: Si tras el `await` se actualiza el estado local mediante `setState` Y además se utiliza el contexto, la guarda recomendada es:
+     ```dart
+     if (!mounted || !context.mounted) return;
+     setState(() => _isLoading = false);
+     Navigator.of(context).pop();
+     ```
+  3. **Callbacks en `initState` (`Future.microtask`)**: En inicializaciones diferidas, nunca se debe leer el contexto directamente sin proteger la ejecución:
+     ```dart
+     Future.microtask(() {
+       if (!mounted) return;
+       final provider = context.read<MyProvider>();
+       if (!provider.isLoaded) provider.load();
+     });
+     ```
+  4. **Defensa en Profundidad en Utilidades Globales**: Componentes utilitarios globales que reciben un `BuildContext` (ej. `AppToast._show`) deben incorporar su propia guarda defensiva (`if (!context.mounted) return;`) al inicio, evitando que errores de invocación de terceros crasheen la app.

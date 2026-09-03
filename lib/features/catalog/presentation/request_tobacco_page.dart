@@ -55,13 +55,13 @@ class _RequestTobaccoViewState extends State<_RequestTobaccoView> {
       flavors: _flavorsCtrl.text,
     );
 
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     if (success) {
       AppToast.showSuccess(context, '¡Solicitud enviada! La revisaremos pronto.');
       // Breve pausa para que el usuario vea el snackbar antes de cerrar
       await Future.delayed(const Duration(milliseconds: 800));
-      if (mounted) Navigator.of(context).pop();
+      if (context.mounted) Navigator.of(context).pop();
     } else {
       final state = provider.state;
       final message = state is RequestTobaccoError

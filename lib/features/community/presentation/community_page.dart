@@ -650,7 +650,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
     _available = await communityProvider.repository.fetchAvailableTobaccos(
       limit: 5000,
     );
-    if (!mounted) return;
+    if (!mounted || !context.mounted) return;
     setState(() => _loading = false);
 
     await showMenu<String?>(

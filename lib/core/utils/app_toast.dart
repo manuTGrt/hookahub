@@ -27,6 +27,7 @@ class AppToast {
     required String message,
     required _ToastConfig config,
   }) {
+    if (!context.mounted) return;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     toastification.showCustom(

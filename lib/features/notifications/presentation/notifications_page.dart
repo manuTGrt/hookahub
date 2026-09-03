@@ -65,7 +65,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 tooltip: 'Marcar todas como leídas',
                 onPressed: () async {
                   await provider.markAllAsRead();
-                  if (mounted) {
+                  if (context.mounted) {
                     AppToast.showInfo(context, 'Todas las notificaciones marcadas como leídas',);
                   }
                 },
@@ -97,9 +97,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   ),
                 );
 
-                if (confirmed == true && mounted) {
+                if (confirmed == true && context.mounted) {
                   await context.read<NotificationsProvider>().deleteAllRead();
-                  if (mounted) {
+                  if (context.mounted) {
                     AppToast.showInfo(context, 'Notificaciones eliminadas');
                   }
                 }
@@ -294,7 +294,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             tobaccoId,
           );
 
-          if (!mounted) return;
+          if (!context.mounted) return;
 
           if (tobacco != null) {
             Navigator.of(context).push(

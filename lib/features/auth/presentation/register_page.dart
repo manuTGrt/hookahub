@@ -557,7 +557,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             lastName: _lastNameController.text.trim(),
                             birthdate: _selectedBirthDate,
                           );
-                          if (!mounted) return;
+                          if (!mounted || !context.mounted) return;
                           if (error != null) {
                             setState(() => _isLoading = false);
                             AppToast.showError(context, error);

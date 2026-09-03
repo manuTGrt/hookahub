@@ -140,7 +140,7 @@ class _LoginPageState extends State<LoginPage> {
                           final email = _emailController.text.trim();
                           final password = _passwordController.text;
                           final error = await auth.signInEmail(email, password);
-                          if (!mounted) return;
+                          if (!context.mounted) return;
                           if (error != null) {
                             AppToast.showError(context, error);
                           } else {
@@ -183,7 +183,7 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () async {
                         final auth = context.read<AuthProvider>();
                         final error = await auth.signInGoogle();
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         if (error != null) {
                           AppToast.showError(context, error);
                         }

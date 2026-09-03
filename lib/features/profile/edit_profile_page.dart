@@ -334,7 +334,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                     .read<ProfileProvider>();
                                 setState(() => _isLoading = true);
                                 final err = await provider.setAvatarIcon(index);
-                                if (!mounted) return;
+                                if (!mounted || !context.mounted) return;
                                 setState(() => _isLoading = false);
                                 if (err != null) {
                                   AppToast.showInfo(context, err);

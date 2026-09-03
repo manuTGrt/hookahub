@@ -26,6 +26,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     super.initState();
     // Cargar estado si aún no está cargado
     Future.microtask(() {
+      if (!mounted) return;
       final provider = context.read<FavoritesProvider>();
       if (!provider.isLoaded) provider.load();
     });

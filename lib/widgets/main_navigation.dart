@@ -252,7 +252,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                               .read<SearchProvider>();
                                           await searchProvider.search(value);
 
-                                          if (!mounted) return;
+                                          if (!mounted || !context.mounted) return;
 
                                           // Navegar a la página de resultados
                                           Navigator.of(context).push(

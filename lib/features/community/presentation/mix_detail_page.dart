@@ -613,7 +613,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
       final repository = context.read<CommunityProvider>().repository;
       final success = await repository.deleteReview(reviewId, widget.mix.id);
 
-      if (!mounted) return;
+      if (!mounted || !context.mounted) return;
 
       if (success) {
         AppToast.showSuccess(context, 'Reseña eliminada');
@@ -623,7 +623,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
         AppToast.showError(context, 'Error al eliminar reseña');
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         AppToast.showError(context, 'Error al eliminar reseña');
       }
     }
@@ -729,7 +729,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
         comment: comment,
       );
 
-      if (!mounted) return;
+      if (!mounted || !context.mounted) return;
 
       if (success) {
         AppToast.showSuccess(context, 'Reseña publicada');
@@ -746,7 +746,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
         AppToast.showError(context, 'Error al publicar reseña');
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         AppToast.showError(context, 'Error al publicar reseña');
       }
     }
