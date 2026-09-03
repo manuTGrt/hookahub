@@ -227,4 +227,35 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
 - **Problema**: Incluso si la barra es visible nativamente, cuando la aplicación implementa pantallas que no tienen un `AppBar` clásico (ej. layouts personalizados con `SafeArea`), el texto de la barra de estado puede tomar el color por defecto (ej. negro) y resultar ilegible si el usuario tiene activado el tema oscuro (fondo oscuro).
 - **Solución (Arquitectónica Global)**:
   1. **Configuración en Tema**: Incluir siempre el bloque `appBarTheme` en `ThemeData` dentro del archivo de temas (ej. `lib/core/theme.dart`), forzando `systemOverlayStyle: SystemUiOverlayStyle.dark` en el tema claro, y `SystemUiOverlayStyle.light` en el tema oscuro.
-  2. **Envoltorio en la Raíz**: Para asegurar que el color de la barra aplique en toda la app reactivamente y sobre pantallas personalizadas, es imperativo envolver el contenido del `builder` del `MaterialApp` (ej. en `lib/app.dart`) dentro de un `AnnotatedRegion<SystemUiOverlayStyle>` dinámico.
+   2. **Envoltorio en la Raíz**: Para asegurar que el color de la barra aplique en toda la app reactivamente y sobre pantallas personalizadas, es imperativo envolver el contenido del `builder` del `MaterialApp` (ej. en `lib/app.dart`) dentro de un `AnnotatedRegion<SystemUiOverlayStyle>` dinámico.
+
+## ⚡ Rendimiento de Renderizado y Rebuilds Granulares
+
+### Optimización en Listas y Vistas Complejas (`context.select` vs `context.watch`)
+- **Problema**: En vistas complejas con listas (ej. `CommunityPage`, `FavoritesPage`, `UserMixesPage`), el uso de `context.watch<Provider>()` dentro del `itemBuilder` de un `ListView` o `SliverChildBuilderDelegate` suscribe cada elemento individual a la totalidad del estado del provider. Cuando se modifica el estado de un único elemento (ej. pulsar "favorito"), o cuando se produce un cambio en cualquier propiedad ajena del provider, **todas las tarjetas visibles en el viewport se reconstruyen por completo**, generando caída de fotogramas (*jank*) y desperdicio de CPU/GPU. Asimismo, envolver pantallas completas en un único `Consumer<T>` monolítico provoca que cambios menores (como un flag de paginación `isLoadingMore`) invaliden cabeceras y filtros estáticos.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Selectores Booleanos Granulares**: Dentro de elementos de lista o tarjetas, está **estrictamente prohibido** usar `context.watch<T>()`. Se debe utilizar `context.select<T, bool>((p) => ...)` devolviendo un valor primitivo univariante (ej. booleanos como `isFavorite` o `isOwned`). El motor de Provider solo invalidará el widget si el valor retornado por el selector cambia tras evaluar la igualdad por valor (`==`).
+     - ❌ **Incorrecto**:
+       ```dart
+       final fav = context.watch<FavoritesProvider>();
+       final isFav = fav.favorites.any((x) => x.id == mix.id);
+       ```
+     - ✅ **Correcto**:
+       ```dart
+       final isFav = context.select<FavoritesProvider, bool>(
+         (fav) => fav.favorites.any((x) => x.id == mix.id),
+       );
+       ```
+  2. **Desacoplamiento de Eventos con `context.read<T>`**:
+     - Las acciones disparadas por interacción del usuario (`onTap`, `onFavoriteTap`, `onEdit`, `onDelete`) **nunca** deben depender de instancias observadas con `watch`. Se debe utilizar siempre `context.read<T>()` dentro del cuerpo de la función de callback.
+  3. **Aislamiento en Widgets Dedicados**:
+     - Evitar métodos de construcción imperativos como `_buildMixCard()`. Extraer cada elemento a un `StatelessWidget` dedicado (ej. `_CommunityMixItem`) para que el `BuildContext` del ítem esté estrictamente aislado del contenedor de la lista.
+  4. **Descomposición de `Consumer` Monolíticos**:
+     - En pantallas con scroll y cabeceras de filtros, no envolver el `Scaffold.body` en un único `Consumer`. Dividir en slivers y widgets independientes que escuchen exclusivamente su subconjunto de datos (ej. un `_CommunityFooter` suscrito únicamente a `isLoadingMore`, y una barra de filtros suscrita solo a `filterState`).
+  5. **Uso Seguro de `context.select` en Listas (`widget is! SliverWithKeepAliveWidget`)**:
+     - En `ListView.builder`, `ListView.separated`, `SliverList` o `GridView`, el `BuildContext` entregado directamente en `itemBuilder: (context, index)` pertenece al elemento contenedor del sliver (`SliverWithKeepAliveWidget`). Si se llama a `context.select` directamente sobre dicho `context`, Provider lanza la excepción de aserción:
+       ```
+       _AssertionError: Failed assertion: line 251 pos 12: 'widget is! SliverWithKeepAliveWidget'
+       Tried to use context.select inside a SliverList/SliderGridView.
+       ```
+     - **Regla Estricta**: Para utilizar `context.select` dentro de un `itemBuilder`, es **obligatorio** extraer el contenido del elemento a un `StatelessWidget` dedicado (ej. `_SearchMixItem`, `_CommunityMixItem`, `_UserMixItem`) o envolver el retorno en un `Builder(builder: (context) { ... })` para proveer un `BuildContext` hijo aislado.

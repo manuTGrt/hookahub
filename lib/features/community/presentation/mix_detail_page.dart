@@ -849,8 +849,9 @@ class _HeaderArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fav = context.watch<FavoritesProvider>();
-    final isFav = fav.favorites.any((x) => x.id == mix.id);
+    final isFav = context.select<FavoritesProvider, bool>(
+      (fav) => fav.favorites.any((x) => x.id == mix.id),
+    );
 
     // Degradado equilibrado usando solo los dos primeros tonos.
     final gradient = const LinearGradient(
@@ -897,6 +898,7 @@ class _HeaderArea extends StatelessWidget {
                   ),
                   tooltip: isFav ? 'Quitar de favoritas' : 'Añadir a favoritas',
                   onPressed: () {
+                    final fav = context.read<FavoritesProvider>();
                     if (isFav) {
                       fav.removeFavorite(mix.id);
                     } else {
@@ -1199,29 +1201,43 @@ class _RelatedMixes extends StatelessWidget {
       );
     }
 
-    final fav = context.watch<FavoritesProvider>();
     return Column(
       children: [
         for (final m in mixes)
-          MixCard(
-            mix: m,
-            isFavorite: fav.favorites.any((x) => x.id == m.id),
-            onFavoriteTap: () {
-              final isFav = fav.favorites.any((x) => x.id == m.id);
-              if (isFav) {
-                fav.removeFavorite(m.id);
-              } else {
-                fav.addFavorite(m);
-              }
-            },
-            onShare: () => Share.share('Mezcla: ${m.name} por ${m.author}'),
-            onTap: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => MixDetailPage(mix: m)));
-            },
-          ),
+          _RelatedMixItem(key: ValueKey(m.id), mix: m),
       ],
+    );
+  }
+}
+
+class _RelatedMixItem extends StatelessWidget {
+  const _RelatedMixItem({super.key, required this.mix});
+
+  final Mix mix;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFav = context.select<FavoritesProvider, bool>(
+      (f) => f.favorites.any((x) => x.id == mix.id),
+    );
+
+    return MixCard(
+      mix: mix,
+      isFavorite: isFav,
+      onFavoriteTap: () {
+        final fav = context.read<FavoritesProvider>();
+        if (isFav) {
+          fav.removeFavorite(mix.id);
+        } else {
+          fav.addFavorite(mix);
+        }
+      },
+      onShare: () => Share.share('Mezcla: ${mix.name} por ${mix.author}'),
+      onTap: () {
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)));
+      },
     );
   }
 }

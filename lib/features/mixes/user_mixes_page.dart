@@ -153,82 +153,9 @@ class _UserMixesPageState extends State<UserMixesPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate((context, index) {
-                          final mix = provider.mixes[index];
-                          final fav = context.watch<FavoritesProvider>();
-                          final isFav = fav.favorites.any(
-                            (m) => m.id == mix.id,
-                          );
-                          return MixCard(
-                            mix: mix,
-                            isFavorite: isFav,
-                            onFavoriteTap: () => isFav
-                                ? fav.removeFavorite(mix.id)
-                                : fav.addFavorite(mix),
-                            onShare: () => Share.share(
-                              'Mezcla: ${mix.name} por ${mix.author}',
-                            ),
-                            isOwned:
-                                true, // En "Mis Mezclas" todas son del usuario
-                            onEdit: () async {
-                              final updated = await Navigator.of(context)
-                                  .push<Mix>(
-                                    MaterialPageRoute(
-                                      builder: (_) => CreateMixPage(
-                                        currentUser: mix.author,
-                                        mixToEdit: mix,
-                                      ),
-                                    ),
-                                  );
-                              if (updated != null && context.mounted) {
-                                provider.refresh();
-                                AppToast.showInfo(context, 'Mezcla actualizada');
-                              }
-                            },
-                            onDelete: () async {
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Eliminar mezcla'),
-                                  content: const Text(
-                                    '¿Seguro que quieres eliminar esta mezcla? Esta acción no se puede deshacer.',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                      child: const Text('Cancelar'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: const Text('Eliminar'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirmed == true && context.mounted) {
-                                final repository = CommunityRepository(
-                                  SupabaseService(),
-                                );
-                                final success = await repository.deleteMix(
-                                  mix.id,
-                                );
-                                if (!context.mounted) return;
-                                if (success) {
-                                  provider.refresh();
-                                  AppToast.showInfo(context, 'Mezcla eliminada');
-                                } else {
-                                  AppToast.showInfo(context, 'No se pudo eliminar la mezcla',);
-                                }
-                              }
-                            },
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => MixDetailPage(mix: mix),
-                                ),
-                              );
-                            },
+                          return _UserMixItem(
+                            key: ValueKey(provider.mixes[index].id),
+                            mix: provider.mixes[index],
                           );
                         }, childCount: provider.mixes.length),
                       ),
@@ -293,6 +220,96 @@ class _EmptyMyMixesState extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _UserMixItem extends StatelessWidget {
+  const _UserMixItem({
+    super.key,
+    required this.mix,
+  });
+
+  final Mix mix;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFav = context.select<FavoritesProvider, bool>(
+      (fav) => fav.favorites.any((m) => m.id == mix.id),
+    );
+
+    return MixCard(
+      mix: mix,
+      isFavorite: isFav,
+      onFavoriteTap: () {
+        final fav = context.read<FavoritesProvider>();
+        if (isFav) {
+          fav.removeFavorite(mix.id);
+        } else {
+          fav.addFavorite(mix);
+        }
+      },
+      onShare: () => Share.share(
+        'Mezcla: ${mix.name} por ${mix.author}',
+      ),
+      isOwned: true, // En "Mis Mezclas" todas son del usuario
+      onEdit: () async {
+        final updated = await Navigator.of(context).push<Mix>(
+          MaterialPageRoute(
+            builder: (_) => CreateMixPage(
+              currentUser: mix.author,
+              mixToEdit: mix,
+            ),
+          ),
+        );
+        if (updated != null && context.mounted) {
+          context.read<UserMixesProvider>().refresh();
+          AppToast.showInfo(context, 'Mezcla actualizada');
+        }
+      },
+      onDelete: () async {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Eliminar mezcla'),
+            content: const Text(
+              '¿Seguro que quieres eliminar esta mezcla? Esta acción no se puede deshacer.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Eliminar'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed == true && context.mounted) {
+          final repository = CommunityRepository(
+            SupabaseService(),
+          );
+          final success = await repository.deleteMix(
+            mix.id,
+          );
+          if (!context.mounted) return;
+          if (success) {
+            context.read<UserMixesProvider>().refresh();
+            AppToast.showInfo(context, 'Mezcla eliminada');
+          } else {
+            AppToast.showInfo(context, 'No se pudo eliminar la mezcla');
+          }
+        }
+      },
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => MixDetailPage(mix: mix),
+          ),
+        );
+      },
     );
   }
 }

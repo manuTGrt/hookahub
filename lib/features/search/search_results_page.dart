@@ -446,26 +446,9 @@ class SearchResultsPage extends StatelessWidget {
       itemCount: mixes.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final mix = mixes[index];
-        final favProvider = context.watch<FavoritesProvider>();
-        final isFavorite = favProvider.favorites.any((m) => m.id == mix.id);
-        final mixWithFixedColor = mix.copyWith(color: const Color(0xFF72C8C1));
-
-        return MixCard(
-          mix: mixWithFixedColor,
-          isFavorite: isFavorite,
-          onFavoriteTap: () async {
-            if (isFavorite) {
-              await favProvider.removeFavorite(mix.id);
-            } else {
-              await favProvider.addFavorite(mix);
-            }
-          },
-          onTap: () {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)));
-          },
+        return _SearchMixItem(
+          key: ValueKey(mixes[index].id),
+          mix: mixes[index],
         );
       },
     );
@@ -605,6 +588,41 @@ class SearchResultsPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SearchMixItem extends StatelessWidget {
+  const _SearchMixItem({
+    super.key,
+    required this.mix,
+  });
+
+  final Mix mix;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFavorite = context.select<FavoritesProvider, bool>(
+      (fav) => fav.favorites.any((m) => m.id == mix.id),
+    );
+    final mixWithFixedColor = mix.copyWith(color: const Color(0xFF72C8C1));
+
+    return MixCard(
+      mix: mixWithFixedColor,
+      isFavorite: isFavorite,
+      onFavoriteTap: () async {
+        final favProvider = context.read<FavoritesProvider>();
+        if (isFavorite) {
+          await favProvider.removeFavorite(mix.id);
+        } else {
+          await favProvider.addFavorite(mix);
+        }
+      },
+      onTap: () {
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)));
+      },
     );
   }
 }

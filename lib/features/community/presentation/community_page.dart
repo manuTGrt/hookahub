@@ -51,198 +51,116 @@ class _CommunityPageState extends State<CommunityPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isInitialLoading = context.select<CommunityProvider, bool>(
+      (p) => p.isLoading && !p.isLoaded,
+    );
+    if (isInitialLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final initialError = context.select<CommunityProvider, String?>(
+      (p) => p.isLoaded ? null : p.error,
+    );
+    if (initialError != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Error al cargar las mezclas',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                initialError,
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => context.read<CommunityProvider>().refresh(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final textScaler = MediaQuery.textScalerOf(context);
     final scaleFactor = textScaler.scale(1.0);
 
     return Scaffold(
-      body: Consumer<CommunityProvider>(
-        builder: (context, provider, child) {
-          // Mostrar indicador de carga inicial
-          if (provider.isLoading && !provider.isLoaded) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          // Mostrar error si ocurrió
-          if (provider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error al cargar las mezclas',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    provider.error!,
-                    style: Theme.of(context).textTheme.bodySmall,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () => provider.refresh(),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Reintentar'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Mostrar contenido
-          return RefreshIndicator(
-            onRefresh: () => provider.refresh(),
-            child: CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.all(16.0),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Barra de controles (orden, favoritas, tabaco)
-                        SizedBox(
-                          height: scaleFactor > 1.5
-                              ? 50
-                              : (scaleFactor > 1.3 ? 44 : 40),
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: [
-                              _buildSortDropdown(
-                                context,
-                                provider,
-                                scaleFactor,
-                              ),
-                              const SizedBox(width: 8),
-                              _buildFavoritesChip(context, provider),
-                              const SizedBox(width: 8),
-                              _TobaccoFilterDropdown(
-                                provider: provider,
-                                scaleFactor: scaleFactor,
-                              ),
-                            ],
+      body: RefreshIndicator(
+        onRefresh: () => context.read<CommunityProvider>().refresh(),
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(16.0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Barra de controles (orden, favoritas, tabaco)
+                    SizedBox(
+                      height: scaleFactor > 1.5
+                          ? 50
+                          : (scaleFactor > 1.3 ? 44 : 40),
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _buildSortDropdown(
+                            context,
+                            scaleFactor,
                           ),
-                        ),
-
-                        const SizedBox(height: 16),
-                      ],
+                          const SizedBox(width: 8),
+                          _buildFavoritesChip(context),
+                          const SizedBox(width: 8),
+                          _TobaccoFilterDropdown(
+                            scaleFactor: scaleFactor,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
-
-                // Lista de mezclas
-                if (provider.mixes.isEmpty)
-                  SliverFillRemaining(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.science_outlined,
-                              size: 64,
-                              color: Theme.of(
-                                context,
-                              ).primaryColor.withValues(alpha: 0.5),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No hay mezclas disponibles',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Sé el primero en crear una mezcla',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall?.color,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        return _buildMixCard(
-                          context,
-                          provider.mixes[index],
-                          scaleFactor,
-                        );
-                      }, childCount: provider.mixes.length),
-                    ),
-                  ),
-
-                // Indicador de carga al final
-                if (provider.isLoadingMore)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).primaryColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // Mensaje cuando no hay más datos
-                if (!provider.hasMoreData && provider.mixes.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Center(
-                        child: Text(
-                          'No hay más mezclas',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // Espacio extra al final
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              ],
+              ),
             ),
-          );
-        },
+            _CommunityMixesSliver(scaleFactor: scaleFactor),
+            const _CommunityFooter(),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          ],
+        ),
       ),
     );
   }
 
   // Chip de favoritas
-  Widget _buildFavoritesChip(BuildContext context, CommunityProvider provider) {
-    final isSelected = provider.filterState.favoritesOnly;
-    final fav = context.watch<FavoritesProvider>();
+  Widget _buildFavoritesChip(BuildContext context) {
+    final isSelected = context.select<CommunityProvider, bool>(
+      (p) => p.filterState.favoritesOnly,
+    );
     return FilterChip(
       label: const Text('Mis favoritas'),
       selected: isSelected,
       onSelected: (selected) {
+        final provider = context.read<CommunityProvider>();
         if (selected) {
           // Usar favoritas locales sin ir a red
-          provider.setLocalFavorites(fav.favorites);
+          final favs = context.read<FavoritesProvider>().favorites;
+          provider.setLocalFavorites(favs);
         } else {
           // Volver a la vista normal
           provider.toggleFavoritesOnly();
@@ -267,10 +185,11 @@ class _CommunityPageState extends State<CommunityPage> {
   // Dropdown de ordenamiento (estética igual a catálogo)
   Widget _buildSortDropdown(
     BuildContext context,
-    CommunityProvider provider,
     double scaleFactor,
   ) {
-    final sort = provider.filterState.sortOption;
+    final sort = context.select<CommunityProvider, CommunitySortOption>(
+      (p) => p.filterState.sortOption,
+    );
     return Theme(
       data: Theme.of(context).copyWith(
         popupMenuTheme: PopupMenuThemeData(
@@ -293,7 +212,7 @@ class _CommunityPageState extends State<CommunityPage> {
       ),
       child: PopupMenuButton<CommunitySortOption>(
         onSelected: (CommunitySortOption option) =>
-            provider.setSortOption(option),
+            context.read<CommunityProvider>().setSortOption(option),
         tooltip: 'Ordenar mezclas',
         offset: const Offset(0, 10),
         position: PopupMenuPosition.under,
@@ -473,29 +392,150 @@ class _CommunityPageState extends State<CommunityPage> {
         return Icons.star;
     }
   }
+}
 
-  // Widget dropdown con buscador para tabacos (estética catálogo)
-  // Similar a _BrandFilterDropdown de catálogo pero adaptado a name+brand.
-  // Ignora por ahora marca al filtrar localmente; se aplica de forma futura en la query.
+class _CommunityMixesSliver extends StatelessWidget {
+  const _CommunityMixesSliver({required this.scaleFactor});
 
-  Widget _buildMixCard(BuildContext context, Mix mix, double scaleFactor) {
-    final fav = context.watch<FavoritesProvider>();
-    final communityProvider = context.read<CommunityProvider>();
-    final isFav = fav.favorites.any((x) => x.id == mix.id);
-    final profileProvider = context.watch<ProfileProvider>();
-    final currentUsername = profileProvider.profile?.username;
-    final isOwned = currentUsername != null && mix.author == currentUsername;
+  final double scaleFactor;
+
+  @override
+  Widget build(BuildContext context) {
+    final mixes = context.select<CommunityProvider, List<Mix>>((p) => p.mixes);
+
+    if (mixes.isEmpty) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.science_outlined,
+                  size: 64,
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No hay mezclas disponibles',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Sé el primero en crear una mezcla',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return _CommunityMixItem(
+              key: ValueKey(mixes[index].id),
+              mix: mixes[index],
+              scaleFactor: scaleFactor,
+            );
+          },
+          childCount: mixes.length,
+        ),
+      ),
+    );
+  }
+}
+
+class _CommunityFooter extends StatelessWidget {
+  const _CommunityFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    final isLoadingMore = context.select<CommunityProvider, bool>(
+      (p) => p.isLoadingMore,
+    );
+    final showNoMore = context.select<CommunityProvider, bool>(
+      (p) => !p.hasMoreData && p.mixes.isNotEmpty,
+    );
+
+    if (isLoadingMore) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).primaryColor,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (showNoMore) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Text(
+              'No hay más mezclas',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.color
+                        ?.withValues(alpha: 0.6),
+                  ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return const SliverToBoxAdapter(child: SizedBox.shrink());
+  }
+}
+
+class _CommunityMixItem extends StatelessWidget {
+  const _CommunityMixItem({
+    super.key,
+    required this.mix,
+    required this.scaleFactor,
+  });
+
+  final Mix mix;
+  final double scaleFactor;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFav = context.select<FavoritesProvider, bool>(
+      (fav) => fav.favorites.any((x) => x.id == mix.id),
+    );
+    final isOwned = context.select<ProfileProvider, bool>(
+      (p) => p.profile?.username != null && p.profile!.username == mix.author,
+    );
 
     return MixCard(
       mix: mix,
       isFavorite: isFav,
       onFavoriteTap: () async {
+        final fav = context.read<FavoritesProvider>();
         if (isFav) {
           await fav.removeFavorite(mix.id);
         } else {
           await fav.addFavorite(mix);
         }
-        // Si estamos filtrando por favoritas, refrescar la lista local
+        if (!context.mounted) return;
+        final communityProvider = context.read<CommunityProvider>();
         if (communityProvider.filterState.favoritesOnly) {
           communityProvider.setLocalFavorites(fav.favorites);
         }
@@ -561,10 +601,8 @@ class _CommunityPageState extends State<CommunityPage> {
 
 class _TobaccoFilterDropdown extends StatefulWidget {
   const _TobaccoFilterDropdown({
-    required this.provider,
     required this.scaleFactor,
   });
-  final CommunityProvider provider;
   final double scaleFactor;
   @override
   State<_TobaccoFilterDropdown> createState() => _TobaccoFilterDropdownState();
@@ -607,10 +645,12 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
     );
 
     const String allKey = '__ALL_TOBACCO__';
+    final communityProvider = context.read<CommunityProvider>();
     setState(() => _loading = true);
-    _available = await widget.provider.repository.fetchAvailableTobaccos(
+    _available = await communityProvider.repository.fetchAvailableTobaccos(
       limit: 5000,
     );
+    if (!mounted) return;
     setState(() => _loading = false);
 
     await showMenu<String?>(
@@ -632,7 +672,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               final list = _filtered();
-              final selectedName = widget.provider.filterState.tobaccoName;
+              final selectedName = communityProvider.filterState.tobaccoName;
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -643,20 +683,21 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                     onChanged: (value) => setState(() {}),
                     decoration: InputDecoration(
                       hintText: 'Buscar tabaco...',
+                      hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.color
+                            ?.withValues(alpha: 0.5),
+                      ),
                       prefixIcon: Icon(
                         Icons.search,
-                        color: Theme.of(context).primaryColor,
                         size: 20,
+                        color: Theme.of(context).primaryColor,
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
-                                size: 20,
-                              ),
+                              icon: const Icon(Icons.clear, size: 18),
                               onPressed: () {
                                 _searchController.clear();
                                 setState(() {});
@@ -758,13 +799,14 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
         ),
       ],
     ).then((value) {
+      if (!mounted) return;
       if (value != null) {
         if (value == allKey) {
-          widget.provider.clearTobaccoFilter();
+          communityProvider.clearTobaccoFilter();
         } else {
           final parts = value.split('::');
           if (parts.length == 2) {
-            widget.provider.setTobaccoFilter(name: parts[0], brand: parts[1]);
+            communityProvider.setTobaccoFilter(name: parts[0], brand: parts[1]);
           }
         }
       }
@@ -835,7 +877,9 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedName = widget.provider.filterState.tobaccoName;
+    final selectedName = context.select<CommunityProvider, String?>(
+      (p) => p.filterState.tobaccoName,
+    );
     final displayText = selectedName ?? 'Todos los tabacos';
     return GestureDetector(
       onTap: _showTobaccoMenu,
@@ -898,7 +942,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
               Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: InkWell(
-                  onTap: widget.provider.clearTobaccoFilter,
+                  onTap: () => context.read<CommunityProvider>().clearTobaccoFilter(),
                   child: Icon(
                     Icons.clear,
                     size: 16,

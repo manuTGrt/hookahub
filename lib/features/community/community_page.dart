@@ -174,13 +174,13 @@ class _CommunityPageState extends State<CommunityPage> {
 
   Widget _buildFavoritesChip(BuildContext context, CommunityProvider provider) {
     final isSelected = provider.filterState.favoritesOnly;
-    final fav = context.watch<FavoritesProvider>();
     return FilterChip(
       label: const Text('Mis favoritas'),
       selected: isSelected,
       onSelected: (selected) {
         if (selected) {
-          provider.setLocalFavorites(fav.favorites);
+          final favs = context.read<FavoritesProvider>().favorites;
+          provider.setLocalFavorites(favs);
         } else {
           provider.toggleFavoritesOnly();
         }
@@ -511,14 +511,16 @@ class _CommunityPageState extends State<CommunityPage> {
   }
 
   Widget _buildMixCard(BuildContext context, Mix mix, double scaleFactor) {
-    final fav = context.watch<FavoritesProvider>();
-    final communityProvider = context.read<CommunityProvider>();
-    final isFav = fav.favorites.any((x) => x.id == mix.id);
+    final isFav = context.select<FavoritesProvider, bool>(
+      (fav) => fav.favorites.any((x) => x.id == mix.id),
+    );
 
     return MixCard(
       mix: mix,
       isFavorite: isFav,
       onFavoriteTap: () async {
+        final fav = context.read<FavoritesProvider>();
+        final communityProvider = context.read<CommunityProvider>();
         if (isFav) {
           await fav.removeFavorite(mix.id);
         } else {
