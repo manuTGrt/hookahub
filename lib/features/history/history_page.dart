@@ -8,7 +8,6 @@ import '../community/presentation/mix_detail_page.dart';
 import '../favorites/favorites_provider.dart';
 import 'presentation/history_provider.dart';
 import 'domain/visit_entry.dart';
-import '../../core/utils/app_toast.dart';
 
 /// Página que muestra el historial de mezclas visitadas en los últimos 2 días.
 /// Las mezclas se agrupan por día (Hoy, Ayer, Hace 2 días) y se ordenan
@@ -52,84 +51,95 @@ class _HistoryPageState extends State<HistoryPage> {
     FavoritesProvider favoritesProvider,
     bool isDark,
   ) {
-    // Estado de carga
-    if (historyProvider.isLoading && !historyProvider.isLoaded) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    // Error
-    if (historyProvider.error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: isDark ? darkNavy.withValues(alpha: 0.5) : navy.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Error al cargar el historial',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              historyProvider.error!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: isDark
-                    ? darkNavy.withValues(alpha: 0.7)
-                    : navy.withValues(alpha: 0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: historyProvider.refresh,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-            ),
-          ],
+    // Evaluación exhaustiva de estado con Dart 3 pattern matching
+    return switch (historyProvider.state) {
+      HistoryInitial() || HistoryLoading() => const Center(
+          child: CircularProgressIndicator(),
         ),
-      );
-    }
-
-    // Sin entradas
-    if (historyProvider.entries.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.history,
-              size: 80,
-              color: isDark ? darkNavy.withValues(alpha: 0.5) : navy.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No hay historial reciente',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                'Las mezclas que visites aparecerán aquí',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+      HistoryError(:final message) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: isDark
+                    ? darkNavy.withValues(alpha: 0.5)
+                    : navy.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Error al cargar el historial',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: isDark
                       ? darkNavy.withValues(alpha: 0.7)
                       : navy.withValues(alpha: 0.6),
                 ),
                 textAlign: TextAlign.center,
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: historyProvider.refresh,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar'),
+              ),
+            ],
+          ),
         ),
-      );
-    }
+      HistoryLoaded(:final entries) when entries.isEmpty => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.history,
+                size: 80,
+                color: isDark
+                    ? darkNavy.withValues(alpha: 0.5)
+                    : navy.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No hay historial reciente',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  'Las mezclas que visites aparecerán aquí',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: isDark
+                        ? darkNavy.withValues(alpha: 0.7)
+                        : navy.withValues(alpha: 0.6),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      HistoryLoaded() => _buildLoadedList(
+          context,
+          historyProvider,
+          favoritesProvider,
+          isDark,
+        ),
+    };
+  }
 
+  Widget _buildLoadedList(
+    BuildContext context,
+    HistoryProvider historyProvider,
+    FavoritesProvider favoritesProvider,
+    bool isDark,
+  ) {
     // Lista de historial agrupada por día
     final groupedEntries = historyProvider.groupedByDay;
 
@@ -310,50 +320,6 @@ class _HistoryPageState extends State<HistoryPage> {
         return Icons.event;
       default:
         return Icons.calendar_month;
-    }
-  }
-
-  void _showClearConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('¿Borrar todo el historial?'),
-        content: const Text(
-          'Esta acción no se puede deshacer. Se eliminará todo tu historial de mezclas visitadas.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              final provider = context.read<HistoryProvider>();
-              final success = await provider.clearAll();
-
-              if (context.mounted) {
-                AppToast.showError(context, success
-                          ? 'Historial borrado correctamente'
-                          : 'Error al borrar el historial',);
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Borrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _clearOldEntries(BuildContext context) async {
-    final provider = context.read<HistoryProvider>();
-    final deletedCount = await provider.clearOld(days: 7);
-
-    if (context.mounted) {
-      AppToast.showSuccess(context, deletedCount > 0
-                ? 'Se eliminaron $deletedCount ${deletedCount == 1 ? 'entrada antigua' : 'entradas antiguas'}'
-                : 'No hay entradas antiguas para eliminar',);
     }
   }
 }

@@ -6,6 +6,63 @@ import '../../../core/providers/database_health_provider.dart';
 import '../../auth/auth_provider.dart';
 import '../data/notifications_repository.dart';
 
+// ---------------------------------------------------------------------------
+// Estados UI (sealed class — sin booleanos fragmentados)
+// ---------------------------------------------------------------------------
+
+sealed class NotificationsState {
+  const NotificationsState();
+}
+
+/// Estado inicial previo a cargar o tras cerrar sesión.
+class NotificationsInitial extends NotificationsState {
+  const NotificationsInitial();
+}
+
+/// Primera carga en progreso.
+class NotificationsLoading extends NotificationsState {
+  const NotificationsLoading();
+}
+
+/// Notificaciones cargadas con éxito.
+class NotificationsLoaded extends NotificationsState {
+  const NotificationsLoaded({
+    required this.notifications,
+    required this.unreadCount,
+    this.isLoadingMore = false,
+    this.hasMoreData = true,
+  });
+
+  final List<AppNotification> notifications;
+  final int unreadCount;
+  final bool isLoadingMore;
+  final bool hasMoreData;
+
+  NotificationsLoaded copyWith({
+    List<AppNotification>? notifications,
+    int? unreadCount,
+    bool? isLoadingMore,
+    bool? hasMoreData,
+  }) {
+    return NotificationsLoaded(
+      notifications: notifications ?? this.notifications,
+      unreadCount: unreadCount ?? this.unreadCount,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMoreData: hasMoreData ?? this.hasMoreData,
+    );
+  }
+}
+
+/// Ocurrió un error al interactuar con las notificaciones.
+class NotificationsError extends NotificationsState {
+  const NotificationsError(this.message);
+  final String message;
+}
+
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
+
 /// Provider para gestionar el estado de las notificaciones
 class NotificationsProvider extends ChangeNotifier {
   NotificationsProvider(this._repository, {AuthProvider? auth}) : _auth = auth {
@@ -27,26 +84,35 @@ class NotificationsProvider extends ChangeNotifier {
   final AuthProvider? _auth;
   StreamSubscription<void>? _reconnectedSub;
 
-  List<AppNotification> _notifications = [];
-  int _unreadCount = 0;
-  bool _isLoading = false;
-  bool _isLoadingMore = false;
-  bool _hasMoreData = true;
-  String? _error;
-
+  NotificationsState _state = const NotificationsInitial();
   StreamSubscription<AppNotification>? _realtimeSubscription;
 
   static const int _pageSize = 50;
   int _currentOffset = 0;
 
   // Getters
-  List<AppNotification> get notifications => List.unmodifiable(_notifications);
-  int get unreadCount => _unreadCount;
-  bool get isLoading => _isLoading;
-  bool get isLoadingMore => _isLoadingMore;
-  bool get hasMoreData => _hasMoreData;
-  String? get error => _error;
-  bool get hasNotifications => _notifications.isNotEmpty;
+  NotificationsState get state => _state;
+  List<AppNotification> get notifications =>
+      _state is NotificationsLoaded
+          ? List.unmodifiable((_state as NotificationsLoaded).notifications)
+          : const [];
+  int get unreadCount =>
+      _state is NotificationsLoaded
+          ? (_state as NotificationsLoaded).unreadCount
+          : 0;
+  bool get isLoading => _state is NotificationsLoading;
+  bool get isLoadingMore =>
+      _state is NotificationsLoaded &&
+      (_state as NotificationsLoaded).isLoadingMore;
+  bool get hasMoreData =>
+      _state is NotificationsLoaded
+          ? (_state as NotificationsLoaded).hasMoreData
+          : true;
+  String? get error =>
+      _state is NotificationsError
+          ? (_state as NotificationsError).message
+          : null;
+  bool get hasNotifications => notifications.isNotEmpty;
 
   void _handleSignIn() {
     unawaited(onUserAuthenticated());
@@ -60,13 +126,8 @@ class NotificationsProvider extends ChangeNotifier {
   void cancelSubscriptionsAndClear() {
     _realtimeSubscription?.cancel();
     _realtimeSubscription = null;
-    _notifications = [];
-    _unreadCount = 0;
     _currentOffset = 0;
-    _hasMoreData = true;
-    _isLoading = false;
-    _isLoadingMore = false;
-    _error = null;
+    _state = const NotificationsInitial();
     notifyListeners();
     AppLogger.info('NotificationsProvider: Suscripciones canceladas y estado purgado');
   }
@@ -87,12 +148,12 @@ class NotificationsProvider extends ChangeNotifier {
   Future<void> loadNotifications({bool refresh = false}) async {
     if (refresh) {
       _currentOffset = 0;
-      _hasMoreData = true;
     }
 
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    if (!refresh && _state is! NotificationsLoaded) {
+      _state = const NotificationsLoading();
+      notifyListeners();
+    }
 
     try {
       final notifications = await _repository.fetchNotifications(
@@ -100,27 +161,30 @@ class NotificationsProvider extends ChangeNotifier {
         offset: 0,
       );
 
-      _notifications = notifications;
-      _hasMoreData = notifications.length >= _pageSize;
+      final unreadCount = await _repository.getUnreadCount();
       _currentOffset = notifications.length;
 
-      // Actualizar contador de no leídas
-      await _updateUnreadCount();
+      _state = NotificationsLoaded(
+        notifications: notifications,
+        unreadCount: unreadCount,
+        hasMoreData: notifications.length >= _pageSize,
+      );
     } catch (e) {
-      _error = 'Error al cargar notificaciones';
+      _state = const NotificationsError('Error al cargar notificaciones');
       AppLogger.error('Error en loadNotifications: $e');
       DatabaseHealthProvider.reportFailure(e);
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
 
   /// Cargar más notificaciones (paginación)
   Future<void> loadMore() async {
-    if (_isLoadingMore || !_hasMoreData) return;
+    if (_state is! NotificationsLoaded) return;
+    final current = _state as NotificationsLoaded;
+    if (current.isLoadingMore || !current.hasMoreData) return;
 
-    _isLoadingMore = true;
+    _state = current.copyWith(isLoadingMore: true);
     notifyListeners();
 
     try {
@@ -129,27 +193,41 @@ class NotificationsProvider extends ChangeNotifier {
         offset: _currentOffset,
       );
 
-      if (moreNotifications.isEmpty) {
-        _hasMoreData = false;
-      } else {
-        _notifications.addAll(moreNotifications);
-        _currentOffset += moreNotifications.length;
-        _hasMoreData = moreNotifications.length >= _pageSize;
+      if (_state is NotificationsLoaded) {
+        final active = _state as NotificationsLoaded;
+        if (moreNotifications.isEmpty) {
+          _state = active.copyWith(
+            isLoadingMore: false,
+            hasMoreData: false,
+          );
+        } else {
+          _currentOffset += moreNotifications.length;
+          _state = active.copyWith(
+            notifications: [...active.notifications, ...moreNotifications],
+            isLoadingMore: false,
+            hasMoreData: moreNotifications.length >= _pageSize,
+          );
+        }
       }
     } catch (e) {
       AppLogger.error('Error en loadMore: $e');
       DatabaseHealthProvider.reportFailure(e);
+      if (_state is NotificationsLoaded) {
+        _state = (_state as NotificationsLoaded).copyWith(isLoadingMore: false);
+      }
     } finally {
-      _isLoadingMore = false;
       notifyListeners();
     }
   }
 
   /// Actualizar contador de notificaciones no leídas
-  Future<void> _updateUnreadCount() async {
+  Future<void> updateUnreadCount() async {
     try {
-      _unreadCount = await _repository.getUnreadCount();
-      notifyListeners();
+      final unread = await _repository.getUnreadCount();
+      if (_state is NotificationsLoaded) {
+        _state = (_state as NotificationsLoaded).copyWith(unreadCount: unread);
+        notifyListeners();
+      }
     } catch (e) {
       AppLogger.error('Error al actualizar contador: $e');
       DatabaseHealthProvider.reportFailure(e);
@@ -160,12 +238,17 @@ class NotificationsProvider extends ChangeNotifier {
   Future<void> markAsRead(String notificationId) async {
     try {
       final success = await _repository.markAsRead(notificationId);
-      if (success) {
-        // Actualizar localmente
-        final index = _notifications.indexWhere((n) => n.id == notificationId);
-        if (index != -1 && !_notifications[index].isRead) {
-          _notifications[index] = _notifications[index].copyWith(isRead: true);
-          _unreadCount = (_unreadCount - 1).clamp(0, double.infinity).toInt();
+      if (success && _state is NotificationsLoaded) {
+        final current = _state as NotificationsLoaded;
+        final index = current.notifications.indexWhere((n) => n.id == notificationId);
+        if (index != -1 && !current.notifications[index].isRead) {
+          final updated = List<AppNotification>.from(current.notifications);
+          updated[index] = updated[index].copyWith(isRead: true);
+          final newUnread = (current.unreadCount - 1).clamp(0, double.infinity).toInt();
+          _state = current.copyWith(
+            notifications: updated,
+            unreadCount: newUnread,
+          );
           notifyListeners();
         }
       }
@@ -179,12 +262,15 @@ class NotificationsProvider extends ChangeNotifier {
   Future<void> markAllAsRead() async {
     try {
       final success = await _repository.markAllAsRead();
-      if (success) {
-        // Actualizar localmente
-        _notifications = _notifications
+      if (success && _state is NotificationsLoaded) {
+        final current = _state as NotificationsLoaded;
+        final updated = current.notifications
             .map((n) => n.copyWith(isRead: true))
             .toList();
-        _unreadCount = 0;
+        _state = current.copyWith(
+          notifications: updated,
+          unreadCount: 0,
+        );
         notifyListeners();
       }
     } catch (e) {
@@ -197,14 +283,20 @@ class NotificationsProvider extends ChangeNotifier {
   Future<void> deleteNotification(String notificationId) async {
     try {
       final success = await _repository.deleteNotification(notificationId);
-      if (success) {
-        // Actualizar localmente
-        final index = _notifications.indexWhere((n) => n.id == notificationId);
+      if (success && _state is NotificationsLoaded) {
+        final current = _state as NotificationsLoaded;
+        final index = current.notifications.indexWhere((n) => n.id == notificationId);
         if (index != -1) {
-          if (!_notifications[index].isRead) {
-            _unreadCount = (_unreadCount - 1).clamp(0, double.infinity).toInt();
-          }
-          _notifications.removeAt(index);
+          final isUnread = !current.notifications[index].isRead;
+          final updated = List<AppNotification>.from(current.notifications)
+            ..removeAt(index);
+          final newUnread = isUnread
+              ? (current.unreadCount - 1).clamp(0, double.infinity).toInt()
+              : current.unreadCount;
+          _state = current.copyWith(
+            notifications: updated,
+            unreadCount: newUnread,
+          );
           notifyListeners();
         }
       }
@@ -218,8 +310,10 @@ class NotificationsProvider extends ChangeNotifier {
   Future<void> deleteAllRead() async {
     try {
       final success = await _repository.deleteAllRead();
-      if (success) {
-        _notifications.removeWhere((n) => n.isRead);
+      if (success && _state is NotificationsLoaded) {
+        final current = _state as NotificationsLoaded;
+        final updated = current.notifications.where((n) => !n.isRead).toList();
+        _state = current.copyWith(notifications: updated);
         notifyListeners();
       }
     } catch (e) {
@@ -249,21 +343,21 @@ class NotificationsProvider extends ChangeNotifier {
 
   /// Callback cuando llega una nueva notificación
   void _onNewNotification(AppNotification notification) {
-    // Verificar si ya existe (evitar duplicados)
-    final exists = _notifications.any((n) => n.id == notification.id);
-
-    if (!exists) {
-      // Insertar al inicio de la lista
-      _notifications.insert(0, notification);
-
-      // Incrementar contador si no está leída
-      if (!notification.isRead) {
-        _unreadCount++;
+    if (_state is NotificationsLoaded) {
+      final current = _state as NotificationsLoaded;
+      final exists = current.notifications.any((n) => n.id == notification.id);
+      if (!exists) {
+        final updated = [notification, ...current.notifications];
+        final newUnread = notification.isRead ? current.unreadCount : current.unreadCount + 1;
+        _state = current.copyWith(
+          notifications: updated,
+          unreadCount: newUnread,
+        );
+        notifyListeners();
+        AppLogger.info('Nueva notificación recibida: ${notification.title}');
       }
-
-      notifyListeners();
-
-      AppLogger.info('Nueva notificación recibida: ${notification.title}');
+    } else {
+      unawaited(loadNotifications());
     }
   }
 

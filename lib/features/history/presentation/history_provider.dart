@@ -7,6 +7,47 @@ import '../../auth/auth_provider.dart';
 import '../data/history_repository.dart';
 import '../domain/visit_entry.dart';
 
+// ---------------------------------------------------------------------------
+// Estados UI (sealed class — sin booleanos fragmentados)
+// ---------------------------------------------------------------------------
+
+sealed class HistoryState {
+  const HistoryState();
+}
+
+/// Estado inicial: historial aún no cargado.
+class HistoryInitial extends HistoryState {
+  const HistoryInitial();
+}
+
+/// Primera carga en progreso.
+class HistoryLoading extends HistoryState {
+  const HistoryLoading();
+}
+
+/// Historial cargado con éxito.
+class HistoryLoaded extends HistoryState {
+  const HistoryLoaded({
+    required this.entries,
+    required this.uniqueCount,
+    this.isRefreshing = false,
+  });
+
+  final List<VisitEntry> entries;
+  final int uniqueCount;
+  final bool isRefreshing;
+}
+
+/// Ocurrió un error al interactuar con el historial.
+class HistoryError extends HistoryState {
+  const HistoryError(this.message);
+  final String message;
+}
+
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
+
 /// Provider para gestionar el estado del historial de mezclas visitadas.
 /// Utiliza [HistoryRepository] para interactuar con Supabase.
 class HistoryProvider extends ChangeNotifier {
@@ -21,37 +62,34 @@ class HistoryProvider extends ChangeNotifier {
   final AuthProvider? _auth;
   StreamSubscription<void>? _reconnectedSub;
 
-  // Estado de carga
-  bool _isLoading = false;
-  bool _isLoaded = false;
-  String? _error;
-
-  // Datos del historial
-  List<VisitEntry> _entries = [];
-  int _uniqueCount = 0;
+  // Estado sellado (única fuente de verdad)
+  HistoryState _state = const HistoryInitial();
 
   /// Limpia el historial en memoria al cerrar sesión
   void clear() {
-    _entries = [];
-    _uniqueCount = 0;
-    _isLoaded = false;
-    _isLoading = false;
-    _error = null;
+    _state = const HistoryInitial();
     notifyListeners();
   }
 
-  // Getters
-  bool get isLoading => _isLoading;
-  bool get isLoaded => _isLoaded;
-  String? get error => _error;
-  List<VisitEntry> get entries => List.unmodifiable(_entries);
-  int get uniqueCount => _uniqueCount;
+  // Getters de estado
+  HistoryState get state => _state;
+  bool get isLoading =>
+      _state is HistoryLoading ||
+      (_state is HistoryLoaded && (_state as HistoryLoaded).isRefreshing);
+  bool get isLoaded => _state is HistoryLoaded;
+  String? get error =>
+      _state is HistoryError ? (_state as HistoryError).message : null;
+  List<VisitEntry> get entries =>
+      _state is HistoryLoaded ? (_state as HistoryLoaded).entries : const [];
+  int get uniqueCount =>
+      _state is HistoryLoaded ? (_state as HistoryLoaded).uniqueCount : 0;
 
   /// Carga el historial de mezclas visitadas en los últimos 2 días.
   /// Previene llamadas concurrentes y retorna inmediatamente si ya está cargando.
-  Future<void> load() async {
+  Future<void> load({bool isRefresh = false}) async {
     // Prevenir llamadas concurrentes
-    if (_isLoading) {
+    if (_state is HistoryLoading ||
+        (_state is HistoryLoaded && (_state as HistoryLoaded).isRefreshing)) {
       AppLogger.info(
         '⏳ HistoryProvider: Ya hay una carga en progreso, ignorando nueva llamada',
       );
@@ -59,26 +97,29 @@ class HistoryProvider extends ChangeNotifier {
     }
 
     AppLogger.info('🔄 HistoryProvider: Iniciando carga del historial');
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    if (!isRefresh) {
+      _state = const HistoryLoading();
+      notifyListeners();
+    }
 
     try {
       // Cargar historial de los últimos 2 días
-      _entries = await _repository.fetchRecentHistory(days: 2);
-      _uniqueCount = await _repository.getUniqueVisitedCount(days: 2);
+      final entries = await _repository.fetchRecentHistory(days: 2);
+      final uniqueCount = await _repository.getUniqueVisitedCount(days: 2);
 
       AppLogger.info(
-        '✅ HistoryProvider: Historial cargado - ${_entries.length} entradas, $_uniqueCount únicas',
+        '✅ HistoryProvider: Historial cargado - ${entries.length} entradas, $uniqueCount únicas',
       );
-      _isLoaded = true;
-      _error = null;
+      _state = HistoryLoaded(
+        entries: entries,
+        uniqueCount: uniqueCount,
+      );
     } catch (e) {
-      _error = 'Error al cargar historial: $e';
-      AppLogger.error('❌ HistoryProvider: $_error');
+      final errorMessage = 'Error al cargar historial: $e';
+      _state = HistoryError(errorMessage);
+      AppLogger.error('❌ HistoryProvider: $errorMessage');
       DatabaseHealthProvider.reportFailure(e);
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
@@ -87,8 +128,16 @@ class HistoryProvider extends ChangeNotifier {
   /// Fuerza una nueva carga completa ignorando el estado previo.
   Future<void> refresh() async {
     AppLogger.info('🔄 HistoryProvider: Forzando refresh del historial');
-    _isLoaded = false;
-    await load();
+    if (_state is HistoryLoaded) {
+      final current = _state as HistoryLoaded;
+      _state = HistoryLoaded(
+        entries: current.entries,
+        uniqueCount: current.uniqueCount,
+        isRefreshing: true,
+      );
+      notifyListeners();
+    }
+    await load(isRefresh: true);
   }
 
   /// Registra una visita a una mezcla.
@@ -116,16 +165,15 @@ class HistoryProvider extends ChangeNotifier {
       final success = await _repository.clearAllHistory();
 
       if (success) {
-        _entries = [];
-        _uniqueCount = 0;
-        _isLoaded = true;
+        _state = const HistoryLoaded(entries: [], uniqueCount: 0);
         notifyListeners();
       }
 
       return success;
     } catch (e) {
-      _error = 'Error al limpiar historial: $e';
-      AppLogger.error(_error ?? 'Error desconocido');
+      final errorMessage = 'Error al limpiar historial: $e';
+      _state = HistoryError(errorMessage);
+      AppLogger.error(errorMessage);
       notifyListeners();
       DatabaseHealthProvider.reportFailure(e);
       return false;
@@ -144,8 +192,9 @@ class HistoryProvider extends ChangeNotifier {
 
       return deletedCount;
     } catch (e) {
-      _error = 'Error al limpiar historial antiguo: $e';
-      AppLogger.error(_error ?? 'Error desconocido');
+      final errorMessage = 'Error al limpiar historial antiguo: $e';
+      _state = HistoryError(errorMessage);
+      AppLogger.error(errorMessage);
       notifyListeners();
       DatabaseHealthProvider.reportFailure(e);
       return 0;
@@ -172,7 +221,7 @@ class HistoryProvider extends ChangeNotifier {
       'Hace 2 días': [],
     };
 
-    for (final entry in _entries) {
+    for (final entry in entries) {
       final viewDate = DateTime(
         entry.visitedAt.year,
         entry.visitedAt.month,

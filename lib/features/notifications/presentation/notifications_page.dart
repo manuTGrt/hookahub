@@ -122,118 +122,114 @@ class _NotificationsPageState extends State<NotificationsPage> {
       ),
       body: Consumer<NotificationsProvider>(
         builder: (context, provider, _) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (provider.error != null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
+          return switch (provider.state) {
+            NotificationsInitial() || NotificationsLoading() => const Center(
+                child: CircularProgressIndicator(),
+              ),
+            NotificationsError(:final message) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: isDark
+                            ? darkNavy.withValues(alpha: 0.5)
+                            : navy.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Error al cargar notificaciones',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        message,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: isDark
+                              ? darkNavy.withValues(alpha: 0.7)
+                              : navy.withValues(alpha: 0.6),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () =>
+                            provider.loadNotifications(refresh: true),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            NotificationsLoaded(:final notifications) when notifications.isEmpty =>
+              Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.error_outline,
-                      size: 64,
+                      Icons.notifications_none,
+                      size: 80,
                       color: isDark
                           ? darkNavy.withValues(alpha: 0.5)
                           : navy.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Error al cargar notificaciones',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      'No tienes notificaciones',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      provider.error!,
+                      'Te notificaremos cuando haya actividad',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: isDark
                             ? darkNavy.withValues(alpha: 0.7)
                             : navy.withValues(alpha: 0.6),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () =>
-                          provider.loadNotifications(refresh: true),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Reintentar'),
                     ),
                   ],
                 ),
               ),
-            );
-          }
+            NotificationsLoaded() => RefreshIndicator(
+                onRefresh: () => provider.loadNotifications(refresh: true),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount:
+                      provider.notifications.length +
+                      (provider.isLoadingMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == provider.notifications.length) {
+                      // Loading indicator al final
+                      return const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
 
-          if (!provider.hasNotifications) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_none,
-                    size: 80,
-                    color: isDark
-                        ? darkNavy.withValues(alpha: 0.5)
-                        : navy.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No tienes notificaciones',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Te notificaremos cuando haya actividad',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? darkNavy.withValues(alpha: 0.7)
-                          : navy.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
+                    final notification = provider.notifications[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: NotificationTile(
+                        notification: notification,
+                        isDark: isDark,
+                        onTap: () => _handleNotificationTap(context, notification),
+                        onDismiss: () =>
+                            provider.deleteNotification(notification.id),
+                      ),
+                    );
+                  },
+                ),
               ),
-            );
-          }
-
-          return RefreshIndicator(
-            onRefresh: () => provider.loadNotifications(refresh: true),
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount:
-                  provider.notifications.length +
-                  (provider.isLoadingMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == provider.notifications.length) {
-                  // Loading indicator al final
-                  return const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                final notification = provider.notifications[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: NotificationTile(
-                    notification: notification,
-                    isDark: isDark,
-                    onTap: () => _handleNotificationTap(context, notification),
-                    onDismiss: () =>
-                        provider.deleteNotification(notification.id),
-                  ),
-                );
-              },
-            ),
-          );
+          };
         },
       ),
     );

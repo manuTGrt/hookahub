@@ -41,9 +41,6 @@ class FakeHistoryRepository implements HistoryRepository {
 class FakeDatabaseHealthService implements DatabaseHealthService {
   @override
   Future<bool> checkDatabaseConnection() async => true;
-
-  @override
-  Future<bool> checkSupabaseService() async => true;
 }
 
 void main() {
@@ -94,4 +91,42 @@ void main() {
       expect(() => historyProvider.dispose(), returnsNormally);
     });
   });
+
+  group('HistoryProvider Sealed State Transitions', () {
+    test('inicia con HistoryInitial y transita a HistoryLoaded', () async {
+      final historyProvider = HistoryProvider(fakeRepository);
+      expect(historyProvider.state, isA<HistoryInitial>());
+      expect(historyProvider.isLoading, isFalse);
+      expect(historyProvider.isLoaded, isFalse);
+
+      await historyProvider.load();
+
+      expect(historyProvider.state, isA<HistoryLoaded>());
+      expect(historyProvider.isLoading, isFalse);
+      expect(historyProvider.isLoaded, isTrue);
+      expect(historyProvider.entries, isEmpty);
+
+      historyProvider.clear();
+      expect(historyProvider.state, isA<HistoryInitial>());
+    });
+
+    test('transita a HistoryError cuando el repositorio lanza excepción', () async {
+      final failingRepo = FailingHistoryRepository();
+      final historyProvider = HistoryProvider(failingRepo);
+
+      await historyProvider.load();
+
+      expect(historyProvider.state, isA<HistoryError>());
+      final errorState = historyProvider.state as HistoryError;
+      expect(errorState.message, contains('Error al cargar historial'));
+      expect(historyProvider.error, isNotNull);
+    });
+  });
+}
+
+class FailingHistoryRepository extends FakeHistoryRepository {
+  @override
+  Future<List<VisitEntry>> fetchRecentHistory({int days = 2, int limit = 100}) async {
+    throw Exception('Error de conexión a la BD');
+  }
 }

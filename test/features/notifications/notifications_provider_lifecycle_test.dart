@@ -4,12 +4,12 @@ import 'package:hookahub/core/data/supabase_service.dart';
 import 'package:hookahub/core/models/notification.dart';
 import 'package:hookahub/core/providers/database_health_provider.dart';
 import 'package:hookahub/core/services/database_health_service.dart';
-import 'package:hookahub/features/auth/auth_provider.dart';
 import 'package:hookahub/features/notifications/data/notifications_repository.dart';
 import 'package:hookahub/features/notifications/presentation/notifications_provider.dart';
 
 class FakeNotificationsRepository implements NotificationsRepository {
   bool activeUser = true;
+  bool shouldThrow = false;
   int fetchCallCount = 0;
   final StreamController<AppNotification> streamController =
       StreamController<AppNotification>.broadcast();
@@ -22,6 +22,9 @@ class FakeNotificationsRepository implements NotificationsRepository {
     int limit = 50,
     int offset = 0,
   }) async {
+    if (shouldThrow) {
+      throw Exception('Fallo simulado en fetchNotifications');
+    }
     fetchCallCount++;
     return [
       AppNotification(
@@ -59,9 +62,6 @@ class FakeNotificationsRepository implements NotificationsRepository {
 class FakeDatabaseHealthService implements DatabaseHealthService {
   @override
   Future<bool> checkDatabaseConnection() async => true;
-
-  @override
-  Future<bool> checkSupabaseService() async => true;
 }
 
 class FakeSupabaseService implements SupabaseService {
@@ -154,6 +154,45 @@ void main() {
 
       // No debe haber aumentado fetchCallCount
       expect(fakeRepo.fetchCallCount, initialFetchCalls);
+
+      provider.dispose();
+    });
+  });
+
+  group('NotificationsProvider Sealed State Transitions', () {
+    test('inicia en NotificationsInitial o Loaded según activeUser', () async {
+      fakeRepo.activeUser = false;
+      final provider = NotificationsProvider(fakeRepo);
+
+      expect(provider.state, isA<NotificationsInitial>());
+      expect(provider.isLoading, isFalse);
+
+      await provider.loadNotifications();
+
+      expect(provider.state, isA<NotificationsLoaded>());
+      final loaded = provider.state as NotificationsLoaded;
+      expect(loaded.notifications.length, 1);
+      expect(loaded.unreadCount, 1);
+      expect(provider.notifications.length, 1);
+      expect(provider.unreadCount, 1);
+
+      provider.cancelSubscriptionsAndClear();
+      expect(provider.state, isA<NotificationsInitial>());
+      expect(provider.notifications, isEmpty);
+
+      provider.dispose();
+    });
+
+    test('transita a NotificationsError si falla fetchNotifications', () async {
+      fakeRepo.shouldThrow = true;
+      final provider = NotificationsProvider(fakeRepo);
+
+      await provider.loadNotifications();
+
+      expect(provider.state, isA<NotificationsError>());
+      final errorState = provider.state as NotificationsError;
+      expect(errorState.message, 'Error al cargar notificaciones');
+      expect(provider.error, 'Error al cargar notificaciones');
 
       provider.dispose();
     });

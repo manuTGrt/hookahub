@@ -287,4 +287,47 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
        if (!provider.isLoaded) provider.load();
      });
      ```
-  4. **Defensa en Profundidad en Utilidades Globales**: Componentes utilitarios globales que reciben un `BuildContext` (ej. `AppToast._show`) deben incorporar su propia guarda defensiva (`if (!context.mounted) return;`) al inicio, evitando que errores de invocación de terceros crasheen la app.
+    4. **Defensa en Profundidad en Utilidades Globales**: Componentes utilitarios globales que reciben un `BuildContext` (ej. `AppToast._show`) deben incorporar su propia guarda defensiva (`if (!context.mounted) return;`) al inicio, evitando que errores de invocación de terceros crasheen la app.
+
+## 🏛️ Estados de Carga y Errores en UI (Sealed Classes vs Booleans Fragmentados)
+
+### Migración a Clases Selladas con Dart 3 (Regla de Oro)
+- **Problema**: El manejo de estados mediante múltiples booleanos y variables fragmentadas (`bool _isLoading`, `bool _isLoaded`, `String? _error`) genera espacios de estados imposibles e inconsistencias en memoria:
+  1. `_isLoading == true` y `_error != null`: Ambigüedad para la UI (¿mostrar spinner o mensaje de error?).
+  2. Hacks de sincronización como `if (isLoading && !isLoaded)` para distinguir primera carga de recargas.
+  3. Pérdida silenciosa de excepciones al limpiar listas sin emitir un estado de fallo explícito.
+  4. Falta de exhaustividad en tiempo de compilación: `if-else` frágiles no advierten si se agregan nuevos estados (`Reconnecting`, `Empty`, etc.).
+- **Solución Arquitectónica (Dart 3 Sealed Classes)**:
+  1. **Definición Inmutable**:
+     ```dart
+     sealed class FeatureState {
+       const FeatureState();
+     }
+     class FeatureInitial extends FeatureState { const FeatureInitial(); }
+     class FeatureLoading extends FeatureState { const FeatureLoading(); }
+     class FeatureLoaded extends FeatureState {
+       const FeatureLoaded({required this.data, this.isRefreshing = false});
+       final List<Item> data;
+       final bool isRefreshing;
+     }
+     class FeatureError extends FeatureState {
+       const FeatureError(this.message);
+       final String message;
+     }
+     ```
+  2. **Única Fuente de Verdad en Provider**:
+     - Sustituir los booleanos privados por `FeatureState _state = const FeatureInitial();`.
+     - Exponer `FeatureState get state => _state;`.
+     - Mantener getters de conveniencia transitorios/delegados (`bool get isLoading => _state is FeatureLoading;`) para evitar breaking changes en widgets periféricos.
+  3. **Consumo Exhaustivo en UI con Switch Expressions**:
+     - Eliminar cadenas `if-else` y evaluar `provider.state` con pattern matching nativo:
+     ```dart
+     return switch (provider.state) {
+       FeatureInitial() || FeatureLoading() => const Center(child: CircularProgressIndicator()),
+       FeatureError(:final message) => _buildErrorView(context, message),
+       FeatureLoaded(:final data) when data.isEmpty => _buildEmptyView(context),
+       FeatureLoaded(:final data) => _buildDataView(context, data),
+     };
+     ```
+  4. **Propagación Segura de Errores**:
+     - No silenciar excepciones con `catch(e) { return []; }` dentro de sub-métodos de búsqueda o carga. Permitir que la excepción burbujee hasta el método principal del provider para registrarla en `AppLogger.error()` y transitar limpiamente a `FeatureError`.

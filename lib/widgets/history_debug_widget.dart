@@ -29,6 +29,7 @@ class HistoryDebugWidget extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildRow('state', provider.state.runtimeType.toString()),
                   _buildRow('isLoading', provider.isLoading.toString()),
                   _buildRow('isLoaded', provider.isLoaded.toString()),
                   _buildRow('error', provider.error ?? 'null'),
