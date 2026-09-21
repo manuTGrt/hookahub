@@ -120,7 +120,7 @@ class VisitEntry {
     'mix_name': mixName,
     'author': author,
     'viewed_at': visitedAt.toIso8601String(),
-    'mix_color': mixColor.value,
+    'mix_color': mixColor.toARGB32(),
     'rating': rating,
     'reviews': reviews,
     'ingredients': ingredients,

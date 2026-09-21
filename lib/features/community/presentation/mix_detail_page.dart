@@ -911,7 +911,7 @@ class _HeaderArea extends StatelessWidget {
                   tooltip: 'Compartir',
                   onPressed: () {
                     final text = 'Mezcla: ${mix.name} por ${mix.author}';
-                    Share.share(text);
+                    SharePlus.instance.share(ShareParams(text: text));
                   },
                 ),
                 if (isMyMix)
@@ -1232,7 +1232,9 @@ class _RelatedMixItem extends StatelessWidget {
           fav.addFavorite(mix);
         }
       },
-      onShare: () => Share.share('Mezcla: ${mix.name} por ${mix.author}'),
+      onShare: () => SharePlus.instance.share(
+        ShareParams(text: 'Mezcla: ${mix.name} por ${mix.author}'),
+      ),
       onTap: () {
         Navigator.of(
           context,

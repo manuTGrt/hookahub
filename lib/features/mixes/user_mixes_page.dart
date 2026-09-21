@@ -249,8 +249,8 @@ class _UserMixItem extends StatelessWidget {
           fav.addFavorite(mix);
         }
       },
-      onShare: () => Share.share(
-        'Mezcla: ${mix.name} por ${mix.author}',
+      onShare: () => SharePlus.instance.share(
+        ShareParams(text: 'Mezcla: ${mix.name} por ${mix.author}'),
       ),
       isOwned: true, // En "Mis Mezclas" todas son del usuario
       onEdit: () async {

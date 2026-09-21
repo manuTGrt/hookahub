@@ -277,7 +277,9 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
                 isFavorite:
                     false, // TODO: Conectar con favoritos si es necesario
                 onFavoriteTap: () {},
-                onShare: () => Share.share('Mira esta mezcla: ${m.name}'),
+                onShare: () => SharePlus.instance.share(
+                  ShareParams(text: 'Mira esta mezcla: ${m.name}'),
+                ),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -361,7 +363,7 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
   void _handleShare() {
     final t = widget.tobacco;
     final text = 'Echa un vistazo a ${t.brand} - ${t.name} en Hookahub';
-    Share.share(text);
+    SharePlus.instance.share(ShareParams(text: text));
   }
 
   void _handleSubmitReview() async {

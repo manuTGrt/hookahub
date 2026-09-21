@@ -353,3 +353,26 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
      ```
   3. Ejecutar `pod install` dentro del directorio `ios/` para regenerar `Pods.xcodeproj` con los nuevos targets.
 
+## 🚀 Migración y Resolución de Deprecaciones (Flutter 3.27+ & Dependencias Modernas)
+
+### 1. Inicialización de Supabase (`publishableKey`)
+- **Problema**: El parámetro `anonKey:` en `Supabase.initialize()` está marcado como `@Deprecated` en favor de `publishableKey:`.
+- **Solución**: En `main.dart`, utilizar `await Supabase.initialize(url: url, publishableKey: anonKey)`. Esto sigue el estándar unificado de Supabase para clientes frontend.
+
+### 2. Compartir Contenido con `share_plus` (v13+)
+- **Problema**: La clase utilitaria estática `Share` y su método `Share.share(text)` están obsoletos.
+- **Breaking Change en API v13+**: `SharePlus.instance.share` no acepta un `String` posicional simple, sino una instancia del objeto `ShareParams(text: ...)`.
+- **Patrón Correcto**:
+  ```dart
+  // ✅ Correcto
+  SharePlus.instance.share(ShareParams(text: 'Texto a compartir'));
+
+  // ❌ Incorrecto (deprecado o error de tipos en v13+)
+  Share.share('Texto a compartir');
+  SharePlus.instance.share('Texto a compartir'); // Error de tipos: espera ShareParams
+  ```
+
+### 3. Serialización de Color en Flutter 3.27+ (`toARGB32`)
+- **Problema**: El getter `Color.value` fue deprecado en Flutter 3.27+ para dar soporte a espacios de color Wide Gamut.
+- **Solución**: Al serializar un `Color` a formato numérico entero (para base de datos o modelos JSON), utilizar `color.toARGB32()`. Para la deserialización, `Color(map['color'] as int)` sigue siendo completamente funcional y retrocompatible.
+

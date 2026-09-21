@@ -47,7 +47,7 @@ class Mix {
     'author': author,
     'rating': rating,
     'ingredients': ingredients,
-    'color': color.value,
+    'color': color.toARGB32(),
     'reviews': reviews,
   };
 

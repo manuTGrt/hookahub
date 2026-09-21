@@ -87,8 +87,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
                             onFavoriteTap: () => fav.removeFavorite(mix.id),
                             trailingIcon: Icons.push_pin_outlined,
                             onTrailingTap: () => fav.toggleTop5(mix.id),
-                            onShare: () => Share.share(
-                              'Mezcla: ${mix.name} por ${mix.author}',
+                            onShare: () => SharePlus.instance.share(
+                              ShareParams(text: 'Mezcla: ${mix.name} por ${mix.author}'),
                             ),
                             isOwned: isOwned,
                             onEdit: isOwned
@@ -247,8 +247,8 @@ class _Top5Section extends StatelessWidget {
                             // En Top 5, el botón de pin quita del Top 5 (sigue en favoritos)
                             trailingIcon: Icons.push_pin,
                             onTrailingTap: () => onToggle(mix.id),
-                            onShare: () => Share.share(
-                              'Mezcla: ${mix.name} por ${mix.author}',
+                            onShare: () => SharePlus.instance.share(
+                              ShareParams(text: 'Mezcla: ${mix.name} por ${mix.author}'),
                             ),
                             isOwned: isOwned,
                             onEdit: isOwned

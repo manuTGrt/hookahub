@@ -20,7 +20,7 @@ Future<void> main() async {
   } else {
     await Supabase.initialize(
       url: url,
-      anonKey: anonKey,
+      publishableKey: anonKey,
       // Para OAuth (Google) el redirect URL se gestiona via deep links en cada plataforma.
       // y podremos pasar opciones adicionales si fuese necesario.
     );
