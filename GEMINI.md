@@ -331,3 +331,25 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
      ```
   4. **Propagación Segura de Errores**:
      - No silenciar excepciones con `catch(e) { return []; }` dentro de sub-métodos de búsqueda o carga. Permitir que la excepción burbujee hasta el método principal del provider para registrarla en `AppLogger.error()` y transitar limpiamente a `FeatureError`.
+
+## 🍏 Compilación en iOS y CocoaPods
+
+### Error de "Target Integrity: The iOS deployment target is set to X, but the range of supported deployment target versions is 15.0 to..."
+- **Problema**: Al compilar para un dispositivo físico o simulador en versiones modernas de Xcode (Xcode 16+), el compilador rechaza cualquier target con versión de despliegue inferior a iOS 15.0. Múltiples dependencias de CocoaPods tienen versiones mínimas heredadas (`9.0`, `12.0`, `13.0`, `14.0`), provocando el fallo del build con el error `Target Integrity (Xcode): The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to...`.
+- **Solución Arquitectónica (`ios/Podfile`)**:
+  1. Fijar `platform :ios, '15.0'` en la parte superior del `Podfile`.
+  2. Forzar que todos los pods dependientes eleven su `IPHONEOS_DEPLOYMENT_TARGET` a mínimo `15.0` en el bloque `post_install`:
+     ```ruby
+     post_install do |installer|
+       installer.pods_project.targets.each do |target|
+         flutter_additional_ios_build_settings(target)
+         target.build_configurations.each do |config|
+           if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.0
+             config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+           end
+         end
+       end
+     end
+     ```
+  3. Ejecutar `pod install` dentro del directorio `ios/` para regenerar `Pods.xcodeproj` con los nuevos targets.
+

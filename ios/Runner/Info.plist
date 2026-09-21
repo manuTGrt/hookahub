@@ -38,22 +38,19 @@
 				<string>com.googleusercontent.apps.372137646373-005982qekmrkbvpfb2dj253ollk3euto</string>
 			</array>
 		</dict>
-
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-
-
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_dartobservatory._tcp</string>
 	</array>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Permitir depuración de Flutter en la red local.</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Necesitamos acceder a la cámara para permitirte tomar una foto de perfil.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Permitir depuración de Flutter en la red local.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Necesitamos acceder a tu galería para permitirte seleccionar una foto de perfil.</string>
 	<key>UIApplicationSceneManifest</key>
