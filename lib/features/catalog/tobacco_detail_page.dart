@@ -134,7 +134,9 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
                   // Igual que MixCard: fondo tintado y borde con el color base (corazón)
                   color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
                   border: Border.all(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Column(
@@ -150,7 +152,9 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
                           // Degradado partiendo del color del "corazón" (mismo que MixCard)
                           colors: [
                             Theme.of(context).primaryColor,
-                            Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                            Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.5),
                           ],
                         ),
                       ),
@@ -256,7 +260,7 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverList.separated(
             itemCount: provider.mixes.length + (provider.hasMoreData ? 1 : 0),
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               if (index >= provider.mixes.length) {
                 return const Center(

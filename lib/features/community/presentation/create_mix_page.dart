@@ -120,7 +120,10 @@ class _CreateMixPageState extends State<CreateMixPage> {
 
       if (details == null) {
         if (mounted) {
-          AppToast.showInfo(context, 'Error al cargar los detalles de la mezcla');
+          AppToast.showInfo(
+            context,
+            'Error al cargar los detalles de la mezcla',
+          );
           setState(() => _loadingExisting = false);
         }
         return;
@@ -242,8 +245,14 @@ class _CreateMixPageState extends State<CreateMixPage> {
 
       if (currentUser == null) {
         if (!mounted) return;
-        Navigator.of(context, rootNavigator: true).pop(); // Cerrar diálogo de carga
-        AppToast.showInfo(context, 'Debes iniciar sesión para crear una mezcla.');
+        Navigator.of(
+          context,
+          rootNavigator: true,
+        ).pop(); // Cerrar diálogo de carga
+        AppToast.showInfo(
+          context,
+          'Debes iniciar sesión para crear una mezcla.',
+        );
         return;
       }
 
@@ -291,7 +300,10 @@ class _CreateMixPageState extends State<CreateMixPage> {
       }
 
       if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop(); // Cerrar diálogo de carga
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).pop(); // Cerrar diálogo de carga
 
       if (resultMix != null) {
         // Retornar a la pantalla anterior con la mezcla creada/editada
@@ -313,7 +325,10 @@ class _CreateMixPageState extends State<CreateMixPage> {
       }
     } catch (e) {
       if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop(); // Cerrar diálogo de carga
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).pop(); // Cerrar diálogo de carga
       AppToast.showError(
         context,
         _isEdit
@@ -404,8 +419,8 @@ class _CreateMixPageState extends State<CreateMixPage> {
                       Text(
                         'Cargando mezcla...',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.textTheme.bodyLarge?.color?.withValues(alpha: 
-                            0.7,
+                          color: theme.textTheme.bodyLarge?.color?.withValues(
+                            alpha: 0.7,
                           ),
                         ),
                       ),
@@ -452,8 +467,9 @@ class _CreateMixPageState extends State<CreateMixPage> {
                         hint: 'Introduce el título',
                         errorText: _nameError,
                         onChanged: (_) {
-                          if (_nameError != null)
+                          if (_nameError != null) {
                             setState(() => _nameError = null);
+                          }
                         },
                       ),
                       const SizedBox(height: 24),
@@ -473,8 +489,9 @@ class _CreateMixPageState extends State<CreateMixPage> {
                         errorText: _descError,
                         maxLines: 3,
                         onChanged: (_) {
-                          if (_descError != null)
+                          if (_descError != null) {
                             setState(() => _descError = null);
+                          }
                         },
                       ),
                       const SizedBox(height: 32),
@@ -530,8 +547,9 @@ class _CreateMixPageState extends State<CreateMixPage> {
                               },
                               pending: _pendingSelection,
                               onAdd: () {
-                                if (_pendingSelection != null)
+                                if (_pendingSelection != null) {
                                   _addIngredient(_pendingSelection!);
+                                }
                               },
                             );
                           },
@@ -552,7 +570,9 @@ class _CreateMixPageState extends State<CreateMixPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.05,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: theme.dividerColor.withValues(alpha: 0.2),
@@ -704,8 +724,9 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
   }
 
   void _onScroll() {
-    if (!mounted || !widget.enabled || !widget.hasMore || widget.isLoading)
+    if (!mounted || !widget.enabled || !widget.hasMore || widget.isLoading) {
       return;
+    }
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     if (position.maxScrollExtent - position.pixels < 120) {
@@ -939,7 +960,9 @@ class _IngredientSelectorState extends State<_IngredientSelector> {
                 child: Text(
                   'Sin resultados',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                    color: theme.textTheme.bodySmall?.color?.withValues(
+                      alpha: 0.7,
+                    ),
                   ),
                 ),
               ),
@@ -1006,7 +1029,9 @@ class _ModernAddButton extends StatelessWidget {
               ? LinearGradient(
                   colors: [
                     isDark ? darkTurquoise : turquoise,
-                    isDark ? darkTurquoise.withValues(alpha: 0.8) : turquoiseDark,
+                    isDark
+                        ? darkTurquoise.withValues(alpha: 0.8)
+                        : turquoiseDark,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -1017,8 +1042,8 @@ class _ModernAddButton extends StatelessWidget {
           boxShadow: enabled
               ? [
                   BoxShadow(
-                    color: (isDark ? darkTurquoise : turquoise).withValues(alpha: 
-                      0.3,
+                    color: (isDark ? darkTurquoise : turquoise).withValues(
+                      alpha: 0.3,
                     ),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
@@ -1096,8 +1121,8 @@ class _SearchField extends StatelessWidget {
         ),
         hintText: 'Buscar tabaco por nombre o marca...',
         hintStyle: TextStyle(
-          color: (theme.textTheme.bodyLarge?.color ?? Colors.black).withValues(alpha: 
-            0.5,
+          color: (theme.textTheme.bodyLarge?.color ?? Colors.black).withValues(
+            alpha: 0.5,
           ),
         ),
         filled: true,
@@ -1195,7 +1220,9 @@ class _IngredientRow extends StatelessWidget {
                 Text(
                   titleCase(ingredient.tobacco.brand),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                    color: theme.textTheme.bodySmall?.color?.withValues(
+                      alpha: 0.7,
+                    ),
                   ),
                 ),
               ],

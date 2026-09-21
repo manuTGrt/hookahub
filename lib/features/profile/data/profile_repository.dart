@@ -53,7 +53,7 @@ class ProfileRepository {
     final data = <String, dynamic>{
       if (update.username != null) 'username': update.username,
       if (update.email != null) 'email': update.email,
-      if (displayName != null) 'display_name': displayName,
+      'display_name': ?displayName,
       if (update.birthdate != null)
         'birthdate': update.birthdate!.toIso8601String(),
       if (update.avatarUrl != null) 'avatar_url': update.avatarUrl,
@@ -180,7 +180,7 @@ class ProfileRepository {
   Future<String?> createSignedAvatarUrl(String? storagePath) async {
     if (storagePath == null || storagePath.isEmpty) return null;
     if (storagePath.startsWith('icon:')) return null;
-    
+
     try {
       final url = await _client.storage
           .from(StorageConfig.avatarsBucket)
@@ -191,7 +191,7 @@ class ProfileRepository {
     }
   }
 
-  /// Establece un avatar de icono (no imagen), persistiendo como 'icon:<index>'
+  /// Establece un avatar de icono (no imagen), persistiendo como `icon:<index>`
   /// y elimina archivos existentes en Storage.
   Future<void> setAvatarIcon(int index) async {
     final user = _client.auth.currentUser;

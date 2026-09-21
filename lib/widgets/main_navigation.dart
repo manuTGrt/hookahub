@@ -164,8 +164,12 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                     boxShadow: [
                       BoxShadow(
                         color: isDark
-                            ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
-                            : Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                            ? Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.2)
+                            : Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -252,7 +256,9 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                               .read<SearchProvider>();
                                           await searchProvider.search(value);
 
-                                          if (!mounted || !context.mounted) return;
+                                          if (!mounted || !context.mounted) {
+                                            return;
+                                          }
 
                                           // Navegar a la página de resultados
                                           Navigator.of(context).push(
@@ -279,7 +285,9 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                           filled: true,
                                           fillColor: isDark
                                               ? Theme.of(context).cardColor
-                                              : Colors.white.withValues(alpha: 0.95),
+                                              : Colors.white.withValues(
+                                                  alpha: 0.95,
+                                                ),
                                           prefixIcon: Icon(
                                             Icons.search,
                                             color: Theme.of(
@@ -309,9 +317,9 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                               12,
                                             ),
                                             borderSide: BorderSide(
-                                              color: Theme.of(
-                                                context,
-                                              ).dividerColor.withValues(alpha: 0.3),
+                                              color: Theme.of(context)
+                                                  .dividerColor
+                                                  .withValues(alpha: 0.3),
                                             ),
                                           ),
                                           enabledBorder: OutlineInputBorder(
@@ -319,9 +327,9 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                               12,
                                             ),
                                             borderSide: BorderSide(
-                                              color: Theme.of(
-                                                context,
-                                              ).dividerColor.withValues(alpha: 0.2),
+                                              color: Theme.of(context)
+                                                  .dividerColor
+                                                  .withValues(alpha: 0.2),
                                             ),
                                           ),
                                           focusedBorder: OutlineInputBorder(
@@ -385,9 +393,8 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                   Container(
                                     decoration: BoxDecoration(
                                       color: isDark
-                                          ? Theme.of(
-                                              context,
-                                            ).primaryColor.withValues(alpha: 0.2)
+                                          ? Theme.of(context).primaryColor
+                                                .withValues(alpha: 0.2)
                                           : Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -418,9 +425,8 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                   Container(
                                     decoration: BoxDecoration(
                                       color: isDark
-                                          ? Theme.of(
-                                              context,
-                                            ).primaryColor.withValues(alpha: 0.2)
+                                          ? Theme.of(context).primaryColor
+                                                .withValues(alpha: 0.2)
                                           : Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -507,9 +513,8 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                   Container(
                                     decoration: BoxDecoration(
                                       color: isDark
-                                          ? Theme.of(
-                                              context,
-                                            ).primaryColor.withValues(alpha: 0.2)
+                                          ? Theme.of(context).primaryColor
+                                                .withValues(alpha: 0.2)
                                           : Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -632,12 +637,12 @@ class MainNavigationPageState extends State<MainNavigationPage> {
     // Cargar dependencias globales críticas al iniciar la app
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
+
       final profileProvider = context.read<ProfileProvider>();
       if (!profileProvider.isLoaded) {
         unawaited(profileProvider.load());
       }
-      
+
       final favProvider = context.read<FavoritesProvider>();
       if (!favProvider.isLoaded) {
         unawaited(favProvider.load());
@@ -775,7 +780,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
           },
         ),
       ],
-      onGenerateInitialRoutes: (_, __) {
+      onGenerateInitialRoutes: (_, _) {
         // Primera vez que se construye este Navigator: disparar first-load
         _onTabFirstEnter(index);
         return [MaterialPageRoute(builder: _pageBuilders[index])];

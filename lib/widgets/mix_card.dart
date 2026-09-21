@@ -34,7 +34,7 @@ class MixCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mixColor = mix.color;
-    String _toTitleCaseSpaces(String input) {
+    String toTitleCaseSpaces(String input) {
       // Convierte cada palabra a Title Case preservando los espacios originales.
       if (input.trim().isEmpty) return input.trim();
       final buffer = StringBuffer();
@@ -183,7 +183,7 @@ class MixCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            _toTitleCaseSpaces(ingredient),
+                            toTitleCaseSpaces(ingredient),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(

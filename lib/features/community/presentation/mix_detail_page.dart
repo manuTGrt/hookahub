@@ -573,14 +573,13 @@ class _MixDetailPageState extends State<MixDetailPage> {
             ),
           )
         else
-          ..._reviews
-              .map(
-                (r) => _ReviewTile(
-                  review: r,
-                  onDelete: () => _handleDeleteReview(r.id),
-                  onEdit: () => _handleEditReview(r),
-                ),
-              ),
+          ..._reviews.map(
+            (r) => _ReviewTile(
+              review: r,
+              onDelete: () => _handleDeleteReview(r.id),
+              onEdit: () => _handleEditReview(r),
+            ),
+          ),
       ],
     );
   }
@@ -679,7 +678,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
                   AppToast.showInfo(context, 'Añade comentario y puntuación');
                   return;
                 }
-                
+
                 final repository = CommunityRepository(SupabaseService());
                 final success = await repository.updateReview(
                   mixId: widget.mix.id,
@@ -688,13 +687,13 @@ class _MixDetailPageState extends State<MixDetailPage> {
                   comment: dialogController.text.trim(),
                 );
                 if (!context.mounted) return;
-                
+
                 if (success) {
                   AppToast.showSuccess(context, 'Reseña actualizada');
                   dialogController.dispose();
                   Navigator.of(context).pop();
-                  // We need a way to reload reviews, wait, let's just close dialog, the parent page will probably reload or needs setState. 
-                  // Oh, wait, the original code had: await _loadReviews(); 
+                  // We need a way to reload reviews, wait, let's just close dialog, the parent page will probably reload or needs setState.
+                  // Oh, wait, the original code had: await _loadReviews();
                   await _loadReviews();
                 } else {
                   AppToast.showError(context, 'Error al actualizar reseña');
@@ -1072,7 +1071,7 @@ class DonutChart extends StatelessWidget {
               backgroundColor: backgroundColor ?? Colors.transparent,
             ),
           ),
-          if (center != null) center!,
+          ?center,
         ],
       ),
     );
@@ -1203,8 +1202,7 @@ class _RelatedMixes extends StatelessWidget {
 
     return Column(
       children: [
-        for (final m in mixes)
-          _RelatedMixItem(key: ValueKey(m.id), mix: m),
+        for (final m in mixes) _RelatedMixItem(key: ValueKey(m.id), mix: m),
       ],
     );
   }

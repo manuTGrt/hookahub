@@ -106,14 +106,18 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) return 'La contraseña es obligatoria';
     if (value.length < 8) return 'Debe tener al menos 8 caracteres';
-    if (!RegExp(r'[A-Z]').hasMatch(value))
+    if (!RegExp(r'[A-Z]').hasMatch(value)) {
       return 'Debe contener al menos una mayúscula';
-    if (!RegExp(r'[a-z]').hasMatch(value))
+    }
+    if (!RegExp(r'[a-z]').hasMatch(value)) {
       return 'Debe contener al menos una minúscula';
-    if (!RegExp(r'[0-9]').hasMatch(value))
+    }
+    if (!RegExp(r'[0-9]').hasMatch(value)) {
       return 'Debe contener al menos un número';
-    if (!RegExp(r'[!@#\$&*~_\-]').hasMatch(value))
+    }
+    if (!RegExp(r'[!@#\$&*~_\-]').hasMatch(value)) {
       return 'Debe contener un carácter especial (!@#\$&*~_- )';
+    }
     return null;
   }
 
@@ -545,8 +549,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               _emailError ||
                               _passwordError ||
                               _confirmPasswordError ||
-                              _showAgeError)
+                              _showAgeError) {
                             return;
+                          }
                           setState(() => _isLoading = true);
                           final auth = context.read<AuthProvider>();
                           final error = await auth.registerEmail(
@@ -569,7 +574,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             _showErrors = false;
                             _triedRegister = false;
                           });
-                          AppToast.showInfo(context, 'Registro exitoso. Revisa tu correo si se requiere verificación.',);
+                          AppToast.showInfo(
+                            context,
+                            'Registro exitoso. Revisa tu correo si se requiere verificación.',
+                          );
                           Navigator.pop(context);
                         },
                   child: _isLoading
