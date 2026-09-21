@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/mix_card.dart';
 import '../../core/models/mix.dart';
-import '../favorites/favorites_provider.dart';
+import '../favorites/presentation/favorites_provider.dart';
 import 'presentation/mix_detail_page.dart';
 import 'presentation/community_provider.dart';
 import 'domain/community_filters.dart';

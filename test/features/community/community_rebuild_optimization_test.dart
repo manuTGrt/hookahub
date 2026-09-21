@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:hookahub/core/models/mix.dart';
-import 'package:hookahub/features/favorites/favorites_provider.dart';
-import 'package:hookahub/features/favorites/favorites_repository.dart';
+import 'package:hookahub/features/favorites/presentation/favorites_provider.dart';
+import 'package:hookahub/features/favorites/domain/favorites_repository.dart';
 import 'package:hookahub/features/profile/presentation/profile_provider.dart';
 import 'package:hookahub/features/profile/domain/profile.dart';
 
@@ -45,7 +45,6 @@ class FakeProfileProvider extends ChangeNotifier implements ProfileProvider {
   @override
   String? get error => null;
 
-  @override
   void setProfile(Profile profile) {
     _profile = profile;
     notifyListeners();

@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/models/mix.dart';
-import '../../favorites/favorites_provider.dart';
+import '../../favorites/presentation/favorites_provider.dart';
 import '../../../widgets/mix_card.dart';
 import '../../../widgets/tobacco_card.dart';
 import '../../../core/models/tobacco.dart';

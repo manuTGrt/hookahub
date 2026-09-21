@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/models/mix.dart';
 import '../../../core/providers/database_health_provider.dart';
 import '../../auth/auth_provider.dart';
-import '../data/user_mixes_repository.dart';
+import '../domain/user_mixes_repository.dart';
 
 class UserMixesProvider extends ChangeNotifier {
   UserMixesProvider(this._repo, {AuthProvider? auth}) : _auth = auth {

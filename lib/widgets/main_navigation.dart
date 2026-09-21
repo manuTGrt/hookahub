@@ -17,7 +17,7 @@ import '../core/providers/database_health_provider.dart';
 import '../features/search/search_provider.dart';
 import '../features/search/search_results_page.dart';
 import 'notification_icon.dart';
-import '../features/favorites/favorites_provider.dart';
+import '../features/favorites/presentation/favorites_provider.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});

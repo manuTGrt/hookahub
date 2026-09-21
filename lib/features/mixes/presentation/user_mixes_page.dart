@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../widgets/mix_card.dart';
-import '../favorites/favorites_provider.dart';
-import '../community/presentation/mix_detail_page.dart';
-import '../community/presentation/create_mix_page.dart';
-import '../community/data/community_repository.dart';
-import 'presentation/user_mixes_provider.dart';
-import '../../core/data/supabase_service.dart';
-import '../../core/models/mix.dart';
-import '../../core/utils/app_toast.dart';
+import '../../../widgets/mix_card.dart';
+import '../../favorites/presentation/favorites_provider.dart';
+import '../../community/presentation/mix_detail_page.dart';
+import '../../community/presentation/create_mix_page.dart';
+import '../../community/data/community_repository.dart';
+import 'user_mixes_provider.dart';
+import '../../../core/data/supabase_service.dart';
+import '../../../core/models/mix.dart';
+import '../../../core/utils/app_toast.dart';
 
 class UserMixesPage extends StatefulWidget {
   const UserMixesPage({super.key});

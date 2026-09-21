@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants.dart';
-import '../favorites/favorites_page.dart';
+import '../favorites/presentation/favorites_page.dart';
 import '../catalog/domain/catalog_filters.dart';
 import '../community/domain/community_filters.dart';
 import '../../widgets/main_navigation.dart';

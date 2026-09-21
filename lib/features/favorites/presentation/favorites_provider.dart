@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../core/models/mix.dart';
-import 'favorites_repository.dart';
+import '../../../core/models/mix.dart';
+import '../domain/favorites_repository.dart';
 
 class FavoritesProvider extends ChangeNotifier {
   FavoritesProvider(this._repo);

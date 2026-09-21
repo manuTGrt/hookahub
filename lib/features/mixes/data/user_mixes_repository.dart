@@ -2,12 +2,14 @@ import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/mix.dart';
+import '../domain/user_mixes_repository.dart' as domain;
 
-class UserMixesRepository {
+class UserMixesRepository implements domain.UserMixesRepository {
   UserMixesRepository(this._supabase);
 
   final SupabaseService _supabase;
 
+  @override
   Future<List<Mix>> fetchMyMixes({int limit = 20, int offset = 0}) async {
     try {
       final user = _supabase.client.auth.currentUser;

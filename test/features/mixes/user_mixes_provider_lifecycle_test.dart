@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hookahub/core/models/mix.dart';
-import 'package:hookahub/features/mixes/data/user_mixes_repository.dart';
+import 'package:hookahub/features/mixes/domain/user_mixes_repository.dart';
 import 'package:hookahub/features/mixes/presentation/user_mixes_provider.dart';
 
 class FakeUserMixesRepository implements UserMixesRepository {
@@ -18,19 +18,6 @@ class FakeUserMixesRepository implements UserMixesRepository {
       ),
     ];
   }
-
-  @override
-  Future<Mix?> saveMix({
-    required String name,
-    String? description,
-    required List<Map<String, dynamic>> components,
-  }) async => null;
-
-  @override
-  Future<bool> deleteMix(String mixId) async => true;
-
-  @override
-  Future<int> countMyMixes() async => 1;
 }
 
 void main() {

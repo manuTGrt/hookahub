@@ -5,7 +5,7 @@ import '../../core/constants.dart';
 import '../../core/models/mix.dart';
 import '../../widgets/mix_card.dart';
 import '../community/presentation/mix_detail_page.dart';
-import '../favorites/favorites_provider.dart';
+import '../favorites/presentation/favorites_provider.dart';
 import 'presentation/history_provider.dart';
 import 'domain/visit_entry.dart';
 

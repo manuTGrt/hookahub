@@ -376,3 +376,17 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
 - **Problema**: El getter `Color.value` fue deprecado en Flutter 3.27+ para dar soporte a espacios de color Wide Gamut.
 - **Solución**: Al serializar un `Color` a formato numérico entero (para base de datos o modelos JSON), utilizar `color.toARGB32()`. Para la deserialización, `Color(map['color'] as int)` sigue siendo completamente funcional y retrocompatible.
 
+## 🏛️ Clean Architecture y Modularización por Features (Regla Estricta)
+
+### Estructura Canónica de Tres Capas
+- **Regla Estricta**: Toda funcionalidad dentro de `lib/features/<feature_name>/` debe estructurarse obligatoriamente bajo las tres capas de Clean Architecture:
+  ```
+  feature_name/
+  ├── data/        # Data sources, repositorios de red o persistencia local (ej. SharedPreferences/Supabase)
+  ├── domain/      # Contratos/interfaces abstractas (ej. FavoritesRepository), entidades puras y filtros
+  └── presentation/# Páginas (UI Widgets), componentes visuales y Providers (ChangeNotifier)
+  ```
+- **Prohibición de Archivos en la Raíz de la Feature**: Ningún archivo `.dart` debe residir directamente en la raíz de una carpeta feature (ej. `features/favorites/favorites_page.dart` ❌). Las vistas y providers van en `presentation/`, los repositorios concretos en `data/`, y los contratos/modelos en `domain/`.
+- **Inversión de Dependencias (DIP)**: Los providers en `presentation/` (ej. `FavoritesProvider`, `UserMixesProvider`) deben depender de la abstracción/interfaz definida en `domain/` (ej. `FavoritesRepository`), permitiendo desacoplamiento total y tests con mocks limpios.
+
+

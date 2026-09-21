@@ -6,7 +6,7 @@ import '../../widgets/tobacco_image.dart';
 import '../../widgets/mix_card.dart';
 import '../catalog/tobacco_detail_page.dart';
 import '../community/presentation/mix_detail_page.dart';
-import '../favorites/favorites_provider.dart';
+import '../favorites/presentation/favorites_provider.dart';
 import '../community/presentation/create_mix_page.dart';
 import '../catalog/presentation/request_tobacco_page.dart';
 import '../../core/data/supabase_service.dart';

@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../core/constants.dart';
-import '../../core/models/mix.dart';
-import '../../widgets/mix_card.dart';
-import '../profile/presentation/profile_provider.dart';
-import '../community/data/community_repository.dart';
-import '../community/presentation/mix_detail_page.dart';
-import '../community/presentation/create_mix_page.dart';
-import '../../core/data/supabase_service.dart';
+import '../../../core/constants.dart';
+import '../../../core/models/mix.dart';
+import '../../../widgets/mix_card.dart';
+import '../../profile/presentation/profile_provider.dart';
+import '../../community/data/community_repository.dart';
+import '../../community/presentation/mix_detail_page.dart';
+import '../../community/presentation/create_mix_page.dart';
+import '../../../core/data/supabase_service.dart';
 import 'favorites_provider.dart';
-import '../../core/utils/app_toast.dart';
+import '../../../core/utils/app_toast.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
