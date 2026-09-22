@@ -289,6 +289,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
   @override
   void dispose() {
     _reconnectedSub?.cancel();
+    _reconnectedSub = null;
     _reviewController.dispose();
     super.dispose();
   }
@@ -629,80 +630,30 @@ class _MixDetailPageState extends State<MixDetailPage> {
   }
 
   void _handleEditReview(Review review) {
-    // Variables locales para el diálogo
-    double dialogRating = review.rating;
-    final dialogController = TextEditingController(text: review.comment);
-
-    showDialog(
+    showDialog<bool>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Editar reseña'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _StarInput(
-                  value: dialogRating,
-                  onChanged: (v) {
-                    setDialogState(() {
-                      dialogRating = v;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: dialogController,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    hintText: 'Comparte tu experiencia...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                dialogController.dispose();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (dialogController.text.trim().isEmpty || dialogRating <= 0) {
-                  AppToast.showInfo(context, 'Añade comentario y puntuación');
-                  return;
-                }
+      builder: (context) => _EditReviewDialog(
+        initialRating: review.rating,
+        initialComment: review.comment,
+        onSave: (rating, comment) async {
+          final repository = CommunityRepository(SupabaseService());
+          final success = await repository.updateReview(
+            mixId: widget.mix.id,
+            reviewId: review.id,
+            rating: rating,
+            comment: comment,
+          );
+          if (!mounted || !context.mounted) return false;
 
-                final repository = CommunityRepository(SupabaseService());
-                final success = await repository.updateReview(
-                  mixId: widget.mix.id,
-                  reviewId: review.id,
-                  rating: dialogRating,
-                  comment: dialogController.text.trim(),
-                );
-                if (!context.mounted) return;
-
-                if (success) {
-                  AppToast.showSuccess(context, 'Reseña actualizada');
-                  dialogController.dispose();
-                  Navigator.of(context).pop();
-                  // We need a way to reload reviews, wait, let's just close dialog, the parent page will probably reload or needs setState.
-                  // Oh, wait, the original code had: await _loadReviews();
-                  await _loadReviews();
-                } else {
-                  AppToast.showError(context, 'Error al actualizar reseña');
-                }
-              },
-              child: const Text('Guardar'),
-            ),
-          ],
-        ),
+          if (success) {
+            AppToast.showSuccess(context, 'Reseña actualizada');
+            await _loadReviews();
+            return true;
+          } else {
+            AppToast.showError(context, 'Error al actualizar reseña');
+            return false;
+          }
+        },
       ),
     );
   }
@@ -1331,6 +1282,107 @@ class _StarInput extends StatelessWidget {
           onPressed: () => onChanged((i + 1).toDouble()),
         );
       }),
+    );
+  }
+}
+
+class _EditReviewDialog extends StatefulWidget {
+  const _EditReviewDialog({
+    required this.initialRating,
+    required this.initialComment,
+    required this.onSave,
+  });
+
+  final double initialRating;
+  final String initialComment;
+  final Future<bool> Function(double rating, String comment) onSave;
+
+  @override
+  State<_EditReviewDialog> createState() => _EditReviewDialogState();
+}
+
+class _EditReviewDialogState extends State<_EditReviewDialog> {
+  late double _rating;
+  late final TextEditingController _controller;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _rating = widget.initialRating;
+    _controller = TextEditingController(text: widget.initialComment);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Editar reseña'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _StarInput(
+              value: _rating,
+              onChanged: (v) {
+                if (_isSaving) return;
+                setState(() => _rating = v);
+              },
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              enabled: !_isSaving,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: 'Comparte tu experiencia...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
+          child: const Text('Cancelar'),
+        ),
+        TextButton(
+          onPressed: _isSaving
+              ? null
+              : () async {
+                  final text = _controller.text.trim();
+                  if (text.isEmpty || _rating <= 0) {
+                    AppToast.showInfo(context, 'Añade comentario y puntuación');
+                    return;
+                  }
+
+                  setState(() => _isSaving = true);
+                  final success = await widget.onSave(_rating, text);
+
+                  if (!context.mounted) return;
+                  if (success) {
+                    Navigator.of(context).pop(true);
+                  } else {
+                    setState(() => _isSaving = false);
+                  }
+                },
+          child: _isSaving
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Guardar'),
+        ),
+      ],
     );
   }
 }
