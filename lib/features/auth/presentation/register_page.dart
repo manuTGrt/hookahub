@@ -125,6 +125,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _usernameController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _birthDateController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -144,6 +145,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _usernameController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _birthDateController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -161,6 +163,8 @@ class _RegisterPageState extends State<RegisterPage> {
     if (picked != null) {
       setState(() {
         _selectedBirthDate = picked;
+        _birthDateController.text =
+            '${picked.day}/${picked.month}/${picked.year}';
         // Validar inmediatamente la mayoría de edad
         _showAgeError = !_isOlderThan18(picked);
         _showErrors =
@@ -330,11 +334,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 onTap: _selectBirthDate,
                 child: AbsorbPointer(
                   child: PastelTextField(
-                    controller: TextEditingController(
-                      text: _selectedBirthDate != null
-                          ? '${_selectedBirthDate!.day}/${_selectedBirthDate!.month}/${_selectedBirthDate!.year}'
-                          : '',
-                    ),
+                    controller: _birthDateController,
                     hintText: 'Selecciona tu fecha de nacimiento',
                     icon: Icons.calendar_today_outlined,
                     fillColor: isDark ? fieldDark : fieldLight,

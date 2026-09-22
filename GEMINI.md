@@ -427,3 +427,14 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   ```
 - **Prohibición de Archivos en la Raíz de la Feature**: Ningún archivo `.dart` debe residir directamente en la raíz de una carpeta feature (ej. `features/favorites/favorites_page.dart` ❌). Las vistas y providers van en `presentation/`, los repositorios concretos en `data/`, y los contratos/modelos en `domain/`.
 - **Inversión de Dependencias (DIP)**: Los providers en `presentation/` (ej. `FavoritesProvider`, `UserMixesProvider`) deben depender de la abstracción/interfaz definida en `domain/` (ej. `FavoritesRepository`), permitiendo desacoplamiento total y tests con mocks limpios.
+
+## 🧠 Gestión de Memoria y Ciclo de Vida de Widgets (Memory Leaks)
+
+### Prohibición Estricta de Instanciación de Controladores en `build()` (Regla de Oro)
+
+- **Problema**: Instanciar controladores (`TextEditingController`, `ScrollController`, `AnimationController`, `PageController`, etc.) directamente dentro del método `build(BuildContext context)` provoca fugas de memoria críticas (*Memory Leaks*). Cada vez que la vista se reconstruye (por tecleo en cualquier campo, cambios de foco `FocusNode`, validaciones reactivas o cambios de tema), se aloja una nueva instancia en el Heap de Dart sin invocar `dispose()` sobre las anteriores. Esto acumula escuchadores nativos y genera alta presión sobre el Garbage Collector.
+- **Regla Estricta**:
+  1. **Declaración en el `State`**: Todo controlador debe declararse obligatoriamente como miembro del `State` de un `StatefulWidget` o gestionarse a través de un `ChangeNotifierProvider` si corresponde.
+  2. **Liberación en `dispose()`**: Es **mandatorio** invocar `.dispose()` sobre cada controlador dentro del `@override void dispose()` de la clase `State`, antes de llamar a `super.dispose()`.
+  3. **Actualización Reactiva de Valores**: Si el valor mostrado en el campo depende de un evento asíncrono o selector externo (como un `showDatePicker`), se debe actualizar la propiedad `.text` del controlador persistente (`_controller.text = ...`) dentro del `setState()` o callback correspondiente, en lugar de recrear el controlador.
+
