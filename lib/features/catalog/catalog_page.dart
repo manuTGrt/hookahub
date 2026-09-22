@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // import '../../core/constants.dart';
@@ -7,8 +8,69 @@ import '../catalog/presentation/providers/catalog_provider.dart';
 import '../catalog/domain/catalog_filters.dart';
 import 'tobacco_detail_page.dart';
 
-class CatalogPage extends StatelessWidget {
+class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
+
+  @override
+  State<CatalogPage> createState() => _CatalogPageState();
+}
+
+class _CatalogPageState extends State<CatalogPage> {
+  final ScrollController _scrollController = ScrollController();
+  CatalogProvider? _catalogProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final provider = context.read<CatalogProvider>();
+    if (_catalogProvider != provider) {
+      if (_catalogProvider?.onScrollToTopRequested == _scrollToTop) {
+        _catalogProvider?.onScrollToTopRequested = null;
+      }
+      _catalogProvider = provider;
+      _catalogProvider?.onScrollToTopRequested = _scrollToTop;
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_catalogProvider?.onScrollToTopRequested == _scrollToTop) {
+      _catalogProvider?.onScrollToTopRequested = null;
+    }
+    _catalogProvider = null;
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    const threshold = 300.0;
+    final max = _scrollController.position.maxScrollExtent;
+    final current = _scrollController.position.pixels;
+    if (max - current <= threshold) {
+      final provider = context.read<CatalogProvider>();
+      if (!provider.isLoading && provider.hasMore) {
+        unawaited(provider.loadMore());
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +84,7 @@ class CatalogPage extends StatelessWidget {
       body: RefreshIndicator(
         onRefresh: provider.refresh,
         child: CustomScrollView(
-          controller: provider.scrollController,
+          controller: _scrollController,
           slivers: [
             SliverToBoxAdapter(
               child: Padding(

@@ -11,7 +11,6 @@ import '../../domain/catalog_filters.dart';
 
 class CatalogProvider extends ChangeNotifier {
   CatalogProvider(this._repository) {
-    _scrollController.addListener(_onScroll);
     // Carga de marcas en segundo plano; la lista se cargará bajo demanda
     unawaited(_loadBrands());
     // Carga de datos diferida: se realizará al entrar en la pestaña Catálogo
@@ -20,17 +19,11 @@ class CatalogProvider extends ChangeNotifier {
 
   final TobaccoRepository _repository;
 
-  final ScrollController _scrollController = ScrollController();
-  ScrollController get scrollController => _scrollController;
+  /// Callback delegado opcional para solicitar scroll hacia arriba en la vista activa
+  VoidCallback? onScrollToTopRequested;
 
   void scrollToTop() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0.0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
+    onScrollToTopRequested?.call();
   }
 
   final List<Tobacco> _items = [];
@@ -182,20 +175,18 @@ class CatalogProvider extends ChangeNotifier {
     }
   }
 
-  void _onScroll() {
-    if (!_scrollController.hasClients || _isLoading || !_hasMore) return;
-    final threshold = 300.0; // px antes del final
-    final max = _scrollController.position.maxScrollExtent;
-    final current = _scrollController.position.pixels;
-    if (max - current <= threshold) {
-      unawaited(loadMore());
-    }
+  bool _isDisposed = false;
+
+  @override
+  void notifyListeners() {
+    if (_isDisposed) return;
+    super.notifyListeners();
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+    _isDisposed = true;
+    onScrollToTopRequested = null;
     _reconnectedSub?.cancel();
     super.dispose();
   }

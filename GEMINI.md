@@ -209,6 +209,18 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   3. Antes de llamar a `list.clear()`, se debe iterar sobre los elementos existentes y llamar a `.dispose()`.
   4. En el `dispose()` del widget padre, delegar la destrucción llamando a `item.dispose()` en cada elemento de la colección.
 
+### Prohibición de ScrollController en Providers Globales (Regla de Oro)
+
+- **Problema**: Instanciar un `ScrollController` dentro de un `ChangeNotifier`/`Provider` global (como `CatalogProvider` registrado en el `MultiProvider` raíz de `app.dart`):
+  1. Rompe Clean Architecture al acoplar la capa de estado con componentes de presentación (`flutter/widgets.dart`).
+  2. Genera una **fuga de memoria crítica (Memory Leak)**: al ser un provider singleton de raíz, su método `dispose()` nunca se ejecuta, reteniendo indefinidamente `ScrollPosition`, tamaños del viewport y closures.
+  3. Lanza la excepción en tiempo de ejecución: `ScrollController attached to multiple scroll views` si la vista es reconstruida o transicionada antes de liberar la posición previa.
+- **Solución Arquitectónica**:
+  1. **La Vista Posee el Controlador**: El `ScrollController` debe pertenecer **estrictamente** al `State` de un `StatefulWidget` (ej. `_CatalogPageState`), instanciándolo en el estado y liberándolo obligatoriamente en `dispose()`.
+  2. **Detección de Paginación en UI**: El listener de scroll (`_onScroll`) debe residir en la vista, invocando los métodos del provider (`context.read<T>().loadMore()`) cuando la posición alcance el umbral de carga.
+  3. **Delegación Desacoplada para Acciones Externas (ej. scrollToTop)**: Si un componente externo (como la barra de navegación en `main_navigation.dart`) necesita ordenar un scroll al inicio, el provider **no debe** contener controladores. En su lugar, debe exponer un callback delegado `VoidCallback? onScrollToTopRequested`. La vista lo suscribe en `didChangeDependencies()` y lo limpia a `null` en `dispose()`.
+  4. **Protección `_isDisposed` en Providers Asíncronos**: Para evitar la excepción `A <Provider> was used after being disposed` provocada por llamadas asíncronas no esperadas que resuelven tras la destrucción del provider, se debe implementar una bandera `bool _isDisposed = false` y sobrescribir `@override void notifyListeners()` para ignorar notificaciones una vez que `_isDisposed == true`.
+
 ### Cancelación de Suscripciones Realtime y Purga de Estado en Logout/Login (Regla de Oro)
 
 - **Problema**: Los providers registrados en el `MultiProvider` raíz (`app.dart`) son singletons de larga duración que persisten incluso tras el cierre de sesión (`signOut()`). Si un provider mantiene un `StreamSubscription` a canales Realtime de Supabase (ej. `NotificationsProvider` escuchando la tabla `notifications` para el `user_id` del usuario) o datos en memoria (`UserMixesProvider`, `HistoryProvider`, `ProfileProvider`):
