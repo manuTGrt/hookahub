@@ -48,7 +48,7 @@ class OnboardingProvider extends ChangeNotifier {
     OnboardingItem(
       title: 'Tu experiencia comienza hoy',
       description:
-          'Únete a HookaHub y lleva tus sesiones al siguiente nivel. Personaliza tus preferencias y guarda tus mezclas.',
+          'Únete a Hookahub y lleva tus sesiones al siguiente nivel. Personaliza tus preferencias y guarda tus mezclas.',
       icon: Icons.rocket_launch_rounded,
       badgeText: 'TODO LISTO',
       highlights: [
