@@ -461,3 +461,40 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   2. **Liberación en `dispose()`**: Es **mandatorio** invocar `.dispose()` sobre cada controlador dentro del `@override void dispose()` de la clase `State`, antes de llamar a `super.dispose()`.
   3. **Actualización Reactiva de Valores**: Si el valor mostrado en el campo depende de un evento asíncrono o selector externo (como un `showDatePicker`), se debe actualizar la propiedad `.text` del controlador persistente (`_controller.text = ...`) dentro del `setState()` o callback correspondiente, en lugar de recrear el controlador.
 
+### Optimización de Indicadores de Borde en Scroll (Aislamiento de Rebuilds con ValueNotifier)
+
+- **Problema**: Utilizar `_controller.addListener(() => setState(() => _offset = _controller.offset))` para actualizar indicadores visuales periféricos (como degradados laterales/fades, sombras de cabecera o botones flotantes de scroll-to-top) ejecuta `setState()` en cada micro-desplazamiento de píxel a 60/120 fps. Esto fuerza la reconstrucción continua de todo el widget contenedor (`LayoutBuilder`, cálculos de dimensiones geométricas, lista/carrusel y todas las tarjetas hijas), provocando caída masiva de frames (*jank*) y consumo desmedido de CPU/batería para variables que sólo cambian de estado booleano en los límites de desplazamiento.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Prohibición de `setState()` en listeners de scroll**: No invocar jamás `setState()` dentro de un listener de `ScrollController` para renderizar efectos periféricos que dependan de umbrales discretos.
+  2. **Uso de `ValueNotifier<bool>` reactivo atómico**: Utilizar notificadores primitivos (ej. `_showLeft`, `_showRight`) y mutar su valor **estrictamente cuando cambie el booleano**:
+     ```dart
+     final canScrollLeft = pos.pixels > 2;
+     if (_showLeft.value != canScrollLeft) {
+       _showLeft.value = canScrollLeft;
+     }
+     ```
+     De este modo, se reducen los rebuilds de miles a solo 1 o 2 durante todo el recorrido del scroll.
+  3. **Aislamiento de reconstrucción con `ValueListenableBuilder`**:
+     - Mantener el `SingleChildScrollView` / `ListView` y sus hijos estáticos fuera del builder del notificador.
+     - Envolver **únicamente** los indicadores visuales periféricos (ej. dentro de un `Positioned`) en `ValueListenableBuilder<bool>`.
+     - Reutilizar la instancia gráfica pasando el `Container` o `Decoration` como argumento `child` del `ValueListenableBuilder`, evitando instanciar nuevos objetos gráficos en memoria:
+     ```dart
+     Positioned(
+       left: 0,
+       top: 0,
+       bottom: 0,
+       child: ValueListenableBuilder<bool>(
+         valueListenable: _showLeft,
+         builder: (context, show, child) {
+           if (!show) return const SizedBox.shrink();
+           return child!;
+         },
+         child: IgnorePointer(
+           key: const Key('quick_access_fade_left'),
+           child: Container(width: 24, decoration: ...),
+         ),
+       ),
+     )
+     ```
+  4. **Ciclo de vida estricto**: Desregistrar el listener del controlador (`removeListener`) y liberar todos los `ValueNotifier` en `@override void dispose()`.
+

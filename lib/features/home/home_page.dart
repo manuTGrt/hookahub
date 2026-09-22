@@ -92,7 +92,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 16),
 
             // Carrusel horizontal de accesos rápidos con fades laterales
-            _QuickAccessCarousel(
+            QuickAccessCarousel(
               scaleFactor: scaleFactor,
               buildCard: (context) {
                 return [
@@ -416,8 +416,10 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class _QuickAccessCarousel extends StatefulWidget {
-  const _QuickAccessCarousel({
+@visibleForTesting
+class QuickAccessCarousel extends StatefulWidget {
+  const QuickAccessCarousel({
+    super.key,
     required this.scaleFactor,
     required this.buildCard,
   });
@@ -426,29 +428,49 @@ class _QuickAccessCarousel extends StatefulWidget {
   final List<Widget> Function(BuildContext) buildCard;
 
   @override
-  State<_QuickAccessCarousel> createState() => _QuickAccessCarouselState();
+  State<QuickAccessCarousel> createState() => _QuickAccessCarouselState();
 }
 
-class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
+class _QuickAccessCarouselState extends State<QuickAccessCarousel> {
   final _controller = ScrollController();
-  double _offset = 0;
+  final _showLeft = ValueNotifier<bool>(false);
+  final _showRight = ValueNotifier<bool>(false);
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(() {
-      setState(() => _offset = _controller.offset);
-    });
+    _controller.addListener(_updateFades);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateFades());
+  }
+
+  void _updateFades() {
+    if (!mounted || !_controller.hasClients) return;
+    final pos = _controller.position;
+    final canScrollLeft = pos.pixels > 2;
+    final canScrollRight = (pos.maxScrollExtent - pos.pixels) > 2;
+
+    if (_showLeft.value != canScrollLeft) {
+      _showLeft.value = canScrollLeft;
+    }
+    if (_showRight.value != canScrollRight) {
+      _showRight.value = canScrollRight;
+    }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_updateFades);
     _controller.dispose();
+    _showLeft.dispose();
+    _showRight.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scaffoldBg = theme.scaffoldBackgroundColor;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final double crossAxisSpacing = 12;
@@ -463,11 +485,8 @@ class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
 
         final children = widget.buildCard(context);
 
-        // Fades (izquierda/derecha) basados en desplazamiento
-        final bool showLeft = _offset > 2;
-        final bool showRight =
-            _controller.hasClients &&
-            _controller.position.maxScrollExtent - _offset > 2;
+        // Notificar tras el layout inicial por si las métricas cambiaron
+        WidgetsBinding.instance.addPostFrameCallback((_) => _updateFades());
 
         return Stack(
           children: [
@@ -488,12 +507,18 @@ class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
               ),
             ),
             // Fade izquierdo
-            if (showLeft)
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: _showLeft,
+                builder: (context, show, child) {
+                  if (!show) return const SizedBox.shrink();
+                  return child!;
+                },
                 child: IgnorePointer(
+                  key: const Key('quick_access_fade_left'),
                   child: Container(
                     width: 24,
                     decoration: BoxDecoration(
@@ -501,23 +526,28 @@ class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                         colors: [
-                          Theme.of(context).scaffoldBackgroundColor,
-                          Theme.of(
-                            context,
-                          ).scaffoldBackgroundColor.withValues(alpha: 0.0),
+                          scaffoldBg,
+                          scaffoldBg.withValues(alpha: 0.0),
                         ],
                       ),
                     ),
                   ),
                 ),
               ),
+            ),
             // Fade derecho
-            if (showRight)
-              Positioned(
-                right: 0,
-                top: 0,
-                bottom: 0,
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: _showRight,
+                builder: (context, show, child) {
+                  if (!show) return const SizedBox.shrink();
+                  return child!;
+                },
                 child: IgnorePointer(
+                  key: const Key('quick_access_fade_right'),
                   child: Container(
                     width: 24,
                     decoration: BoxDecoration(
@@ -525,16 +555,15 @@ class _QuickAccessCarouselState extends State<_QuickAccessCarousel> {
                         begin: Alignment.centerRight,
                         end: Alignment.centerLeft,
                         colors: [
-                          Theme.of(context).scaffoldBackgroundColor,
-                          Theme.of(
-                            context,
-                          ).scaffoldBackgroundColor.withValues(alpha: 0.0),
+                          scaffoldBg,
+                          scaffoldBg.withValues(alpha: 0.0),
                         ],
                       ),
                     ),
                   ),
                 ),
               ),
+            ),
           ],
         );
       },
