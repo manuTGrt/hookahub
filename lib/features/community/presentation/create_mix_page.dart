@@ -79,7 +79,7 @@ class _CreateMixPageState extends State<CreateMixPage> {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     for (final ing in _ingredients) {
-      ing.percentCtrl.dispose();
+      ing.dispose();
     }
     super.dispose();
   }
@@ -171,6 +171,9 @@ class _CreateMixPageState extends State<CreateMixPage> {
 
       if (mounted) {
         setState(() {
+          for (final ing in _ingredients) {
+            ing.dispose();
+          }
           _ingredients
             ..clear()
             ..addAll(loaded);
@@ -199,7 +202,13 @@ class _CreateMixPageState extends State<CreateMixPage> {
 
   void _removeIngredient(String id) {
     setState(() {
-      _ingredients.removeWhere((e) => e.tobacco.id == id);
+      _ingredients.removeWhere((e) {
+        final matches = e.tobacco.id == id;
+        if (matches) {
+          e.dispose();
+        }
+        return matches;
+      });
     });
   }
 
@@ -1419,13 +1428,20 @@ class _SlidableIngredientRowState extends State<_SlidableIngredientRow>
   }
 }
 
-class _SelectedIngredient {
-  _SelectedIngredient({required this.tobacco})
+@visibleForTesting
+class SelectedIngredient {
+  SelectedIngredient({required this.tobacco})
     : percentCtrl = TextEditingController(
         text: _defaultPercent.toStringAsFixed(0),
       );
   final Tobacco tobacco;
   final TextEditingController percentCtrl;
 
+  void dispose() {
+    percentCtrl.dispose();
+  }
+
   static double get _defaultPercent => 25; // valor inicial equilibrado
 }
+
+typedef _SelectedIngredient = SelectedIngredient;

@@ -198,6 +198,17 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   - Todo `ChangeNotifier` o `StatefulWidget` que mantenga suscripciones a `Stream`, controladores o temporizadores (`Timer`) **debe** sobrescribir explícitamente `@override void dispose()` a nivel de clase.
   - Cancelar todas las suscripciones (`_sub?.cancel()`), cerrar controladores y siempre invocar `super.dispose()` al final.
 
+### Ciclo de Vida de Controladores en Pantallas de Auth y Listas Dinámicas (Regla de Oro)
+
+- **Problema 1 (Pantallas de Autenticación / Formularios)**: En pantallas como `LoginPage`, los controladores instanciados en el estado (`_emailController`, `_passwordController`) retienen conexiones con el subsistema de texto del framework. Si el usuario inicia sesión y la pantalla es reemplazada (`Navigator.pushReplacement`), no implementar `dispose()` en el `State` deja estos controladores anclados en memoria, fugando recursos en cada flujo de login/logout.
+- **Solución**: Todo `StatefulWidget` con `TextEditingController` o `FocusNode` locales **debe** implementar `@override void dispose()` llamando a `.dispose()` en cada instancia antes de `super.dispose()`.
+- **Problema 2 (Objetos y Listas Dinámicas con Controladores)**: Cuando una vista administra colecciones dinámicas cuyos elementos encapsulan un `TextEditingController` (ej. `_SelectedIngredient.percentCtrl` en `CreateMixPage`), eliminar elementos con `removeWhere` o vaciar la colección con `clear()` deja los controladores huérfanos sin llamar a `.dispose()`.
+- **Solución**:
+  1. Las clases auxiliares que encapsulen un controlador deben proveer un método `dispose()` propio (respetando encapsulamiento).
+  2. Al eliminar elementos de la lista (`removeWhere`), se debe ejecutar `.dispose()` sobre la instancia coincidente antes de removerla.
+  3. Antes de llamar a `list.clear()`, se debe iterar sobre los elementos existentes y llamar a `.dispose()`.
+  4. En el `dispose()` del widget padre, delegar la destrucción llamando a `item.dispose()` en cada elemento de la colección.
+
 ### Cancelación de Suscripciones Realtime y Purga de Estado en Logout/Login (Regla de Oro)
 
 - **Problema**: Los providers registrados en el `MultiProvider` raíz (`app.dart`) son singletons de larga duración que persisten incluso tras el cierre de sesión (`signOut()`). Si un provider mantiene un `StreamSubscription` a canales Realtime de Supabase (ej. `NotificationsProvider` escuchando la tabla `notifications` para el `user_id` del usuario) o datos en memoria (`UserMixesProvider`, `HistoryProvider`, `ProfileProvider`):
