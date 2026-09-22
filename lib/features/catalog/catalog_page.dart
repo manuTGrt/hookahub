@@ -77,12 +77,9 @@ class _CatalogPageState extends State<CatalogPage> {
     final textScaler = MediaQuery.textScalerOf(context);
     final scaleFactor = textScaler.scale(1.0);
 
-    final provider = context.watch<CatalogProvider>();
-    final primaryColor = Theme.of(context).primaryColor;
-
     return Scaffold(
       body: RefreshIndicator(
-        onRefresh: provider.refresh,
+        onRefresh: () => context.read<CatalogProvider>().refresh(),
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
@@ -101,11 +98,11 @@ class _CatalogPageState extends State<CatalogPage> {
                         scrollDirection: Axis.horizontal,
                         children: [
                           // Dropdown de ordenamiento
-                          _buildSortDropdown(context, provider, scaleFactor),
+                          _SortFilterDropdown(scaleFactor: scaleFactor),
                           const SizedBox(width: 8),
 
                           // Dropdown de marcas
-                          _buildBrandDropdown(context, provider, scaleFactor),
+                          _BrandFilterDropdown(scaleFactor: scaleFactor),
                         ],
                       ),
                     ),
@@ -115,294 +112,25 @@ class _CatalogPageState extends State<CatalogPage> {
             ),
 
             // Grid de tabacos
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-              sliver: SliverGrid(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: scaleFactor > 1.5
-                      ? 0.65
-                      : (scaleFactor > 1.3 ? 0.7 : 0.8),
-                ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  if (index >= provider.items.length) {
-                    return const SizedBox.shrink();
-                  }
-                  final t = provider.items[index];
-                  return _buildTobaccoCard(
-                    context,
-                    t,
-                    scaleFactor,
-                    primaryColor,
-                  );
-                }, childCount: provider.items.length),
-              ),
-            ),
+            _CatalogGridSliver(scaleFactor: scaleFactor),
 
             // Estado vacío después del primer intento para sincronizarse con el banner
-            if (provider.hasAttemptedLoad &&
-                !provider.isLoading &&
-                provider.error == null &&
-                provider.items.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 32),
-                  child: Center(
-                    child: Text(
-                      'Aún no hay tabacos',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            const _CatalogEmptyStateSliver(),
 
             // Loader / fin de lista / error
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(
-                  child: () {
-                    if (provider.error != null) {
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Error al cargar: ${provider.error}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 8),
-                          OutlinedButton(
-                            onPressed: provider.loadMore,
-                            child: const Text('Reintentar'),
-                          ),
-                        ],
-                      );
-                    }
-                    if (provider.isLoading) {
-                      return const CircularProgressIndicator();
-                    }
-                    if (!provider.hasMore) {
-                      return Text(
-                        'No hay más resultados',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  }(),
-                ),
-              ),
-            ),
+            const _CatalogFooterSliver(),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildSortDropdown(
-    BuildContext context,
-    CatalogProvider provider,
-    double scaleFactor,
-  ) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        // Animación suave para el popup
-        popupMenuTheme: PopupMenuThemeData(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.15),
-              width: 1,
-            ),
-          ),
-          elevation: 12,
-          color: Theme.of(context).cardColor,
-        ),
-        // Animación de transición suave
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          },
-        ),
-      ),
-      child: PopupMenuButton<SortOption>(
-        onSelected: (SortOption option) {
-          provider.setSortOption(option);
-        },
-        tooltip: 'Ordenar catálogo',
-        offset: const Offset(0, 10),
-        position: PopupMenuPosition.under,
-        splashRadius: 24,
-        itemBuilder: (BuildContext context) {
-          return [
-            // Header del menú
-            PopupMenuItem<SortOption>(
-              enabled: false,
-              height: 40,
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.sort,
-                    size: 18,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Ordenar por',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            PopupMenuDivider(
-              height: 1,
-              color: Theme.of(context).scaffoldBackgroundColor,
-            ),
-            // Opciones de ordenamiento
-            ...SortOption.values.map((SortOption option) {
-              final isSelected = provider.filter.sortOption == option;
-              return PopupMenuItem<SortOption>(
-                value: option,
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? Theme.of(context).primaryColor.withValues(alpha: 0.08)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeInOut,
-                        child: Icon(
-                          isSelected
-                              ? Icons.check_circle_rounded
-                              : Icons.radio_button_unchecked,
-                          size: 20,
-                          color: isSelected
-                              ? Theme.of(context).primaryColor
-                              : Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          option.label,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: isSelected
-                                    ? Theme.of(context).primaryColor
-                                    : Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium?.color,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                              ),
-                        ),
-                      ),
-                      if (isSelected)
-                        Icon(
-                          _getSortIcon(option),
-                          size: 16,
-                          color: Theme.of(
-                            context,
-                          ).primaryColor.withValues(alpha: 0.6),
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ];
-        },
-        child: Container(
-          height: scaleFactor > 1.5 ? 50 : (scaleFactor > 1.3 ? 44 : 40),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).primaryColor.withValues(alpha: 0.15),
-                Theme.of(context).primaryColor.withValues(alpha: 0.10),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.sort_rounded,
-                size: 18,
-                color: Theme.of(context).primaryColor,
-              ),
-              const SizedBox(width: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 120),
-                child: Text(
-                  provider.filter.sortOption.label,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).primaryColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13.5,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.arrow_drop_down_rounded,
-                size: 22,
-                color: Theme.of(context).primaryColor,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+// Widget dropdown para ordenamiento con selector granular
+class _SortFilterDropdown extends StatelessWidget {
+  const _SortFilterDropdown({required this.scaleFactor});
+
+  final double scaleFactor;
 
   IconData _getSortIcon(SortOption option) {
     switch (option) {
@@ -424,25 +152,260 @@ class _CatalogPageState extends State<CatalogPage> {
     }
   }
 
-  Widget _buildBrandDropdown(
-    BuildContext context,
-    CatalogProvider provider,
-    double scaleFactor,
-  ) {
-    return _BrandFilterDropdown(provider: provider, scaleFactor: scaleFactor);
-  }
+  @override
+  Widget build(BuildContext context) {
+    final sortOption = context.select<CatalogProvider, SortOption>(
+      (p) => p.filter.sortOption,
+    );
+    final primaryColor = Theme.of(context).primaryColor;
 
-  Widget _buildTobaccoCard(
-    BuildContext context,
-    Tobacco tobacco,
-    double scaleFactor,
-    Color baseColor,
-  ) {
-    // Ajustar tamaños según el factor de escala del texto
+    return Theme(
+      data: Theme.of(context).copyWith(
+        // Animación suave para el popup
+        popupMenuTheme: PopupMenuThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: primaryColor.withValues(alpha: 0.15),
+              width: 1,
+            ),
+          ),
+          elevation: 12,
+          color: Theme.of(context).cardColor,
+        ),
+        // Animación de transición suave
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
+      ),
+      child: PopupMenuButton<SortOption>(
+        onSelected: (SortOption option) {
+          context.read<CatalogProvider>().setSortOption(option);
+        },
+        tooltip: 'Ordenar catálogo',
+        offset: const Offset(0, 10),
+        position: PopupMenuPosition.under,
+        splashRadius: 24,
+        itemBuilder: (BuildContext context) {
+          return [
+            // Header del menú
+            PopupMenuItem<SortOption>(
+              enabled: false,
+              height: 40,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.sort,
+                    size: 18,
+                    color: primaryColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Ordenar por',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: primaryColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuDivider(
+              height: 1,
+              color: Theme.of(context).scaffoldBackgroundColor,
+            ),
+            // Opciones de ordenamiento
+            ...SortOption.values.map((SortOption option) {
+              final isSelected = sortOption == option;
+              return PopupMenuItem<SortOption>(
+                value: option,
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? primaryColor.withValues(alpha: 0.08)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        child: Icon(
+                          isSelected
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked,
+                          size: 20,
+                          color: isSelected
+                              ? primaryColor
+                              : Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          option.label,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: isSelected
+                                ? primaryColor
+                                : Theme.of(context).textTheme.bodyMedium?.color,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                      if (isSelected)
+                        Icon(
+                          _getSortIcon(option),
+                          size: 16,
+                          color: primaryColor.withValues(alpha: 0.6),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ];
+        },
+        child: Container(
+          height: scaleFactor > 1.5 ? 50 : (scaleFactor > 1.3 ? 44 : 40),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                primaryColor.withValues(alpha: 0.15),
+                primaryColor.withValues(alpha: 0.10),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: primaryColor.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.sort_rounded,
+                size: 18,
+                color: primaryColor,
+              ),
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 120),
+                child: Text(
+                  sortOption.label,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: primaryColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.5,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.arrow_drop_down_rounded,
+                size: 22,
+                color: primaryColor,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Widget de cuadrícula de tabacos con selector granular
+class _CatalogGridSliver extends StatelessWidget {
+  const _CatalogGridSliver({required this.scaleFactor});
+
+  final double scaleFactor;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = context.select<CatalogProvider, List<Tobacco>>(
+      (p) => p.items,
+    );
+    final primaryColor = Theme.of(context).primaryColor;
+
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+      sliver: SliverGrid(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: scaleFactor > 1.5
+              ? 0.65
+              : (scaleFactor > 1.3 ? 0.7 : 0.8),
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index >= items.length) {
+              return const SizedBox.shrink();
+            }
+            final t = items[index];
+            return _TobaccoCard(
+              tobacco: t,
+              scaleFactor: scaleFactor,
+              baseColor: primaryColor,
+            );
+          },
+          childCount: items.length,
+        ),
+      ),
+    );
+  }
+}
+
+// Tarjeta individual de tabaco
+class _TobaccoCard extends StatelessWidget {
+  const _TobaccoCard({
+    required this.tobacco,
+    required this.scaleFactor,
+    required this.baseColor,
+  });
+
+  final Tobacco tobacco;
+  final double scaleFactor;
+  final Color baseColor;
+
+  @override
+  Widget build(BuildContext context) {
     final cardPadding = scaleFactor > 1.3 ? 10.0 : 12.0;
     final bool tightSpacing = scaleFactor < 1.3;
-
-    final Color color = baseColor; // mismo color para todos, como en Community
+    final Color color = baseColor;
 
     return Semantics(
       label:
@@ -464,18 +427,18 @@ class _CatalogPageState extends State<CatalogPage> {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.05), // igual que MixCard
+            color: color.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: color.withValues(alpha: 0.2),
-            ), // igual que MixCard
+            ),
           ),
           child: Padding(
             padding: EdgeInsets.all(cardPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Imagen placeholder - ocupa la mayor parte del espacio disponible
+                // Imagen placeholder
                 Expanded(
                   flex: scaleFactor > 1.3 ? 1 : 4,
                   child: Padding(
@@ -501,8 +464,7 @@ class _CatalogPageState extends State<CatalogPage> {
                         flex: 2,
                         child: Text(
                           tobacco.name,
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Theme.of(
                                   context,
@@ -518,8 +480,7 @@ class _CatalogPageState extends State<CatalogPage> {
                         flex: 1,
                         child: Text(
                           tobacco.brand,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Theme.of(
                                   context,
                                 ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
@@ -533,7 +494,7 @@ class _CatalogPageState extends State<CatalogPage> {
                   ),
                 ),
 
-                // Rating y reseñas - siempre en la parte inferior
+                // Rating y reseñas
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Row(
@@ -547,13 +508,12 @@ class _CatalogPageState extends State<CatalogPage> {
                             Icon(
                               Icons.star,
                               size: scaleFactor > 1.3 ? 14 : 16,
-                              color: color, // igual que MixCard
+                              color: color,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               tobacco.rating.toString(),
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: Theme.of(
                                       context,
@@ -564,8 +524,7 @@ class _CatalogPageState extends State<CatalogPage> {
                             Flexible(
                               child: Text(
                                 '(${tobacco.reviews})',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -581,14 +540,13 @@ class _CatalogPageState extends State<CatalogPage> {
                             Icon(
                               Icons.star_border,
                               size: scaleFactor > 1.3 ? 14 : 16,
-                              color: color, // igual que MixCard
+                              color: color,
                             ),
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
                                 'Sin valoraciones',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -613,14 +571,100 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 }
 
+// Widget de estado vacío aislado
+class _CatalogEmptyStateSliver extends StatelessWidget {
+  const _CatalogEmptyStateSliver();
+
+  @override
+  Widget build(BuildContext context) {
+    final showEmptyState = context.select<CatalogProvider, bool>(
+      (p) =>
+          p.hasAttemptedLoad &&
+          !p.isLoading &&
+          p.error == null &&
+          p.items.isEmpty,
+    );
+
+    if (!showEmptyState) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 32),
+        child: Center(
+          child: Text(
+            'Aún no hay tabacos',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Widget de pie de lista con loader / error / fin de resultados
+class _CatalogFooterSliver extends StatelessWidget {
+  const _CatalogFooterSliver();
+
+  @override
+  Widget build(BuildContext context) {
+    final (error, isLoading, hasMore) = context.select<CatalogProvider, (String?, bool, bool)>(
+      (p) => (p.error, p.isLoading, p.hasMore),
+    );
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: () {
+            if (error != null) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Error al cargar: $error',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: () => context.read<CatalogProvider>().loadMore(),
+                    child: const Text('Reintentar'),
+                  ),
+                ],
+              );
+            }
+            if (isLoading) {
+              return const CircularProgressIndicator();
+            }
+            if (!hasMore) {
+              return Text(
+                'No hay más resultados',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }(),
+        ),
+      ),
+    );
+  }
+}
+
 // Widget dropdown con buscador para filtros de marca
 class _BrandFilterDropdown extends StatefulWidget {
   const _BrandFilterDropdown({
-    required this.provider,
     required this.scaleFactor,
   });
 
-  final CatalogProvider provider;
   final double scaleFactor;
 
   @override
@@ -636,12 +680,12 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
     super.dispose();
   }
 
-  List<String> _getFilteredBrands() {
+  List<String> _getFilteredBrands(List<String> availableBrands) {
     final query = _searchController.text.toLowerCase();
     if (query.isEmpty) {
-      return widget.provider.availableBrands;
+      return availableBrands;
     }
-    return widget.provider.availableBrands
+    return availableBrands
         .where((brand) => brand.toLowerCase().contains(query))
         .toList();
   }
@@ -661,8 +705,8 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
       Offset.zero & overlay.size,
     );
 
-    // Usar una constante especial para "Todas las marcas"
     const String allBrandsKey = '__ALL_BRANDS__';
+    final catalogProvider = context.read<CatalogProvider>();
 
     await showMenu<String?>(
       context: context,
@@ -683,9 +727,8 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              final filteredBrands = _getFilteredBrands();
-              // Leer el brand seleccionado dentro del StatefulBuilder para que se actualice
-              final currentSelectedBrand = widget.provider.filter.brand;
+              final filteredBrands = _getFilteredBrands(catalogProvider.availableBrands);
+              final currentSelectedBrand = catalogProvider.filter.brand;
 
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -805,13 +848,11 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
         ),
       ],
     ).then((value) {
-      // Si el usuario seleccionó algo
-      if (value != null) {
-        // Si seleccionó "Todas las marcas", pasar null al provider
+      if (value != null && mounted) {
         if (value == allBrandsKey) {
-          widget.provider.setFilterByBrand(null);
+          context.read<CatalogProvider>().setFilterByBrand(null);
         } else {
-          widget.provider.setFilterByBrand(value);
+          context.read<CatalogProvider>().setFilterByBrand(value);
         }
       }
       _searchController.clear();
@@ -884,7 +925,9 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedBrand = widget.provider.filter.brand;
+    final selectedBrand = context.select<CatalogProvider, String?>(
+      (p) => p.filter.brand,
+    );
     final displayText = selectedBrand ?? 'Todas las marcas';
 
     return GestureDetector(
@@ -950,3 +993,4 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
     );
   }
 }
+

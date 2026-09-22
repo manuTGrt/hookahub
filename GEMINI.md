@@ -498,3 +498,26 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
      ```
   4. **Ciclo de vida estricto**: Desregistrar el listener del controlador (`removeListener`) y liberar todos los `ValueNotifier` en `@override void dispose()`.
 
+### Prohibición de `context.watch` en el Árbol Raíz de Pantallas Complejas (Granularización de Rebuilds)
+
+- **Problema**: Declarar `final provider = context.watch<MyProvider>();` en el método `build()` del widget raíz de una pantalla compleja (ej. pantallas de listados, catálogos o dashboards de cientos de líneas):
+  1. Suscribe indiscriminadamente todo el `BuildContext` de la pantalla a **cualquier** notificación de cambio (`notifyListeners()`).
+  2. Cada evento asíncrono secundario (como carga en background de metadatos, inicio/fin de paginación `loadMore`, cambios en filtros o refresco de un único ítem con `updateItem`) destruye y reconstruye todo el árbol (`Scaffold`, `CustomScrollView`, appbars, selectores horizontales, grids enteros y footers).
+  3. Causa caídas de framerate (*jank* o *micro-stuttering*) durante el scroll continuo y genera alta presión sobre el recolector de basura.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Raíz Estructural Pura**: El método `build()` raíz de una pantalla compleja no debe suscribirse al `Provider` completo. Para callbacks de acción como `RefreshIndicator.onRefresh` o disparadores de eventos, se debe usar `context.read<MyProvider>().action()`.
+  2. **Descomposición en Sub-widgets Especializados**: Dividir la pantalla en componentes aislados (ej. `_SortFilterDropdown`, `_BrandFilterDropdown`, `_CatalogGridSliver`, `_EmptyStateSliver`, `_FooterSliver`).
+  3. **Suscripción Atómica con `context.select` y `Selector`**:
+     - Cada sub-widget debe escuchar únicamente la propiedad mínima necesaria para su renderizado:
+       ```dart
+       // ✅ Solo se reconstruye si cambia sortOption
+       final sortOption = context.select<CatalogProvider, SortOption>((p) => p.filter.sortOption);
+       ```
+     - Para estados de carga/paginación compuestos, utilizar tuplas/records de Dart 3:
+       ```dart
+       // ✅ Solo se reconstruye el footer cuando conmuta el estado de paginación
+       final (error, isLoading, hasMore) = context.select<CatalogProvider, (String?, bool, bool)>(
+         (p) => (p.error, p.isLoading, p.hasMore),
+       );
+       ```
+     - De esta forma, el scroll, los dropdowns y los slivers adyacentes permanecen inmunes y no se re-evalúan innecesariamente.
