@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/data/supabase_service.dart';
 import '../../core/providers/database_health_provider.dart';
+import '../../core/utils/app_error_mapper.dart';
 import '../../core/utils/app_logger.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -104,11 +105,10 @@ class AuthProvider extends ChangeNotifier {
           .timeout(const Duration(seconds: 4));
       return null;
     } on AuthException catch (e) {
-      DatabaseHealthProvider.reportFailure(e);
-      return e.message;
+      return AppErrorMapper.toSpanish(e);
     } catch (e) {
       DatabaseHealthProvider.reportFailure(e);
-      return 'Error inesperado';
+      return AppErrorMapper.toSpanish(e);
     }
   }
 
@@ -154,11 +154,10 @@ class AuthProvider extends ChangeNotifier {
 
       return null;
     } on AuthException catch (e) {
-      DatabaseHealthProvider.reportFailure(e);
-      return e.message;
+      return AppErrorMapper.toSpanish(e);
     } catch (e) {
       DatabaseHealthProvider.reportFailure(e);
-      return 'Error inesperado: ${e.toString()}';
+      return AppErrorMapper.toSpanish(e);
     }
   }
 
@@ -167,11 +166,10 @@ class AuthProvider extends ChangeNotifier {
       await _svc.signInWithGoogle();
       return null;
     } on AuthException catch (e) {
-      DatabaseHealthProvider.reportFailure(e);
-      return e.message;
+      return AppErrorMapper.toSpanish(e);
     } catch (e) {
       DatabaseHealthProvider.reportFailure(e);
-      return 'Error inesperado: $e';
+      return AppErrorMapper.toSpanish(e);
     }
   }
 

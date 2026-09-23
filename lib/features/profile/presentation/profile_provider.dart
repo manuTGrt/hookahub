@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import '../../../core/providers/database_health_provider.dart';
+import '../../../core/utils/app_error_mapper.dart';
 import '../../auth/auth_provider.dart';
 import '../data/profile_repository.dart';
 import '../domain/profile.dart';
@@ -106,7 +107,7 @@ class ProfileProvider extends ChangeNotifier {
       return null;
     } catch (e) {
       DatabaseHealthProvider.reportFailure(e);
-      return e.toString();
+      return AppErrorMapper.toSpanish(e);
     }
   }
 

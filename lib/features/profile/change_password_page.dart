@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
+import '../../core/utils/app_error_mapper.dart';
 import '../../core/utils/app_toast.dart';
 
 class ChangePasswordPage extends StatefulWidget {
@@ -70,7 +71,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (mounted) {
         AppToast.showError(
           context,
-          'Error al cambiar contraseña: ${e.toString()}',
+          'Error al cambiar contraseña: ${AppErrorMapper.toSpanish(e)}',
         );
       }
     } finally {

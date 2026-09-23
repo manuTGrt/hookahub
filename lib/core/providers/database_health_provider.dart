@@ -59,13 +59,78 @@ class DatabaseHealthProvider extends ChangeNotifier {
     instance._triggerHealthcheck();
   }
 
-  /// Indica si el error proviene de red/BD para suprimir mensajes duplicados en UI.
+  /// Indica si el error proviene de red o pérdida de conectividad con la base de datos/backend.
+  ///
+  /// Excluye explícitamente errores de validación, credenciales de cliente (AuthException 4xx)
+  /// y violaciones de restricciones de integridad o lógica de negocio (PostgrestException 23xxx, 22xxx, 42xxx, etc.).
   static bool isConnectionError(Object error) {
-    return error is SocketException ||
+    if (error is SocketException ||
         error is TimeoutException ||
-        error is PostgrestException ||
-        error is AuthException ||
-        error is HttpException;
+        error is HttpException) {
+      return true;
+    }
+
+    if (error is AuthException) {
+      // Los errores de autenticación comunes (400 Bad Request por credenciales inválidas,
+      // 401 Unauthorized, 422 Unprocessable Entity por usuario duplicado, 429 Rate Limit)
+      // son respuestas válidas de GoTrue ante acciones del usuario, NUNCA caídas de BD/red.
+      final status = int.tryParse(error.statusCode ?? '');
+      if (status != null && status >= 400 && status < 500) {
+        return false;
+      }
+      // Por defecto, una AuthException significa que el servicio de autenticación respondió.
+      return false;
+    }
+
+    if (error is PostgrestException) {
+      final code = error.code;
+      if (code != null) {
+        // Excluir errores de cliente y restricciones según estándar SQLSTATE:
+        // - Clase 23: Violación de restricciones de integridad (23505 unique, 23503 foreign key, 23502 not null, etc.)
+        // - Clase 22: Excepciones de datos / formato de cliente (22001 string data, 22P02 invalid text representation, etc.)
+        // - Clase 42: Errores de sintaxis o permisos / RLS (42501 insufficient privilege, 42703 undefined column, etc.)
+        // - Códigos de cliente PostgREST: PGRST1xx (ej. PGRST116: 0 filas encontradas), PGRST2xx
+        if (code.startsWith('23') ||
+            code.startsWith('22') ||
+            code.startsWith('42') ||
+            code.startsWith('PGRST1') ||
+            code.startsWith('PGRST2')) {
+          return false;
+        }
+
+        // Reconocer errores genuinos de conexión PostgreSQL / infraestructura:
+        // - Clase 08: Connection exceptions (08000, 08003, 08006, 08001, 08004, 08007)
+        // - Clase 57: Operator intervention / shutdown (57P01, 57P02, 57P03)
+        // - 53300: Too many connections (pool agotado)
+        if (code.startsWith('08') || code.startsWith('57') || code == '53300') {
+          return true;
+        }
+      }
+
+      // Evaluar si el mensaje describe una caída de transporte o socket subyacente
+      final msg = error.message.toLowerCase();
+      if (msg.contains('connection refused') ||
+          msg.contains('connection closed') ||
+          msg.contains('network') ||
+          msg.contains('timeout') ||
+          msg.contains('socketexception')) {
+        return true;
+      }
+
+      // Por defecto, excepciones genéricas de Postgrest con respuestas 4xx no son caídas de red
+      return false;
+    }
+
+    // Detección de fallos de red encapsulados en mensajes de transporte (ej. ClientException de package:http)
+    final errorString = error.toString().toLowerCase();
+    if (errorString.contains('clientexception') ||
+        errorString.contains('failed host lookup') ||
+        errorString.contains('connection reset') ||
+        errorString.contains('broken pipe')) {
+      return true;
+    }
+
+    return false;
   }
 
   /// Permite marcar la conexión como saludable cuando una operación remota

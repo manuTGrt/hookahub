@@ -521,3 +521,74 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
        );
        ```
      - De esta forma, el scroll, los dropdowns y los slivers adyacentes permanecen inmunes y no se re-evalúan innecesariamente.
+
+## 🛡️ Detección de Caídas de Conectividad y Healthcheck (DatabaseHealthProvider)
+
+### Discriminación Estricta de Errores en `isConnectionError` (Regla de Oro)
+
+- **Problema**: Clasificar genéricamente `AuthException` o `PostgrestException` como errores de conectividad (`isConnectionError(Object error)`) causa **falsos positivos críticos** en producción:
+  1. Si un usuario introduce una contraseña incorrecta (`400 Bad Request` en GoTrue) o intenta registrarse con un email existente (`422 Unprocessable Entity`), `DatabaseHealthProvider.reportFailure(e)` interpreta la validación como una caída de red o de infraestructura.
+  2. Ejecuta inmediatamente `_markDisconnectedImmediate()`, cambiando `_isConnected = false` y mostrando el banner rojo de "Base de datos desconectada" / estado offline ante un simple error de credenciales.
+  3. De igual manera, excepciones de cliente en `PostgrestException` como violaciones de unicidad (`23505`), claves foráneas (`23503`), datos inválidos (`22P02`), permisos RLS (`42501`) o consultas vacías con `.single()` (`PGRST116`) desconectaban erróneamente toda la app.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Exclusión de Errores de Validación y Credenciales (`AuthException`)**:
+     - Las respuestas HTTP 4xx de GoTrue (`400`, `401`, `422`, `429`) son respuestas válidas del servidor ante acciones del usuario, **nunca** caídas de infraestructura. Si ocurriera una caída de red en un flujo de autenticación, la capa de transporte lanzaría `SocketException`, `ClientException` o `TimeoutException`.
+     - `AuthException` debe retornar siempre `false` en `isConnectionError`.
+     - Asimismo, en `AuthProvider`, los bloques `on AuthException catch (e)` no deben invocar `DatabaseHealthProvider.reportFailure(e)`.
+  2. **Discriminación SQLSTATE en `PostgrestException`**:
+     - **Excluir (Errores de cliente / aplicación / restricciones)**:
+       - Clase 23: Violación de restricciones de integridad (`23505`, `23503`, `23502`, `23514`).
+       - Clase 22: Formato o tipos de datos de cliente (`22001`, `22P02`).
+       - Clase 42: Sintaxis o políticas RLS (`42501`, `42703`, `42P01`).
+       - Errores de cliente PostgREST: códigos que inician por `PGRST1` (ej. `PGRST116`) y `PGRST2`.
+     - **Incluir (Auténticos fallos de infraestructura de base de datos)**:
+       - Clase 08: Connection exceptions de PostgreSQL (`08000`, `08003`, `08006`, etc.).
+       - Clase 57: Operator intervention / shutdown de PostgreSQL (`57P01`, `57P02`, `57P03`).
+       - `53300`: Pool de conexiones agotado.
+       - Mensajes explícitos de fallo de transporte (`connection refused`, `connection closed`, `network`, `timeout`, `socketexception`).
+  3. **Reconocimiento de Transporte HTTP**:
+     - Reconocer excepciones de transporte de red (`SocketException`, `TimeoutException`, `HttpException`, y `ClientException` de `package:http` o `failed host lookup`).
+
+### Mapeo y Traducción Centralizada de Errores al Español (AppErrorMapper)
+
+- **Problema**: Las excepciones emitidas por Supabase GoTrue (`AuthException`), PostgreSQL/PostgREST (`PostgrestException`) y la capa de transporte HTTP/Sockets devuelven mensajes en inglés en crudo (`Invalid login credentials`, `User already registered`, `duplicate key value violates unique constraint`, etc.). Exponer estas cadenas directamente a la interfaz (vía toasts, snackbars o interpolaciones `${e.toString()}`) degrada severamente la experiencia de usuario y expone detalles técnicos internos.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Utilidad Pura Centralizada**: Toda excepción de backend o transporte debe pasar obligatoriamente por `AppErrorMapper.toSpanish(error)` antes de presentarse en la UI.
+  2. **Traducción Exhaustiva de Autenticación (`AuthException`)**:
+     - Credenciales inválidas (`invalid_credentials` / `Invalid login credentials`) ➔ `'El correo o la contraseña son incorrectos.'`
+     - Usuario duplicado (`user_already_exists` / `User already registered`) ➔ `'Ya existe una cuenta registrada con este correo electrónico.'`
+     - Contraseña débil (`weak_password` / `Password should be at least...`) ➔ `'La contraseña debe tener al menos 6 caracteres.'`
+     - Correo no confirmado (`email_not_confirmed`) ➔ `'Tu correo electrónico aún no ha sido confirmado. Revisa tu bandeja de entrada.'`
+     - Límite de tasa (`over_request_rate_limit` / `rate limit`) ➔ `'Has superado el límite de intentos. Por favor, espera unos minutos antes de volver a intentarlo.'`
+     - Formato inválido (`invalid_email` / `Unable to validate email`) ➔ `'El formato del correo electrónico no es válido.'`
+  3. **Traducción Semántica de Base de Datos (`PostgrestException`)**:
+     - Unicidad (`23505`) ➔ `'Ya existe un registro con estos datos.'`
+     - Claves foráneas (`23503`) ➔ `'La operación no pudo completarse porque hace referencia a un elemento que no existe.'`
+     - Campos obligatorios (`23502`) ➔ `'Por favor, completa todos los campos requeridos.'`
+     - Reglas de validación (`23514`) ➔ `'Uno o más datos ingresados no cumplen con las reglas requeridas.'`
+     - Permisos denegados / RLS (`42501`) ➔ `'No tienes permisos suficientes para realizar esta acción.'`
+     - Registros no encontrados (`PGRST116`) ➔ `'No se encontró la información solicitada.'`
+  4. **Protección contra Fuga de Trazas Técnicas**:
+     - Excepciones no mapeadas nunca deben imprimir `e.toString()`; deben retornar un mensaje de respaldo amigable en español: `'Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.'`
+
+## 🚪 Ciclo de Vida de Autenticación y Navegación Declarativa (AuthGate)
+
+### Prohibición de `Navigator.pushAndRemoveUntil` en Tabs Anidados (Regla de Oro)
+
+- **Problema**:
+  1. En arquitecturas con pestañas y navegadores anidados (`MainNavigationPage` con múltiples `Navigator` en cada tab), invocar llamadas imperativas como `Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const LoginPage()), ...)` desde una pantalla dentro de una pestaña (ej. `ProfilePage` en el tab 3) utiliza por defecto el `NavigatorState` local de ese tab.
+  2. Esto anida `LoginPage` dentro del tab de Perfil, conservando en pantalla la barra de navegación superior (Header) y la inferior (BottomNavigationBar), permitiendo al usuario no autenticado seguir navegando a Home, Catálogo y Comunidad.
+  3. De igual manera, ejecutar `Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigationPage()))` al iniciar sesión en `LoginPage` rompe el flujo declarativo, montando una segunda instancia duplicada de `MainNavigationPage` en la pila del root navigator sobre `AuthGate`.
+
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **`AuthGate` como Única Fuente de la Verdad Declarativa**:
+     - `AuthGate` debe escuchar reactivamente a `AuthProvider` (`Consumer<AuthProvider>`) y conmutar declarativamente entre `LoginPage` y `MainNavigationPage`.
+     - El cambio se envuelve en un `AnimatedSwitcher` con claves explícitas (`ValueKey('main_nav')` vs `ValueKey('login_page')`). Al cambiar la clave, Flutter desmonta y destruye por completo el widget saliente y todos sus subárboles de estado/navegación.
+  2. **Cierre de Sesión Limpio (`ProfilePage`)**:
+     - Al cerrar sesión, la vista simplemente invoca `await auth.signOut()`.
+     - Si hay modales, bottom sheets o subrutas abiertas sobre la pantalla, se cierran usando `Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst)`.
+     - **Queda estrictamente prohibido** importar o instanciar `LoginPage` dentro de `ProfilePage`.
+  3. **Inicio de Sesión Limpio (`LoginPage`)**:
+     - Al autenticarse correctamente con correo/contraseña o Google, `AuthProvider` actualiza el estado interno a `_isAuthenticated = true` y ejecuta `notifyListeners()`.
+     - **Queda estrictamente prohibido** llamar a `Navigator.pushReplacement` hacia `MainNavigationPage` dentro de `LoginPage`. La navegación ocurre de forma automática y reactiva a través de `AuthGate`.
+

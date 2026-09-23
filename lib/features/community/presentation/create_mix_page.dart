@@ -11,6 +11,7 @@ import '../../../core/data/supabase_service.dart';
 import '../../catalog/data/tobacco_repository.dart';
 import '../../catalog/presentation/providers/tobacco_lookup_provider.dart';
 import 'community_provider.dart';
+import '../../../core/utils/app_error_mapper.dart';
 import '../../../core/utils/app_toast.dart';
 
 // Utilidad: convierte cada palabra a "Title Case" (primera mayúscula, resto minúsculas).
@@ -183,7 +184,10 @@ class _CreateMixPageState extends State<CreateMixPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _loadingExisting = false);
-        AppToast.showError(context, 'Error al cargar datos: $e');
+        AppToast.showError(
+          context,
+          'Error al cargar datos: ${AppErrorMapper.toSpanish(e)}',
+        );
       }
     }
   }
@@ -341,8 +345,8 @@ class _CreateMixPageState extends State<CreateMixPage> {
       AppToast.showError(
         context,
         _isEdit
-            ? 'Error al actualizar la mezcla: ${e.toString()}'
-            : 'Error al crear la mezcla: ${e.toString()}',
+            ? 'Error al actualizar la mezcla: ${AppErrorMapper.toSpanish(e)}'
+            : 'Error al crear la mezcla: ${AppErrorMapper.toSpanish(e)}',
       );
     }
   }

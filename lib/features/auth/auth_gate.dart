@@ -65,10 +65,34 @@ class AuthGate extends StatelessWidget {
               : Consumer<AuthProvider>(
                   key: const ValueKey('auth_content'),
                   builder: (context, auth, _) {
-                    if (auth.isAuthenticated) {
-                      return const MainNavigationPage();
-                    }
-                    return const LoginPage();
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        final scaleAnimation = Tween<double>(
+                          begin: 0.94,
+                          end: 1.0,
+                        ).animate(animation);
+
+                        final fadeAnimation = CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeInOut,
+                        );
+
+                        return FadeTransition(
+                          opacity: fadeAnimation,
+                          child: ScaleTransition(
+                            scale: scaleAnimation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: auth.isAuthenticated
+                          ? const MainNavigationPage(key: ValueKey('main_nav'))
+                          : const LoginPage(key: ValueKey('login_page')),
+                    );
                   },
                 ),
         );

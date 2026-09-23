@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../core/models/tobacco.dart';
+import '../../../../core/utils/app_error_mapper.dart';
 import '../../data/tobacco_repository.dart';
 
 /// Provider para búsquedas y listado paginado de tabacos en el desplegable
@@ -70,7 +71,7 @@ class TobaccoLookupProvider extends ChangeNotifier {
         _hasMore = false;
       }
     } catch (e) {
-      _error = e.toString();
+      _error = AppErrorMapper.toSpanish(e);
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../core/theme_provider.dart';
 import '../../widgets/pastel_textfield.dart';
-import '../../widgets/main_navigation.dart';
 import '../../widgets/social_login_button.dart';
 import 'package:hookahub/features/auth/auth_provider.dart';
 import 'presentation/register_page.dart';
@@ -150,13 +149,6 @@ class _LoginPageState extends State<LoginPage> {
                           if (!context.mounted) return;
                           if (error != null) {
                             AppToast.showError(context, error);
-                          } else {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const MainNavigationPage(),
-                              ),
-                            );
                           }
                         },
                         child: const Text('Iniciar sesión'),

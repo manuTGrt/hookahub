@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../core/providers/database_health_provider.dart';
+import '../../../../core/utils/app_error_mapper.dart';
 
 import '../../../../core/models/tobacco.dart';
 import '../../data/tobacco_repository.dart';
@@ -167,7 +168,7 @@ class CatalogProvider extends ChangeNotifier {
       // Si es error de conexión, solo mostramos banner global y suprimimos texto en la lista
       _error = DatabaseHealthProvider.isConnectionError(e)
           ? null
-          : e.toString();
+          : AppErrorMapper.toSpanish(e);
     } finally {
       _hasAttemptedLoad = true;
       _isLoading = false;

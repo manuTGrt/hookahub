@@ -9,10 +9,17 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:hookahub/app.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({'has_completed_onboarding': true});
+  });
+
   testWidgets('La app arranca y muestra la pantalla inicial', (tester) async {
     await tester.pumpWidget(const HookahubApp());
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     // La app por defecto carga LoginPage; comprobamos textos comunes
     // según el diseño mínimo (si cambia, ajusta el finder).

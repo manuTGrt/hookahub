@@ -5,7 +5,6 @@ import 'settings_page.dart';
 import 'edit_profile_page.dart';
 import '../favorites/presentation/favorites_page.dart';
 import '../mixes/presentation/user_mixes_page.dart';
-import '../auth/login_page.dart';
 import 'package:hookahub/features/auth/auth_provider.dart';
 import 'presentation/profile_provider.dart';
 import '../favorites/presentation/favorites_provider.dart';
@@ -339,10 +338,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         return;
                       }
                       if (!context.mounted) return;
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const LoginPage()),
-                        (route) => false,
-                      );
+                      Navigator.of(context, rootNavigator: true)
+                          .popUntil((route) => route.isFirst);
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
