@@ -1,5 +1,6 @@
 import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
+import '../../../core/constants.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/mix.dart';
 import '../domain/user_mixes_repository.dart' as domain;
@@ -29,7 +30,8 @@ class UserMixesRepository implements domain.UserMixesRepository {
           ''')
           .eq('author_id', user.id)
           .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
+          .range(offset, offset + limit - 1)
+          .timeout(supabaseReadTimeout);
 
       return (response as List).map((mixData) {
         final components = mixData['mix_components'] as List? ?? [];
@@ -62,9 +64,13 @@ class UserMixesRepository implements domain.UserMixesRepository {
           color: mixColor,
         );
       }).toList();
-    } catch (e) {
-      AppLogger.error('Error al obtener mis mezclas: $e');
-      return [];
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Error al obtener mis mezclas',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
     }
   }
 }

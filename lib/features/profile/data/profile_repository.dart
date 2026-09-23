@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/constants.dart';
 import '../../../core/data/supabase_service.dart';
+import '../../../core/utils/app_logger.dart';
 import '../domain/profile.dart';
 import '../../../core/storage.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -21,7 +23,8 @@ class ProfileRepository {
         .from('profiles')
         .select()
         .eq('id', user.id)
-        .maybeSingle();
+        .maybeSingle()
+        .timeout(supabaseReadTimeout);
 
     if (res == null) return null;
     return _fromMap(res);
@@ -35,9 +38,15 @@ class ProfileRepository {
       final List res = await _client
           .from('mixes')
           .select('id')
-          .eq('author_id', user.id);
+          .eq('author_id', user.id)
+          .timeout(supabaseReadTimeout);
       return res.length;
-    } catch (_) {
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Error al contar mezclas del usuario',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return 0;
     }
   }
@@ -62,13 +71,19 @@ class ProfileRepository {
 
     if (data.isEmpty) return;
 
-    await _client.from('profiles').update(data).eq('id', user.id);
+    await _client
+        .from('profiles')
+        .update(data)
+        .eq('id', user.id)
+        .timeout(supabaseWriteTimeout);
 
     // Nota: si se requiere cambiar email del auth, hay que usar auth.updateUser
     if (update.email != null &&
         update.email!.isNotEmpty &&
         update.email != user.email) {
-      await _client.auth.updateUser(UserAttributes(email: update.email));
+      await _client.auth
+          .updateUser(UserAttributes(email: update.email))
+          .timeout(supabaseWriteTimeout);
     }
   }
 
@@ -96,7 +111,8 @@ class ProfileRepository {
               contentType: 'image/jpeg',
               upsert: true,
             ),
-          );
+          )
+          .timeout(supabaseWriteTimeout);
     } on StorageException catch (e) {
       throw StorageException('Error al subir a Storage: ${e.message}');
     } catch (e) {
@@ -111,7 +127,8 @@ class ProfileRepository {
             'avatar_url': storagePath,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq('id', user.id);
+          .eq('id', user.id)
+          .timeout(supabaseWriteTimeout);
     } on PostgrestException catch (e) {
       throw PostgrestException(
         message: 'Error al actualizar perfil: ${e.message}',
@@ -184,7 +201,8 @@ class ProfileRepository {
     try {
       final url = await _client.storage
           .from(StorageConfig.avatarsBucket)
-          .createSignedUrl(storagePath, StorageConfig.signedUrlExpiresIn);
+          .createSignedUrl(storagePath, StorageConfig.signedUrlExpiresIn)
+          .timeout(supabaseReadTimeout);
       return url;
     } on StorageException catch (e) {
       throw StorageException('No se pudo generar Signed URL: ${e.message}');
@@ -218,7 +236,8 @@ class ProfileRepository {
           'avatar_url': 'icon:$index',
           'updated_at': DateTime.now().toIso8601String(),
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .timeout(supabaseWriteTimeout);
   }
 
   /// Elimina el avatar actual del usuario: borra archivos en su carpeta y pone avatar_url a NULL.
@@ -249,7 +268,8 @@ class ProfileRepository {
           'avatar_url': null,
           'updated_at': DateTime.now().toIso8601String(),
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .timeout(supabaseWriteTimeout);
   }
 
   Profile _fromMap(Map<String, dynamic> map) {

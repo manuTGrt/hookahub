@@ -1,5 +1,6 @@
 import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
+import '../../../core/constants.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/mix.dart';
 // no-op
@@ -27,7 +28,8 @@ class CommunityRepository {
             mix_components(tobacco_name, brand, percentage, color)
           ''')
           .eq('id', mixId)
-          .single();
+          .single()
+          .timeout(supabaseReadTimeout);
 
       // Extraer componentes/ingredientes
       final components = response['mix_components'] as List? ?? [];
@@ -66,8 +68,8 @@ class CommunityRepository {
         ingredients: ingredients,
         color: mixColor,
       );
-    } catch (e) {
-      AppLogger.error('Error al obtener mezcla por ID: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al obtener mezcla por ID', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -129,7 +131,9 @@ class CommunityRepository {
             idQuery = idQuery.order('created_at', ascending: false);
         }
 
-        final List dataIds = await idQuery.range(offset, offset + limit - 1);
+        final List dataIds = await idQuery
+            .range(offset, offset + limit - 1)
+            .timeout(supabaseReadTimeout);
         targetIds = dataIds
             .map((row) => (row as Map<String, dynamic>)['id'] as String)
             .toList();
@@ -177,7 +181,7 @@ class CommunityRepository {
             request = request.order('created_at', ascending: false);
         }
 
-        response = await request;
+        response = await request.timeout(supabaseReadTimeout);
       } else {
         // Sin filtro por tabaco: consulta directa con todos los componentes
         dynamic request = _supabase.client.from('mixes').select('''
@@ -215,7 +219,9 @@ class CommunityRepository {
             request = request.order('created_at', ascending: false);
         }
 
-        response = await request.range(offset, offset + limit - 1);
+        response = await request
+            .range(offset, offset + limit - 1)
+            .timeout(supabaseReadTimeout);
       }
 
       return response.map((mixData) {
@@ -257,9 +263,9 @@ class CommunityRepository {
           color: mixColor,
         );
       }).toList();
-    } catch (e) {
-      AppLogger.error('Error al obtener mezclas: $e');
-      return [];
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al obtener mezclas', error: e, stackTrace: stackTrace);
+      rethrow;
     }
   }
 
@@ -286,7 +292,7 @@ class CommunityRepository {
         request = request.limit(limit);
       }
 
-      final List data = await request;
+      final List data = await request.timeout(supabaseReadTimeout);
       for (final row in data) {
         final name = (row['name'] as String?) ?? '';
         final brand = (row['brand'] as String?) ?? '';
@@ -309,7 +315,8 @@ class CommunityRepository {
           .select('name, brand')
           .order('brand', ascending: true)
           .order('name', ascending: true)
-          .range(offset, end);
+          .range(offset, end)
+          .timeout(supabaseReadTimeout);
 
       if (page.isEmpty) break;
       for (final row in page) {
@@ -350,13 +357,15 @@ class CommunityRepository {
             'description': description,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq('id', mixId);
+          .eq('id', mixId)
+          .timeout(supabaseWriteTimeout);
 
       // Reemplazar componentes: borrar e insertar
       await _supabase.client
           .from('mix_components')
           .delete()
-          .eq('mix_id', mixId);
+          .eq('mix_id', mixId)
+          .timeout(supabaseWriteTimeout);
 
       if (components.isNotEmpty) {
         final componentsData = components
@@ -370,7 +379,10 @@ class CommunityRepository {
               },
             )
             .toList();
-        await _supabase.client.from('mix_components').insert(componentsData);
+        await _supabase.client
+            .from('mix_components')
+            .insert(componentsData)
+            .timeout(supabaseWriteTimeout);
       }
 
       // Obtener username del autor para regresar un Mix coherente
@@ -378,7 +390,8 @@ class CommunityRepository {
           .from('profiles')
           .select('username')
           .eq('id', user.id)
-          .single();
+          .single()
+          .timeout(supabaseReadTimeout);
       final authorName = profileResponse['username'] as String? ?? 'Anónimo';
 
       final ingredients = components
@@ -400,7 +413,8 @@ class CommunityRepository {
           .from('mixes')
           .select('rating, reviews')
           .eq('id', mixId)
-          .single();
+          .single()
+          .timeout(supabaseReadTimeout);
 
       return Mix(
         id: mixId,
@@ -439,7 +453,8 @@ class CommunityRepository {
               mix_components(tobacco_name, brand, percentage, color)
             )
           ''')
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .timeout(supabaseReadTimeout);
 
       return (response as List).map((favData) {
         final mixData = favData['mixes'];
@@ -514,7 +529,8 @@ class CommunityRepository {
             'reviews': 0,
           })
           .select()
-          .single();
+          .single()
+          .timeout(supabaseWriteTimeout);
 
       final mixId = mixResponse['id'] as String;
 
@@ -531,14 +547,18 @@ class CommunityRepository {
           )
           .toList();
 
-      await _supabase.client.from('mix_components').insert(componentsData);
+      await _supabase.client
+          .from('mix_components')
+          .insert(componentsData)
+          .timeout(supabaseWriteTimeout);
 
       // Obtener perfil del usuario (usar username)
       final profileResponse = await _supabase.client
           .from('profiles')
           .select('username')
           .eq('id', user.id)
-          .single();
+          .single()
+          .timeout(supabaseReadTimeout);
 
       final authorName = profileResponse['username'] as String? ?? 'Anónimo';
 
@@ -589,7 +609,8 @@ class CommunityRepository {
             mix_components(tobacco_name, brand, percentage, color)
           ''')
           .eq('id', mixId)
-          .single();
+          .single()
+          .timeout(supabaseReadTimeout);
 
       // Extraer componentes
       final List<Map<String, dynamic>> components = [];
@@ -619,7 +640,8 @@ class CommunityRepository {
               .select('description')
               .eq('name', comp['tobacco_name'] as String)
               .eq('brand', comp['brand'] as String)
-              .limit(1);
+              .limit(1)
+              .timeout(supabaseReadTimeout);
           if (descRes.isNotEmpty) {
             comp['description'] = descRes.first['description'];
           }
@@ -668,7 +690,8 @@ class CommunityRepository {
           ''')
           .inFilter('tobacco_name', tobaccoNames)
           .neq('mix_id', currentMixId)
-          .limit(limit * 3); // Obtener más para filtrar duplicados
+          .limit(limit * 3)
+          .timeout(supabaseReadTimeout); // Obtener más para filtrar duplicados
 
       // Agrupar por mix_id para evitar duplicados
       final Map<String, dynamic> uniqueMixes = {};
@@ -738,7 +761,8 @@ class CommunityRepository {
             profiles!reviews_author_id_fkey(username, display_name, avatar_url)
           ''')
           .eq('mix_id', mixId)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .timeout(supabaseReadTimeout);
 
       return (response as List).map((reviewData) {
         final profile = reviewData['profiles'];
@@ -772,12 +796,15 @@ class CommunityRepository {
         return false;
       }
 
-      await _supabase.client.from('reviews').insert({
-        'mix_id': mixId,
-        'author_id': user.id,
-        'rating': rating,
-        'comment': comment,
-      });
+      await _supabase.client
+          .from('reviews')
+          .insert({
+            'mix_id': mixId,
+            'author_id': user.id,
+            'rating': rating,
+            'comment': comment,
+          })
+          .timeout(supabaseWriteTimeout);
 
       // Actualizar el rating promedio y el conteo de reviews de la mezcla
       await _updateMixRating(mixId);
@@ -795,13 +822,15 @@ class CommunityRepository {
       final reviews = await _supabase.client
           .from('reviews')
           .select('rating')
-          .eq('mix_id', mixId);
+          .eq('mix_id', mixId)
+          .timeout(supabaseReadTimeout);
 
       if (reviews.isEmpty) {
         await _supabase.client
             .from('mixes')
             .update({'rating': 0.0, 'reviews': 0})
-            .eq('id', mixId);
+            .eq('id', mixId)
+            .timeout(supabaseWriteTimeout);
         return;
       }
 
@@ -813,7 +842,8 @@ class CommunityRepository {
       await _supabase.client
           .from('mixes')
           .update({'rating': avgRating, 'reviews': ratings.length})
-          .eq('id', mixId);
+          .eq('id', mixId)
+          .timeout(supabaseWriteTimeout);
     } catch (e) {
       AppLogger.error('Error al actualizar rating de mezcla: $e');
     }
@@ -822,7 +852,11 @@ class CommunityRepository {
   /// Elimina una reseña por su ID.
   Future<bool> deleteReview(String reviewId, String mixId) async {
     try {
-      await _supabase.client.from('reviews').delete().eq('id', reviewId);
+      await _supabase.client
+          .from('reviews')
+          .delete()
+          .eq('id', reviewId)
+          .timeout(supabaseWriteTimeout);
 
       // Actualizar el rating de la mezcla después de eliminar
       await _updateMixRating(mixId);
@@ -845,7 +879,8 @@ class CommunityRepository {
       await _supabase.client
           .from('reviews')
           .update({'rating': rating, 'comment': comment})
-          .eq('id', reviewId);
+          .eq('id', reviewId)
+          .timeout(supabaseWriteTimeout);
 
       // Actualizar el rating de la mezcla después de editar
       await _updateMixRating(mixId);
@@ -867,7 +902,8 @@ class CommunityRepository {
           .from('mixes')
           .select('author_id')
           .eq('id', mixId)
-          .single();
+          .single()
+          .timeout(supabaseReadTimeout);
 
       final authorId = res['author_id'] as String?;
       return authorId != null && authorId == user.id;
@@ -882,7 +918,11 @@ class CommunityRepository {
     try {
       // Intentar borrar directamente la mezcla. Si hay FKs con CASCADE,
       // eliminará componentes/reseñas asociadas automáticamente.
-      await _supabase.client.from('mixes').delete().eq('id', mixId);
+      await _supabase.client
+          .from('mixes')
+          .delete()
+          .eq('id', mixId)
+          .timeout(supabaseWriteTimeout);
       return true;
     } catch (e) {
       AppLogger.error('Error al eliminar mezcla: $e');

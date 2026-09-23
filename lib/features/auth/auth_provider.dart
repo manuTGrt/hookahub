@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/constants.dart';
 import '../../core/data/supabase_service.dart';
 import '../../core/providers/database_health_provider.dart';
 import '../../core/utils/app_error_mapper.dart';
@@ -102,7 +103,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _svc
           .signInWithEmail(email: email, password: password)
-          .timeout(const Duration(seconds: 4));
+          .timeout(supabaseReadTimeout);
       return null;
     } on AuthException catch (e) {
       return AppErrorMapper.toSpanish(e);
@@ -134,7 +135,7 @@ class AuthProvider extends ChangeNotifier {
               'bio': bio,
             }..removeWhere((key, value) => value == null),
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(supabaseReadTimeout);
 
       // Si el usuario se crea inmediatamente (sin confirmación de email)
       if (response.user != null) {
@@ -149,7 +150,7 @@ class AuthProvider extends ChangeNotifier {
               birthdate: birthdate,
               bio: bio,
             )
-            .timeout(const Duration(seconds: 4));
+            .timeout(supabaseReadTimeout);
       }
 
       return null;
@@ -175,7 +176,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> signOut() async {
     try {
-      await _svc.signOut().timeout(const Duration(seconds: 4));
+      await _svc.signOut().timeout(supabaseReadTimeout);
     } catch (e) {
       DatabaseHealthProvider.reportFailure(e);
       // Ignorar error de signOut, ya que el token local se borrará de todos modos

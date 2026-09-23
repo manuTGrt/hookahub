@@ -1,3 +1,4 @@
+import '../../../core/constants.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/tobacco.dart';
 import '../domain/catalog_filters.dart';
@@ -63,7 +64,7 @@ class TobaccoRepository {
 
     final List<dynamic> rows = await request
         .range(offset, offset + limit - 1)
-        .timeout(const Duration(seconds: 4));
+        .timeout(supabaseReadTimeout);
 
     return rows.map<Tobacco>((r) {
       final map = r as Map<String, dynamic>;
@@ -90,7 +91,7 @@ class TobaccoRepository {
         )
         .eq('id', id)
         .limit(1)
-        .timeout(const Duration(seconds: 4));
+        .timeout(supabaseReadTimeout);
 
     if (rows.isEmpty) return null;
     final map = rows.first as Map<String, dynamic>;
@@ -120,7 +121,7 @@ class TobaccoRepository {
         .ilike('name', name)
         .ilike('brand', brand)
         .limit(1)
-        .timeout(const Duration(seconds: 4));
+        .timeout(supabaseReadTimeout);
 
     if (rows.isEmpty) return null;
     final map = rows.first as Map<String, dynamic>;
@@ -145,7 +146,7 @@ class TobaccoRepository {
         .from('tobaccos')
         .select('brand')
         .order('brand', ascending: true)
-        .timeout(const Duration(seconds: 4));
+        .timeout(supabaseReadTimeout);
 
     // Extraer marcas únicas (por si Supabase no elimina duplicados)
     final brands = rows
@@ -176,6 +177,6 @@ class TobaccoRepository {
             'description': description,
           if (flavors != null && flavors.isNotEmpty) 'flavors': flavors,
         })
-        .timeout(const Duration(seconds: 8));
+        .timeout(supabaseWriteTimeout);
   }
 }

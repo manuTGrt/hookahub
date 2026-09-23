@@ -344,6 +344,24 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
      ```
   4. **Defensa en Profundidad en Utilidades Globales**: Componentes utilitarios globales que reciben un `BuildContext` (ej. `AppToast._show`) deben incorporar su propia guarda defensiva (`if (!context.mounted) return;`) al inicio, evitando que errores de invocación de terceros crasheen la app.
 
+### Timeouts Obligatorios en Repositorios Supabase y Prevención de Spinners Perpetuos (Regla de Oro)
+
+- **Problema**: En conexiones móviles inestables (conmutación Wi-Fi a 4G/5G, pérdida de paquetes o latencia infinita), el cliente HTTP/PostgREST de Supabase puede dejar el socket abierto indefinidamente si no se configura un tiempo límite de expiración. Cuando un `Provider` inicia una carga (`_isLoading = true`) y espera un `Future` sin timeout, la ejecución nunca completa ni lanza excepción. Como consecuencia, los bloques `catch` y `finally` jamás se ejecutan, dejando la interfaz de usuario bloqueada en un spinner de carga perpetuo. Además, silenciar excepciones en el repositorio devolviendo listas vacías (`catch (e) { return []; }`) enmascara el fallo de red, engaña al provider y bloquea el reporte a `DatabaseHealthProvider`.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Constantes Centralizadas (Cero Magic Numbers)**:
+     - Definir las duraciones en `lib/core/constants.dart`:
+       - `supabaseReadTimeout = Duration(seconds: 4)` para todas las operaciones de lectura (`select`, búsquedas, obtención por ID).
+       - `supabaseWriteTimeout = Duration(seconds: 8)` para operaciones de mutación (`insert`, `update`, `delete`, subidas a Storage).
+  2. **Aplicación Universal en la Capa Data**:
+     - Toda consulta a Supabase en repositorios (`CommunityRepository`, `UserMixesRepository`, `ProfileRepository`, `TobaccoRepository`, etc.) debe encadenar `.timeout(supabaseReadTimeout)` o `.timeout(supabaseWriteTimeout)` sobre el `Future` de la petición.
+  3. **Propagación Segura de Excepciones**:
+     - Los repositorios **nunca** deben silenciar excepciones ni tragarlas con `catch (e) { return []; }`.
+     - Si se captura para registrar el error, se debe registrar con `AppLogger.error('...', error: e, stackTrace: stackTrace)` y re-lanzar inmediatamente con `rethrow;`.
+  4. **Coordinación con Mapeo de Errores y Salud de Base de Datos**:
+     - `TimeoutException` es clasificada automáticamente por `DatabaseHealthProvider.isConnectionError` como un error de transporte (mostrando el banner global de conexión).
+     - `AppErrorMapper.toSpanish` traduce `TimeoutException` a `'Tiempo de espera agotado. Revisa tu conexión a internet.'`.
+     - El `Provider` ejecuta su bloque `finally { _isLoading = false; notifyListeners(); }`, cerrando el spinner y ofreciendo al usuario la opción de reintentar.
+
 ## 🏛️ Estados de Carga y Errores en UI (Sealed Classes vs Booleans Fragmentados)
 
 ### Migración a Clases Selladas con Dart 3 (Regla de Oro)

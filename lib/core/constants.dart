@@ -24,3 +24,7 @@ const turquoiseSecondaryDark = Color(0xFF274242); // acento secundario oscuro
 const warningRed = Color(0xFFD84343);
 const warningSurfaceLight = Color(0xFFFFECEB);
 const warningSurfaceDark = Color(0xFF3B2020);
+
+// Tiempos de espera (timeouts) para peticiones de red y Supabase
+const supabaseReadTimeout = Duration(seconds: 4);
+const supabaseWriteTimeout = Duration(seconds: 8);
