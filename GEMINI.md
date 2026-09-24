@@ -52,6 +52,24 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
   - ❌ **Incorrecto**: `USING (auth.role() = 'authenticated')`
   - ✅ **Correcto**: `USING ((select auth.role()) = 'authenticated')`
 
+### Optimización de Conteo: Antipatrón `select('id').length` vs `count(CountOption.exact)`
+
+- **Problema**: Realizar consultas como `_client.from('tabla').select('id').eq(...)` para luego computar la cantidad de registros en Dart mediante `(res as List).length` provoca **overfetching severo**: PostgREST genera y transmite un JSON con todos los UUIDs a través de la red móvil, y Dart reserva memoria en el heap para deserializar cada fila solo para descartarla tras leer la longitud.
+- **Solución (Regla de Oro)**: Utilizar siempre el método nativo `.count(CountOption.exact)` del query builder de Supabase:
+  - ✅ **Correcto**:
+    ```dart
+    final count = await _client
+        .from('mixes')
+        .count(CountOption.exact)
+        .eq('author_id', user.id)
+        .timeout(supabaseReadTimeout);
+    return count;
+    ```
+  - **Beneficios**:
+    1. **0 bytes en el payload** del cuerpo de la respuesta: Supabase ejecuta una petición HTTP `HEAD` con cabecera `Prefer: count=exact` y devuelve el número directamente en la cabecera `content-range`.
+    2. **Cálculo a nivel de motor SQL**: PostgreSQL resuelve `COUNT(*)` optimizado por índices de clave foránea/primaria.
+    3. **Resiliencia en UI**: En conteos secundarios o cosméticos, capturar `(e, stackTrace)`, registrar con `AppLogger.warning` y retornar `0` como fallback para evitar saturar la tabla remota `app_logs` ante micro-cortes.
+
 ## 📝 Logging Centralizado (AppLogger)
 
 - **Regla Estricta**: Está **PROHIBIDO** el uso directo de `print()` y `debugPrint()` a lo largo de toda la aplicación.

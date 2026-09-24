@@ -35,15 +35,15 @@ class ProfileRepository {
     final user = _client.auth.currentUser;
     if (user == null) return 0;
     try {
-      final List res = await _client
+      final count = await _client
           .from('mixes')
-          .select('id')
+          .count(CountOption.exact)
           .eq('author_id', user.id)
           .timeout(supabaseReadTimeout);
-      return res.length;
+      return count;
     } catch (e, stackTrace) {
-      AppLogger.error(
-        'Error al contar mezclas del usuario',
+      AppLogger.warning(
+        'Error al contar mezclas del usuario: $e',
         error: e,
         stackTrace: stackTrace,
       );
