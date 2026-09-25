@@ -8,6 +8,29 @@ import 'package:hookahub/features/auth/auth_provider.dart';
 import 'presentation/register_page.dart';
 import '../../core/utils/app_toast.dart';
 
+// ---------------------------------------------------------------------------
+// Estados UI (sealed class — sin booleanos fragmentados)
+// ---------------------------------------------------------------------------
+
+sealed class LoginState {
+  const LoginState();
+}
+
+/// Estado inicial en reposo, listo para interactuar.
+class LoginIdle extends LoginState {
+  const LoginIdle();
+}
+
+/// Autenticación por correo y contraseña en curso.
+class LoginEmailLoading extends LoginState {
+  const LoginEmailLoading();
+}
+
+/// Autenticación por Google en curso.
+class LoginGoogleLoading extends LoginState {
+  const LoginGoogleLoading();
+}
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -19,6 +42,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  LoginState _loginState = const LoginIdle();
 
   @override
   void dispose() {
@@ -27,11 +51,54 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  Future<void> _handleEmailLogin() async {
+    if (_loginState is! LoginIdle) return;
+
+    setState(() => _loginState = const LoginEmailLoading());
+    try {
+      final auth = context.read<AuthProvider>();
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+      final error = await auth.signInEmail(email, password);
+
+      if (!mounted) return;
+      if (error != null) {
+        AppToast.showError(context, error);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loginState = const LoginIdle());
+      }
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    if (_loginState is! LoginIdle) return;
+
+    setState(() => _loginState = const LoginGoogleLoading());
+    try {
+      final auth = context.read<AuthProvider>();
+      final error = await auth.signInGoogle();
+
+      if (!mounted) return;
+      if (error != null) {
+        AppToast.showError(context, error);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loginState = const LoginIdle());
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         final bool isDark = Theme.of(context).brightness == Brightness.dark;
+        final bool isSubmitting = _loginState is! LoginIdle;
+        final bool isEmailLoading = _loginState is LoginEmailLoading;
+        final bool isGoogleLoading = _loginState is LoginGoogleLoading;
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -51,14 +118,16 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     color: Theme.of(context).primaryColor,
                   ),
-                  onPressed: () {
-                    final nextMode = switch (themeProvider.themeMode) {
-                      ThemeMode.system => ThemeMode.light,
-                      ThemeMode.light => ThemeMode.dark,
-                      ThemeMode.dark => ThemeMode.system,
-                    };
-                    themeProvider.setThemeMode(nextMode);
-                  },
+                  onPressed: isSubmitting
+                      ? null
+                      : () {
+                          final nextMode = switch (themeProvider.themeMode) {
+                            ThemeMode.system => ThemeMode.light,
+                            ThemeMode.light => ThemeMode.dark,
+                            ThemeMode.dark => ThemeMode.system,
+                          };
+                          themeProvider.setThemeMode(nextMode);
+                        },
                 ),
               ),
             ],
@@ -105,6 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                       controller: _emailController,
                       hintText: 'Correo electrónico',
                       icon: Icons.email_outlined,
+                      readOnly: isSubmitting,
                       fillColor: isDark ? fieldDark : fieldLight,
                       iconColor: Theme.of(context).primaryColor,
                       textColor:
@@ -117,6 +187,7 @@ class _LoginPageState extends State<LoginPage> {
                       hintText: 'Contraseña',
                       icon: Icons.lock_outline,
                       obscureText: _obscurePassword,
+                      readOnly: isSubmitting,
                       fillColor: isDark ? fieldDark : fieldLight,
                       iconColor: Theme.of(context).primaryColor,
                       textColor:
@@ -129,11 +200,13 @@ class _LoginPageState extends State<LoginPage> {
                               : Icons.visibility,
                           color: Theme.of(context).primaryColor,
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                        onPressed: isSubmitting
+                            ? null
+                            : () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -141,17 +214,19 @@ class _LoginPageState extends State<LoginPage> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: () async {
-                          final auth = context.read<AuthProvider>();
-                          final email = _emailController.text.trim();
-                          final password = _passwordController.text;
-                          final error = await auth.signInEmail(email, password);
-                          if (!context.mounted) return;
-                          if (error != null) {
-                            AppToast.showError(context, error);
-                          }
-                        },
-                        child: const Text('Iniciar sesión'),
+                        onPressed: isSubmitting ? null : _handleEmailLogin,
+                        child: isEmailLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Text('Iniciar sesión'),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -179,14 +254,8 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 16),
                     SocialLoginButton(
                       provider: SocialProvider.google,
-                      onPressed: () async {
-                        final auth = context.read<AuthProvider>();
-                        final error = await auth.signInGoogle();
-                        if (!context.mounted) return;
-                        if (error != null) {
-                          AppToast.showError(context, error);
-                        }
-                      },
+                      isLoading: isGoogleLoading,
+                      onPressed: isSubmitting ? null : _handleGoogleLogin,
                     ),
 
                     const SizedBox(height: 8),
@@ -199,14 +268,16 @@ class _LoginPageState extends State<LoginPage> {
                           fontWeight: FontWeight.normal,
                         ),
                       ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterPage(),
-                          ),
-                        );
-                      },
+                      onPressed: isSubmitting
+                          ? null
+                          : () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RegisterPage(),
+                                ),
+                              );
+                            },
                       child: const Text('¿No tienes cuenta? Regístrate'),
                     ),
                     const SizedBox(height: 40),

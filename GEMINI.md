@@ -628,3 +628,21 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
      - Al autenticarse correctamente con correo/contraseña o Google, `AuthProvider` actualiza el estado interno a `_isAuthenticated = true` y ejecuta `notifyListeners()`.
      - **Queda estrictamente prohibido** llamar a `Navigator.pushReplacement` hacia `MainNavigationPage` dentro de `LoginPage`. La navegación ocurre de forma automática y reactiva a través de `AuthGate`.
 
+### Estado de Carga y Prevención de Doble Envío / Spam en Formularios de Auth (Regla de Oro)
+
+- **Problema**:
+  1. En pantallas de autenticación (`LoginPage`), permitir que los botones de envío ("Iniciar sesión" o "Continuar con Google") permanezcan activos tras el tap sin un estado de carga provoca condiciones de carrera severas (*race conditions*). Si el usuario pulsa repetidas veces rápidamente por impaciencia, se envían múltiples peticiones concurrentes a Supabase Auth o al proveedor OAuth de Google.
+  2. La ausencia de un spinner de carga genera incertidumbre en el usuario, incentivando el spam click.
+  3. No deshabilitar el botón alternativo (ej. pulsar Google mientras se procesa login por correo) o permitir modificar los campos de texto (`PastelTextField`) y navegar hacia la pantalla de registro mientras la petición asíncrona está en vuelo provoca inconsistencias de estado.
+
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Sealed Class para el Estado de Vista**: Modelar el estado de la pantalla mediante una clase sellada exhaustiva (`sealed class LoginState` con `LoginIdle`, `LoginEmailLoading`, `LoginGoogleLoading`) sin utilizar booleanos fragmentados.
+  2. **Bloqueo Mutuo Global durante el Envío**:
+     - Si la pantalla no se encuentra en reposo (`isSubmitting = _loginState is! LoginIdle`), ambos botones deben desactivarse inmediatamente pasando `onPressed: null`.
+     - Los campos de texto se marcan como `readOnly: isSubmitting` y el botón de navegación a registro queda bloqueado (`onPressed: null`).
+  3. **Feedback Visual Coherente**:
+     - El botón de email sustituye su etiqueta de texto por un `CircularProgressIndicator` de tamaño 20x20 con `strokeWidth: 2`.
+     - El componente `SocialLoginButton` recibe `isLoading: isGoogleLoading`, mostrando su spinner nativo y bloqueando cualquier gesto en `GestureDetector` (`onTapDown`/`onTapUp`).
+  4. **Resiliencia con `try/finally` y comprobación de `mounted`**:
+     - El restablecimiento a `LoginIdle` se realiza obligatoriamente en un bloque `finally` con la guarda `if (mounted) setState(...)`, asegurando que cancelaciones de Google o fallos de conexión rehabiliten la interfaz limpiamente sin provocar fugas o errores de ciclo de vida tras ser desmontada por `AuthGate`.
+

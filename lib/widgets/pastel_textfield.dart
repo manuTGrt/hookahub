@@ -10,6 +10,8 @@ class PastelTextField extends StatelessWidget {
   final Color? iconColor;
   final Color? textColor;
   final Widget? suffixIcon;
+  final bool enabled;
+  final bool readOnly;
 
   const PastelTextField({
     super.key,
@@ -21,6 +23,8 @@ class PastelTextField extends StatelessWidget {
     this.iconColor,
     this.textColor,
     this.suffixIcon,
+    this.enabled = true,
+    this.readOnly = false,
   });
 
   @override
@@ -30,6 +34,8 @@ class PastelTextField extends StatelessWidget {
     return TextField(
       controller: controller,
       obscureText: obscureText,
+      enabled: enabled,
+      readOnly: readOnly,
       style: TextStyle(color: textColor ?? Colors.black),
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: iconColor ?? turquoiseDark),

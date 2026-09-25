@@ -80,11 +80,13 @@ class _SocialLoginButtonState extends State<SocialLoginButton>
       scale: _scaleAnimation,
       child: GestureDetector(
         onTapDown: (_) {
-          if (widget.onPressed != null) _scaleController.forward();
+          if (widget.onPressed != null && !widget.isLoading) _scaleController.forward();
         },
         onTapUp: (_) {
           _scaleController.reverse();
-          widget.onPressed?.call();
+          if (!widget.isLoading) {
+            widget.onPressed?.call();
+          }
         },
         onTapCancel: () => _scaleController.reverse(),
         child: AnimatedContainer(
