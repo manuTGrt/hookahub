@@ -255,6 +255,15 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   4. **Protección en Reconexión**: Los listeners de reconexión (`DatabaseHealthProvider.instance.onReconnected`) deben condicionar cualquier `fetch` o re-suscripción a la existencia de un usuario activo (`hasActiveUser`).
   5. **Limpieza en `dispose()`**: Siempre desregistrar los listeners de `AuthProvider` en el `@override void dispose()`.
 
+### Aislamiento Multi-Usuario y Sincronización Nube-Caché en Favoritos (Regla de Oro)
+
+- **Problema**: Guardar colecciones de usuario como favoritos y Top 5 en `SharedPreferences` con claves fijas genéricas (`favorites_mixes` y `top5_mix_ids`) provoca una **fuga de datos cruzada crítica** entre cuentas: si el Usuario A cierra sesión y el Usuario B inicia sesión en el mismo dispositivo, el Usuario B ve y puede modificar los favoritos y el Top 5 del Usuario A. Además, si el provider no escucha los eventos `signOut()` de `AuthProvider`, el estado en memoria nunca se purga.
+- **Solución Arquitectónica (Híbrida Nube + Offline-First)**:
+  1. **Persistencia Centralizada en Supabase**: Los favoritos y el Top 5 se persisten en la tabla remota `public.favorites` (`user_id`, `mix_id`, `is_top5`) protegida por RLS (`(select auth.uid()) = user_id`).
+  2. **Aislamiento Estricto en Caché Local**: `SharedPreferences` se utiliza exclusivamente como capa de caché offline-first con claves parametrizadas por identidad: `favorites_mixes_${userId}` y `top5_mix_ids_${userId}` (usando sufijo `_guest` para sesiones sin autenticar).
+  3. **Migración Transparente**: Al iniciar sesión, si la tabla remota no tiene datos pero el dispositivo conserva registros en las claves legacy (`favorites_mixes`), el repositorio migra automáticamente los datos a Supabase y purga la clave legacy para evitar inconsistencias y prevenir la pérdida de datos del usuario existente.
+  4. **Reactividad al Ciclo de Vida de Autenticación**: `FavoritesProvider` recibe `AuthProvider? auth`, registra listeners para `addSignOutListener` (que purga `_favorites = []`, `_top5Ids = []`, `_loaded = false` y notifica a la UI) y `addSignInListener` (que recarga los datos del nuevo usuario), y los desregistra obligatoriamente en `dispose()`.
+
 ## 🧭 Navegación y Diálogos
 
 ### Gestión de Diálogos en Navegadores Anidados (Root Navigator)

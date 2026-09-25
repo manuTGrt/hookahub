@@ -19,16 +19,22 @@ class FakeDatabaseHealthService implements DatabaseHealthService {
 
 class FakeFavoritesRepository implements FavoritesRepository {
   @override
-  Future<List<Mix>> loadFavorites() async => [];
+  Future<List<Mix>> loadFavorites({String? userId}) async => [];
 
   @override
-  Future<void> saveFavorites(List<Mix> mixes) async {}
+  Future<void> saveFavorites(List<Mix> mixes, {String? userId}) async {}
 
   @override
-  Future<List<String>> loadTop5Ids() async => [];
+  Future<void> addFavorite(Mix mix, {String? userId}) async {}
 
   @override
-  Future<void> saveTop5Ids(List<String> ids) async {}
+  Future<void> removeFavorite(String mixId, {String? userId}) async {}
+
+  @override
+  Future<List<String>> loadTop5Ids({String? userId}) async => [];
+
+  @override
+  Future<void> saveTop5Ids(List<String> ids, {String? userId}) async {}
 }
 
 class FakeCommunityRepository implements CommunityRepository {

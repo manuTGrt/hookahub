@@ -54,7 +54,10 @@ class HookahubApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) => FavoritesProvider(FavoritesRepository()),
+          create: (context) => FavoritesProvider(
+            FavoritesRepository(supabase: SupabaseService()),
+            auth: context.read<AuthProvider>(),
+          ),
         ),
         ChangeNotifierProxyProvider<AuthProvider, ProfileProvider>(
           create: (context) => ProfileProvider(

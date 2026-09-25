@@ -1,28 +1,104 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hookahub/core/models/mix.dart';
+import 'package:hookahub/features/auth/auth_provider.dart';
 import 'package:hookahub/features/favorites/domain/favorites_repository.dart';
 import 'package:hookahub/features/favorites/presentation/favorites_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockFavoritesRepository implements FavoritesRepository {
   List<Mix> favorites = [];
   List<String> top5Ids = [];
+  String? lastLoadedUserId;
+  String? lastSavedUserId;
 
   @override
-  Future<List<Mix>> loadFavorites() async => List.from(favorites);
+  Future<List<Mix>> loadFavorites({String? userId}) async {
+    lastLoadedUserId = userId;
+    return List.from(favorites);
+  }
 
   @override
-  Future<void> saveFavorites(List<Mix> mixes) async {
+  Future<void> saveFavorites(List<Mix> mixes, {String? userId}) async {
+    lastSavedUserId = userId;
     favorites = List.from(mixes);
   }
 
   @override
-  Future<List<String>> loadTop5Ids() async => List.from(top5Ids);
+  Future<void> addFavorite(Mix mix, {String? userId}) async {
+    lastSavedUserId = userId;
+    if (!favorites.any((m) => m.id == mix.id)) {
+      favorites.add(mix);
+    }
+  }
 
   @override
-  Future<void> saveTop5Ids(List<String> ids) async {
+  Future<void> removeFavorite(String mixId, {String? userId}) async {
+    lastSavedUserId = userId;
+    favorites.removeWhere((m) => m.id == mixId);
+    top5Ids.remove(mixId);
+  }
+
+  @override
+  Future<List<String>> loadTop5Ids({String? userId}) async {
+    lastLoadedUserId = userId;
+    return List.from(top5Ids);
+  }
+
+  @override
+  Future<void> saveTop5Ids(List<String> ids, {String? userId}) async {
+    lastSavedUserId = userId;
     top5Ids = List.from(ids);
   }
+}
+
+class FakeAuthProvider extends ChangeNotifier implements AuthProvider {
+  final List<VoidCallback> _signOutListeners = [];
+  final List<VoidCallback> _signInListeners = [];
+  User? _user;
+
+  @override
+  User? get user => _user;
+
+  void setMockUser(User? user) {
+    _user = user;
+    notifyListeners();
+  }
+
+  @override
+  void addSignOutListener(VoidCallback listener) {
+    _signOutListeners.add(listener);
+  }
+
+  @override
+  void removeSignOutListener(VoidCallback listener) {
+    _signOutListeners.remove(listener);
+  }
+
+  @override
+  void addSignInListener(VoidCallback listener) {
+    _signInListeners.add(listener);
+  }
+
+  @override
+  void removeSignInListener(VoidCallback listener) {
+    _signInListeners.remove(listener);
+  }
+
+  void triggerSignOut() {
+    for (final l in List<VoidCallback>.from(_signOutListeners)) {
+      l();
+    }
+  }
+
+  void triggerSignIn() {
+    for (final l in List<VoidCallback>.from(_signInListeners)) {
+      l();
+    }
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
@@ -102,5 +178,41 @@ void main() {
       expect(provider.isTop5('mix-1'), isFalse);
       expect(mockRepo.top5Ids.contains('mix-1'), isFalse);
     });
+
+    test('signOut() limpia la lista en memoria y resetea isLoaded evitando fuga de datos cruzada', () async {
+      final fakeAuth = FakeAuthProvider();
+      final authProviderInstance = FavoritesProvider(mockRepo, auth: fakeAuth);
+
+      mockRepo.favorites = [testMix1, testMix2];
+      mockRepo.top5Ids = ['mix-1'];
+      await authProviderInstance.load();
+
+      expect(authProviderInstance.favorites.length, 2);
+      expect(authProviderInstance.top5.length, 1);
+      expect(authProviderInstance.isLoaded, isTrue);
+
+      // Simular que el usuario cierra sesión
+      fakeAuth.triggerSignOut();
+
+      // Debe haberse limpiado en memoria inmediatamente
+      expect(authProviderInstance.favorites.isEmpty, isTrue);
+      expect(authProviderInstance.top5.isEmpty, isTrue);
+      expect(authProviderInstance.isLoaded, isFalse);
+
+      authProviderInstance.dispose();
+    });
+
+    test('clear() vacía inmediatamente el estado en memoria', () async {
+      mockRepo.favorites = [testMix1];
+      await provider.load();
+      expect(provider.favorites.isNotEmpty, isTrue);
+
+      provider.clear();
+
+      expect(provider.favorites.isEmpty, isTrue);
+      expect(provider.top5.isEmpty, isTrue);
+      expect(provider.isLoaded, isFalse);
+    });
   });
 }
+

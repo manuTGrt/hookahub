@@ -12,18 +12,30 @@ class FakeFavoritesRepository implements FavoritesRepository {
   List<String> _storedTop5 = [];
 
   @override
-  Future<List<Mix>> loadFavorites() async => _storedFavorites;
+  Future<List<Mix>> loadFavorites({String? userId}) async => _storedFavorites;
 
   @override
-  Future<void> saveFavorites(List<Mix> mixes) async {
+  Future<void> saveFavorites(List<Mix> mixes, {String? userId}) async {
     _storedFavorites = List.from(mixes);
   }
 
   @override
-  Future<List<String>> loadTop5Ids() async => _storedTop5;
+  Future<void> addFavorite(Mix mix, {String? userId}) async {
+    if (!_storedFavorites.any((m) => m.id == mix.id)) {
+      _storedFavorites.add(mix);
+    }
+  }
 
   @override
-  Future<void> saveTop5Ids(List<String> ids) async {
+  Future<void> removeFavorite(String mixId, {String? userId}) async {
+    _storedFavorites.removeWhere((m) => m.id == mixId);
+  }
+
+  @override
+  Future<List<String>> loadTop5Ids({String? userId}) async => _storedTop5;
+
+  @override
+  Future<void> saveTop5Ids(List<String> ids, {String? userId}) async {
     _storedTop5 = List.from(ids);
   }
 }
