@@ -620,9 +620,9 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   1. **`AuthGate` como Única Fuente de la Verdad Declarativa**:
      - `AuthGate` debe escuchar reactivamente a `AuthProvider` (`Consumer<AuthProvider>`) y conmutar declarativamente entre `LoginPage` y `MainNavigationPage`.
      - El cambio se envuelve en un `AnimatedSwitcher` con claves explícitas (`ValueKey('main_nav')` vs `ValueKey('login_page')`). Al cambiar la clave, Flutter desmonta y destruye por completo el widget saliente y todos sus subárboles de estado/navegación.
-  2. **Cierre de Sesión Limpio (`ProfilePage`)**:
-     - Al cerrar sesión, la vista simplemente invoca `await auth.signOut()`.
-     - Si hay modales, bottom sheets o subrutas abiertas sobre la pantalla, se cierran usando `Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst)`.
+  2. **Cierre de Sesión Limpio y Centralizado (`AuthGate` + `rootNavigatorKey`)**:
+     - Al cerrar sesión o ante revocación de token/expiración por servidor (`_notifySignOut`), la limpieza de rutas modales, diálogos o pantallas apiladas en el navegador raíz se gestiona de forma centralizada en `AuthGate` (`_AuthSwitcher` escuchando a `AuthProvider.addSignOutListener` y ejecutando `rootNavigatorKey.currentState?.popUntil((r) => r.isFirst)`).
+     - La vista (`ProfilePage`) queda completamente desacoplada de la navegación y únicamente ejecuta `await auth.signOut()`.
      - **Queda estrictamente prohibido** importar o instanciar `LoginPage` dentro de `ProfilePage`.
   3. **Inicio de Sesión Limpio (`LoginPage`)**:
      - Al autenticarse correctamente con correo/contraseña o Google, `AuthProvider` actualiza el estado interno a `_isAuthenticated = true` y ejecuta `notifyListeners()`.

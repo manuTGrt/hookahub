@@ -335,11 +335,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         if (context.mounted) {
                           AppToast.showInfo(context, 'Error al cerrar sesión');
                         }
-                        return;
                       }
-                      if (!context.mounted) return;
-                      Navigator.of(context, rootNavigator: true)
-                          .popUntil((route) => route.isFirst);
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(

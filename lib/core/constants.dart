@@ -28,3 +28,6 @@ const warningSurfaceDark = Color(0xFF3B2020);
 // Tiempos de espera (timeouts) para peticiones de red y Supabase
 const supabaseReadTimeout = Duration(seconds: 4);
 const supabaseWriteTimeout = Duration(seconds: 8);
+
+/// Clave global para el navegador raíz de la aplicación (usada por AuthGate y MaterialApp)
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();

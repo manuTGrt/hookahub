@@ -21,6 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class TestableAuthProvider extends ChangeNotifier implements AuthProvider {
   bool _isAuth = false;
+  final List<VoidCallback> _signOutListeners = [];
 
   @override
   bool get isAuthenticated => _isAuth;
@@ -31,7 +32,20 @@ class TestableAuthProvider extends ChangeNotifier implements AuthProvider {
   }
 
   @override
+  void addSignOutListener(VoidCallback listener) {
+    _signOutListeners.add(listener);
+  }
+
+  @override
+  void removeSignOutListener(VoidCallback listener) {
+    _signOutListeners.remove(listener);
+  }
+
+  @override
   Future<void> signOut() async {
+    for (final l in List<VoidCallback>.of(_signOutListeners)) {
+      l();
+    }
     setAuthenticated(false);
   }
 
@@ -239,6 +253,93 @@ void main() {
 
         // Tras el cierre de sesión, debe renderizarse LoginPage sin rastros de barras
         expect(authProvider.isAuthenticated, isFalse);
+        expect(find.byType(LoginPage), findsOneWidget);
+        expect(find.byType(MainNavigationPage), findsNothing);
+
+        healthProvider.dispose();
+      },
+    );
+
+    testWidgets(
+      'cierra rutas modales y diálogos superpuestos en el rootNavigator automáticamente en signOut',
+      (tester) async {
+        final authProvider = TestableAuthProvider()..setAuthenticated(true);
+        final onboardingProvider = TestableOnboardingProvider();
+        final themeProvider = ThemeProvider();
+        final healthProvider = DatabaseHealthProvider(
+          healthService: FakeDatabaseHealthService(),
+        );
+        final profileProvider = MockProfileProvider();
+        final favoritesProvider = MockFavoritesProvider();
+        final homeStatsProvider = MockHomeStatsProvider();
+        final notificationsProvider = MockNotificationsProvider();
+        final catalogProvider = MockCatalogProvider();
+        final communityProvider = MockCommunityProvider();
+        final searchProvider = MockSearchProvider();
+        final testNavKey = GlobalKey<NavigatorState>();
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+              ChangeNotifierProvider<OnboardingProvider>.value(
+                value: onboardingProvider,
+              ),
+              ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
+              ChangeNotifierProvider<DatabaseHealthProvider>.value(
+                value: healthProvider,
+              ),
+              ChangeNotifierProvider<ProfileProvider>.value(
+                value: profileProvider,
+              ),
+              ChangeNotifierProvider<FavoritesProvider>.value(
+                value: favoritesProvider,
+              ),
+              ChangeNotifierProvider<HomeStatsProvider>.value(
+                value: homeStatsProvider,
+              ),
+              ChangeNotifierProvider<NotificationsProvider>.value(
+                value: notificationsProvider,
+              ),
+              ChangeNotifierProvider<CatalogProvider>.value(
+                value: catalogProvider,
+              ),
+              ChangeNotifierProvider<CommunityProvider>.value(
+                value: communityProvider,
+              ),
+              ChangeNotifierProvider<SearchProvider>.value(
+                value: searchProvider,
+              ),
+            ],
+            child: MaterialApp(
+              navigatorKey: testNavKey,
+              home: AuthGate(navigatorKey: testNavKey),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(MainNavigationPage), findsOneWidget);
+
+        // Simulamos abrir un diálogo modal en el rootNavigator
+        showDialog<void>(
+          context: testNavKey.currentContext!,
+          builder: (_) => const AlertDialog(
+            title: Text('Diálogo Modal Abierto'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Diálogo Modal Abierto'), findsOneWidget);
+
+        // Al cerrar sesión, AuthGate debe limpiar el diálogo automáticamente
+        await authProvider.signOut();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        // El diálogo debe haberse cerrado y LoginPage debe ser visible
+        expect(find.text('Diálogo Modal Abierto'), findsNothing);
         expect(find.byType(LoginPage), findsOneWidget);
         expect(find.byType(MainNavigationPage), findsNothing);
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+import 'core/constants.dart';
 import 'core/theme.dart';
 import 'core/theme_provider.dart';
 import 'core/providers/database_health_provider.dart';
@@ -102,6 +103,7 @@ class HookahubApp extends StatelessWidget {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return MaterialApp(
+            navigatorKey: rootNavigatorKey,
             title: 'Hookahub',
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
