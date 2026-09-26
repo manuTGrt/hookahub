@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/models/tobacco.dart';
-import '../../core/models/mix.dart';
-import '../../widgets/tobacco_image.dart';
-import '../../widgets/mix_card.dart';
-import '../catalog/tobacco_detail_page.dart';
-import '../community/presentation/mix_detail_page.dart';
-import '../favorites/presentation/favorites_provider.dart';
-import '../community/presentation/create_mix_page.dart';
-import '../catalog/presentation/request_tobacco_page.dart';
-import '../../core/data/supabase_service.dart';
+import '../../../core/models/tobacco.dart';
+import '../../../core/models/mix.dart';
+import '../../../widgets/tobacco_image.dart';
+import '../../../widgets/mix_card.dart';
+import '../../catalog/presentation/tobacco_detail_page.dart';
+import '../../community/presentation/mix_detail_page.dart';
+import '../../favorites/presentation/favorites_provider.dart';
+import '../../community/presentation/create_mix_page.dart';
+import '../../catalog/presentation/request_tobacco_page.dart';
+import '../../../core/data/supabase_service.dart';
 
 /// Página de resultados de búsqueda que muestra tabacos y mezclas
 /// que coincidan con el término de búsqueda.

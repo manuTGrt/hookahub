@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../core/models/tobacco.dart';
-import '../../core/models/review.dart';
-import '../../widgets/mix_card.dart';
-import '../../widgets/app_segmented_control.dart';
-import '../../widgets/tobacco_image.dart';
-import '../community/presentation/community_provider.dart'; // Import provider
-import 'presentation/providers/tobacco_mixes_provider.dart';
-import '../community/presentation/mix_detail_page.dart';
-import 'data/tobacco_reviews_repository.dart';
-import 'presentation/providers/tobacco_reviews_provider.dart';
+import '../../../core/models/tobacco.dart';
+import '../../../core/models/review.dart';
+import '../../../widgets/mix_card.dart';
+import '../../../widgets/app_segmented_control.dart';
+import '../../../widgets/tobacco_image.dart';
+import '../../community/presentation/community_provider.dart'; // Import provider
+import 'providers/tobacco_mixes_provider.dart';
+import '../../community/presentation/mix_detail_page.dart';
+import '../data/tobacco_reviews_repository.dart';
+import 'providers/tobacco_reviews_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/utils/app_toast.dart';
+import '../../../core/utils/app_toast.dart';
 
 class TobaccoDetailPage extends StatelessWidget {
   const TobaccoDetailPage({super.key, required this.tobacco});

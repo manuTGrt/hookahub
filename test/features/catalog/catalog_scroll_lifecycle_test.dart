@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:hookahub/core/models/tobacco.dart';
-import 'package:hookahub/features/catalog/catalog_page.dart';
+import 'package:hookahub/features/catalog/presentation/catalog_page.dart';
 import 'package:hookahub/features/catalog/data/tobacco_repository.dart';
 import 'package:hookahub/features/catalog/domain/catalog_filters.dart';
 import 'package:hookahub/features/catalog/presentation/providers/catalog_provider.dart';

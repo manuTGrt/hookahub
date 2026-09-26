@@ -23,7 +23,7 @@ import 'features/history/presentation/history_provider.dart';
 import 'features/history/data/history_repository.dart';
 import 'features/home/data/home_stats_repository.dart';
 import 'features/home/presentation/home_stats_provider.dart';
-import 'features/search/search_provider.dart';
+import 'features/search/presentation/search_provider.dart';
 import 'features/catalog/data/tobacco_repository.dart';
 import 'features/catalog/presentation/providers/catalog_provider.dart';
 import 'features/notifications/data/notifications_repository.dart';

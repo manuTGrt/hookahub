@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants.dart';
+import '../../../core/constants.dart';
 import 'change_password_page.dart';
-import 'presentation/profile_provider.dart';
-import 'domain/profile.dart';
+import 'profile_provider.dart';
+import '../domain/profile.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart' as fp;
 import 'dart:io' show Platform;
 import 'package:image_cropper/image_cropper.dart';
-import '../../core/utils/app_toast.dart';
+import '../../../core/utils/app_toast.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});

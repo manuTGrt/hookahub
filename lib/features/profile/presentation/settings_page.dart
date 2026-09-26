@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../core/constants.dart';
-import '../../core/theme_provider.dart';
-import '../../core/utils/app_toast.dart';
+import '../../../core/constants.dart';
+import '../../../core/theme_provider.dart';
+import '../../../core/utils/app_toast.dart';
 
 /// Página de configuración donde el usuario puede ajustar
 /// las preferencias de la aplicación

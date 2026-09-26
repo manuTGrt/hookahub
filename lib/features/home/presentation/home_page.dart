@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants.dart';
-import '../favorites/presentation/favorites_page.dart';
-import '../catalog/domain/catalog_filters.dart';
-import '../community/domain/community_filters.dart';
-import '../../widgets/main_navigation.dart';
-import 'presentation/home_stats_provider.dart';
+import '../../../core/constants.dart';
+import '../../favorites/presentation/favorites_page.dart';
+import '../../catalog/domain/catalog_filters.dart';
+import '../../community/domain/community_filters.dart';
+import '../../../widgets/main_navigation.dart';
+import 'home_stats_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

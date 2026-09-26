@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// import '../../core/constants.dart';
-import '../../core/models/tobacco.dart';
-import '../../widgets/tobacco_image.dart';
-import '../catalog/presentation/providers/catalog_provider.dart';
-import '../catalog/domain/catalog_filters.dart';
+// import '../../../core/constants.dart';
+import '../../../core/models/tobacco.dart';
+import '../../../widgets/tobacco_image.dart';
+import 'providers/catalog_provider.dart';
+import '../domain/catalog_filters.dart';
 import 'tobacco_detail_page.dart';
 
 class CatalogPage extends StatefulWidget {

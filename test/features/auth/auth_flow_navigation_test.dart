@@ -14,7 +14,7 @@ import 'package:hookahub/features/home/presentation/home_stats_provider.dart';
 import 'package:hookahub/features/notifications/presentation/notifications_provider.dart';
 import 'package:hookahub/features/onboarding/presentation/onboarding_provider.dart';
 import 'package:hookahub/features/profile/presentation/profile_provider.dart';
-import 'package:hookahub/features/search/search_provider.dart';
+import 'package:hookahub/features/search/presentation/search_provider.dart';
 import 'package:hookahub/widgets/main_navigation.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';

@@ -2,11 +2,11 @@ import 'package:hookahub/core/utils/app_logger.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import '../../core/models/tobacco.dart';
-import '../../core/models/mix.dart';
-import '../../core/providers/database_health_provider.dart';
-import '../catalog/data/tobacco_repository.dart';
-import '../community/data/community_repository.dart';
+import '../../../core/models/tobacco.dart';
+import '../../../core/models/mix.dart';
+import '../../../core/providers/database_health_provider.dart';
+import '../../catalog/data/tobacco_repository.dart';
+import '../../community/data/community_repository.dart';
 
 // ---------------------------------------------------------------------------
 // Estados UI (sealed class — sin booleanos fragmentados)

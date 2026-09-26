@@ -7,7 +7,7 @@ import 'package:hookahub/features/catalog/domain/catalog_filters.dart';
 import 'package:hookahub/core/providers/database_health_provider.dart';
 import 'package:hookahub/core/services/database_health_service.dart';
 import 'package:hookahub/features/community/data/community_repository.dart';
-import 'package:hookahub/features/search/search_provider.dart';
+import 'package:hookahub/features/search/presentation/search_provider.dart';
 
 class FakeTobaccoRepository implements TobaccoRepository {
   bool shouldThrow = false;

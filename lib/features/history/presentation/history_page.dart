@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../core/constants.dart';
-import '../../core/models/mix.dart';
-import '../../widgets/mix_card.dart';
-import '../community/presentation/mix_detail_page.dart';
-import '../favorites/presentation/favorites_provider.dart';
-import 'presentation/history_provider.dart';
-import 'domain/visit_entry.dart';
+import '../../../core/constants.dart';
+import '../../../core/models/mix.dart';
+import '../../../widgets/mix_card.dart';
+import '../../community/presentation/mix_detail_page.dart';
+import '../../favorites/presentation/favorites_provider.dart';
+import 'history_provider.dart';
+import '../domain/visit_entry.dart';
 
 /// Página que muestra el historial de mezclas visitadas en los últimos 2 días.
 /// Las mezclas se agrupan por día (Hoy, Ayer, Hace 2 días) y se ordenan

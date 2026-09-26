@@ -26,6 +26,18 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
 
 - Siempre ignorar (`.gitignore`) ficheros como `.env`, `key.properties`, y cualquier `.keystore` o `.jks` que contenga claves criptográficas o IDs críticos en texto plano.
 
+### Estandarización de Capas por Feature (Clean Architecture)
+
+- **Regla Estricta**: Cada módulo dentro de `lib/features/[feature]/` debe seguir estrictamente la separación de responsabilidades:
+  ```text
+  feature_name/
+  ├── data/          # Fuentes de datos, implementaciones de repositorios, mapeadores
+  ├── domain/        # Entidades, modelos puros de dominio, interfaces de repositorio
+  └── presentation/  # UI (páginas, widgets específicos de la feature) y State Management (providers)
+  ```
+- **Prohibición de Vistas en la Raíz de la Feature**: Ninguna página, pantalla o widget (`*_page.dart`, `*_screen.dart`, `*_view.dart`) ni clase de gestión de estado (`*_provider.dart`) puede residir en la raíz de `lib/features/[feature]/`. Todas las vistas y providers deben alojarse indefectiblemente bajo la subcarpeta `presentation/` (o subcarpetas de esta, ej. `presentation/providers/`).
+- **Features de Orquestación o Agregación (ej. `features/search/`)**: Aunque una feature no cuente con tablas o endpoints exclusivos propios (consumiendo repositorios de otros módulos), sus pantallas y controladores deben estar organizados dentro de `presentation/`, manteniendo una estructura canónica coherente y predecible a lo largo de todo el proyecto.
+
 ## 🗄️ Base de Datos y Funciones (Supabase)
 
 ### Funciones con "SECURITY DEFINER" (Vulnerabilidad de Search Path)

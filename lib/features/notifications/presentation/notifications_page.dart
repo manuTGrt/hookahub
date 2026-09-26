@@ -6,7 +6,7 @@ import '../../../core/models/notification.dart';
 import '../../../core/constants.dart';
 import '../../community/presentation/mix_detail_page.dart';
 import '../../../core/models/mix.dart';
-import '../../catalog/tobacco_detail_page.dart';
+import '../../catalog/presentation/tobacco_detail_page.dart';
 import '../../catalog/presentation/providers/catalog_provider.dart';
 import '../../../core/utils/app_toast.dart';
 

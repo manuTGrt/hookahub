@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/constants.dart';
-import '../../core/utils/app_error_mapper.dart';
-import '../../core/utils/app_toast.dart';
+import '../../../core/constants.dart';
+import '../../../core/utils/app_error_mapper.dart';
+import '../../../core/utils/app_toast.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});

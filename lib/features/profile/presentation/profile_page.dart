@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants.dart';
+import '../../../core/constants.dart';
 import 'settings_page.dart';
 import 'edit_profile_page.dart';
-import '../favorites/presentation/favorites_page.dart';
-import '../mixes/presentation/user_mixes_page.dart';
+import '../../favorites/presentation/favorites_page.dart';
+import '../../mixes/presentation/user_mixes_page.dart';
 import 'package:hookahub/features/auth/auth_provider.dart';
-import 'presentation/profile_provider.dart';
-import '../favorites/presentation/favorites_provider.dart';
-import '../history/history_page.dart';
-import '../../widgets/main_navigation.dart';
-import '../../core/utils/app_toast.dart';
+import 'profile_provider.dart';
+import '../../favorites/presentation/favorites_provider.dart';
+import '../../history/presentation/history_page.dart';
+import '../../../widgets/main_navigation.dart';
+import '../../../core/utils/app_toast.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});

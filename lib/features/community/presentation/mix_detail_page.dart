@@ -11,7 +11,7 @@ import '../../favorites/presentation/favorites_provider.dart';
 import '../../../widgets/mix_card.dart';
 import '../../../widgets/tobacco_card.dart';
 import '../../../core/models/tobacco.dart';
-import '../../catalog/tobacco_detail_page.dart';
+import '../../catalog/presentation/tobacco_detail_page.dart';
 import '../../../core/models/review.dart';
 import '../../../widgets/app_segmented_control.dart';
 import 'community_provider.dart';
