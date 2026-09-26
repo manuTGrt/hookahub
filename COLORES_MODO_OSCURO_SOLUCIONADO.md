@@ -31,7 +31,7 @@ Se ha solucionado el problema de **textos ilegibles en modo oscuro** en las pág
 - `_buildFilterChip()` → Actualizada para usar colores del tema
 - `_buildTobaccoCard()` → Todos los textos ahora son adaptativos
 
-### 👥 **CommunityPage** (`lib/features/community/community_page.dart`)
+### 👥 **CommunityPage** (`lib/features/community/presentation/community_page.dart`)
 #### Elementos actualizados:
 - ✅ **Contenedor "Nueva mezcla"**: Gradiente, iconos y textos adaptativos
 - ✅ **Título de sección**: Color adaptativo

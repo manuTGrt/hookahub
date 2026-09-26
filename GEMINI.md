@@ -496,6 +496,17 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
 - **Prohibición de Archivos en la Raíz de la Feature**: Ningún archivo `.dart` debe residir directamente en la raíz de una carpeta feature (ej. `features/favorites/favorites_page.dart` ❌). Las vistas y providers van en `presentation/`, los repositorios concretos en `data/`, y los contratos/modelos en `domain/`.
 - **Inversión de Dependencias (DIP)**: Los providers en `presentation/` (ej. `FavoritesProvider`, `UserMixesProvider`) deben depender de la abstracción/interfaz definida en `domain/` (ej. `FavoritesRepository`), permitiendo desacoplamiento total y tests con mocks limpios.
 
+### Prohibición de Archivos Huérfanos y Nombres de Clases Homónimas (Regla de Oro)
+
+- **Problema**: Tras migrar o refactorizar una funcionalidad hacia la capa `presentation/` (ej. `features/community/presentation/community_page.dart`), dejar archivos antiguos en la raíz del módulo (ej. `features/community/community_page.dart`):
+  1. Genera código muerto sin mantenimiento que infla el bundle y el coste de análisis estático.
+  2. Crea **ambigüedad y colisión de símbolos en el IDE**: si ambos archivos declaran la misma clase (`class CommunityPage`), las herramientas de navegación y sugerencia automática de imports pueden enlazar la versión obsoleta de manera inadvertida, provocando regresiones silenciosas o pérdida de funcionalidades modernas.
+  3. Desincroniza la documentación y rompe la consistencia del estándar de Clean Architecture.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Eliminación Atómica Inmediata**: Al mover o refactorizar cualquier vista o provider a `presentation/`, el archivo original debe eliminarse inmediatamente mediante `git rm`.
+  2. **Prohibición de Nombres Duplicados**: Queda estrictamente prohibida la coexistencia de clases públicas con nombres idénticos dentro de una misma feature o módulo funcional.
+  3. **Auditoría Documental**: Toda actualización de rutas debe propagarse de forma atómica a la documentación del repositorio (ej. `NAVIGATION_STRUCTURE.md` y guías de accesibilidad/estilo) y verificarse con `dart analyze` y `flutter test`.
+
 ## 🧠 Gestión de Memoria y Ciclo de Vida de Widgets (Memory Leaks)
 
 ### Prohibición Estricta de Instanciación de Controladores en `build()` (Regla de Oro)

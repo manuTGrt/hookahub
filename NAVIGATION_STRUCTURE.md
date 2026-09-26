@@ -21,7 +21,7 @@ La aplicación ahora cuenta con una estructura de navegación moderna y consiste
   - Cards visualmente atractivas con colores temáticos
 
 ### 👥 Comunidad de Mezclas
-- **Ubicación**: `lib/features/community/community_page.dart`
+- **Ubicación**: `lib/features/community/presentation/community_page.dart`
 - **Características**:
   - Botón para crear nuevas mezclas
   - Filtros por popularidad y calificaciones

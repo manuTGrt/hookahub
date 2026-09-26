@@ -14,7 +14,7 @@ Se han aplicado mejoras de accesibilidad consistentes en tres páginas principal
    - Tarjetas de productos con layout flexible y responsivo
    - Aspect ratio condicional para diferentes tamaños de texto
 
-3. **CommunityPage** (`lib/features/community/community_page.dart`)
+3. **CommunityPage** (`lib/features/community/presentation/community_page.dart`)
    - Tarjetas de mezclas con texto responsivo y padding adaptativo
    - Mejoras en legibilidad y overflow prevention
 
