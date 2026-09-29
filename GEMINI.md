@@ -431,19 +431,37 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   2. **Única Fuente de Verdad en Provider**:
      - Sustituir los booleanos privados por `FeatureState _state = const FeatureInitial();`.
      - Exponer `FeatureState get state => _state;`.
-     - Mantener getters de conveniencia transitorios/delegados (`bool get isLoading => _state is FeatureLoading;`) para evitar breaking changes en widgets periféricos.
-  3. **Consumo Exhaustivo en UI con Switch Expressions**:
+     - Mantener getters de conveniencia transitorios/delegados (`bool get isLoading => _state is FeatureLoading;`, `bool get isLoaded => _state is FeatureLoaded;`, etc.) para evitar breaking changes en widgets periféricos y pruebas existentes.
+  3. **Estandarización de Proveedores Paginados (`UserMixes`, `Catalog`, `Community`)**:
+     - En proveedores con paginación (`loadMore`), las banderas de paginación (`isLoadingMore`, `hasMore`/`hasMoreData`) **deben residir dentro de la subclase `FeatureLoaded`**, eliminando banderas ortogonales en el provider:
+     ```dart
+     class FeatureLoaded extends FeatureState {
+       const FeatureLoaded({
+         required this.items,
+         this.isLoadingMore = false,
+         this.hasMore = true,
+       });
+       final List<Item> items;
+       final bool isLoadingMore;
+       final bool hasMore;
+       FeatureLoaded copyWith({List<Item>? items, bool? isLoadingMore, bool? hasMore}) => ...;
+     }
+     ```
+     - Durante la paginación, el provider permanece en `FeatureLoaded` con `isLoadingMore = true`, evitando que la UI parpadee o desmonte la lista actual.
+  4. **Consumo Exhaustivo en UI con Switch Expressions**:
      - Eliminar cadenas `if-else` y evaluar `provider.state` con pattern matching nativo:
      ```dart
      return switch (provider.state) {
        FeatureInitial() || FeatureLoading() => const Center(child: CircularProgressIndicator()),
        FeatureError(:final message) => _buildErrorView(context, message),
-       FeatureLoaded(:final data) when data.isEmpty => _buildEmptyView(context),
-       FeatureLoaded(:final data) => _buildDataView(context, data),
+       FeatureLoaded(:final items) when items.isEmpty => _buildEmptyView(context),
+       FeatureLoaded(:final items) => _buildDataView(context, items),
      };
      ```
-  4. **Propagación Segura de Errores**:
+  5. **Propagación Segura de Errores**:
      - No silenciar excepciones con `catch(e) { return []; }` dentro de sub-métodos de búsqueda o carga. Permitir que la excepción burbujee hasta el método principal del provider para registrarla en `AppLogger.error()` y transitar limpiamente a `FeatureError`.
+  6. **Proveedores Migrados y Validados con Tests de Transición**:
+     - Todos los providers de la aplicación (`NotificationsProvider`, `HistoryProvider`, `UserMixesProvider`, `ProfileProvider`, `CatalogProvider`, `CommunityProvider`) implementan estrictamente esta arquitectura sellada, respaldados por sus suites `*_sealed_state_test.dart`.
 
 ## 🍏 Compilación en iOS y CocoaPods
 

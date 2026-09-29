@@ -52,7 +52,7 @@ class _CommunityPageState extends State<CommunityPage> {
   @override
   Widget build(BuildContext context) {
     final isInitialLoading = context.select<CommunityProvider, bool>(
-      (p) => p.isLoading && !p.isLoaded,
+      (p) => p.state is CommunityLoading || p.state is CommunityInitial,
     );
     if (isInitialLoading) {
       return const Scaffold(
@@ -61,7 +61,9 @@ class _CommunityPageState extends State<CommunityPage> {
     }
 
     final initialError = context.select<CommunityProvider, String?>(
-      (p) => p.isLoaded ? null : p.error,
+      (p) => p.state is CommunityError
+          ? (p.state as CommunityError).message
+          : null,
     );
     if (initialError != null) {
       return Scaffold(

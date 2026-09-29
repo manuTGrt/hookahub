@@ -10,6 +10,59 @@ import '../../../../core/models/tobacco.dart';
 import '../../data/tobacco_repository.dart';
 import '../../domain/catalog_filters.dart';
 
+// ---------------------------------------------------------------------------
+// Estados UI (sealed class — sin booleanos fragmentados)
+// ---------------------------------------------------------------------------
+
+sealed class CatalogState {
+  const CatalogState();
+}
+
+/// Estado inicial previo al primer intento de carga.
+class CatalogInitial extends CatalogState {
+  const CatalogInitial();
+}
+
+/// Carga inicial en progreso.
+class CatalogLoading extends CatalogState {
+  const CatalogLoading();
+}
+
+/// Catálogo cargado con éxito.
+class CatalogLoaded extends CatalogState {
+  const CatalogLoaded({
+    required this.items,
+    this.isLoadingMore = false,
+    this.hasMore = true,
+  });
+
+  final List<Tobacco> items;
+  final bool isLoadingMore;
+  final bool hasMore;
+
+  CatalogLoaded copyWith({
+    List<Tobacco>? items,
+    bool? isLoadingMore,
+    bool? hasMore,
+  }) {
+    return CatalogLoaded(
+      items: items ?? this.items,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMore: hasMore ?? this.hasMore,
+    );
+  }
+}
+
+/// Ocurrió un error al cargar el catálogo.
+class CatalogError extends CatalogState {
+  const CatalogError(this.message);
+  final String message;
+}
+
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
+
 class CatalogProvider extends ChangeNotifier {
   CatalogProvider(this._repository) {
     // Carga de marcas en segundo plano; la lista se cargará bajo demanda
@@ -27,20 +80,32 @@ class CatalogProvider extends ChangeNotifier {
     onScrollToTopRequested?.call();
   }
 
-  final List<Tobacco> _items = [];
-  List<Tobacco> get items => List.unmodifiable(_items);
+  // Estado sellado (única fuente de verdad)
+  CatalogState _state = const CatalogInitial();
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
+  CatalogState get state => _state;
 
-  bool _hasMore = true;
-  bool get hasMore => _hasMore;
+  // Getters derivados para compatibilidad y consumo simplificado
+  List<Tobacco> get items =>
+      _state is CatalogLoaded ? (_state as CatalogLoaded).items : const [];
 
-  bool _hasAttemptedLoad = false;
-  bool get hasAttemptedLoad => _hasAttemptedLoad;
+  bool get isLoading =>
+      _state is CatalogLoading ||
+      (_state is CatalogLoaded && (_state as CatalogLoaded).isLoadingMore);
 
-  String? _error;
-  String? get error => _error;
+  bool get isLoaded => _state is CatalogLoaded;
+
+  bool get isLoadingMore =>
+      _state is CatalogLoaded && (_state as CatalogLoaded).isLoadingMore;
+
+  bool get hasMore =>
+      _state is CatalogLoaded ? (_state as CatalogLoaded).hasMore : true;
+
+  bool get hasAttemptedLoad =>
+      _state is CatalogLoaded || _state is CatalogError;
+
+  String? get error =>
+      _state is CatalogError ? (_state as CatalogError).message : null;
 
   // Estado de filtros
   CatalogFilter _filter = const CatalogFilter();
@@ -75,9 +140,6 @@ class CatalogProvider extends ChangeNotifier {
 
   /// Aplica un filtro por marca
   void setFilterByBrand(String? brand) {
-    // Necesitamos diferenciar entre "no cambiar" y "limpiar".
-    // El copyWith actual mantiene la marca previa cuando se pasa null.
-    // Por eso, al intentar volver a "Todas las marcas" (brand == null) la marca anterior persistía.
     if (_filter.brand == brand) return; // Sin cambios reales
     if (brand == null) {
       _filter = _filter.clearBrand();
@@ -101,19 +163,19 @@ class CatalogProvider extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
-    _hasAttemptedLoad = false;
-    _items.clear();
-    _hasMore = true;
-    _error = null;
-    notifyListeners();
     await loadMore(resetCursor: true);
   }
 
   /// Refresca un único elemento en la lista si existe, sin perder el scroll
   void updateItem(Tobacco updatedTobacco) {
-    final index = _items.indexWhere((t) => t.id == updatedTobacco.id);
+    final currentState = _state;
+    if (currentState is! CatalogLoaded) return;
+    final index =
+        currentState.items.indexWhere((t) => t.id == updatedTobacco.id);
     if (index != -1) {
-      _items[index] = updatedTobacco;
+      final updatedList = List<Tobacco>.from(currentState.items);
+      updatedList[index] = updatedTobacco;
+      _state = currentState.copyWith(items: updatedList);
       notifyListeners();
     }
   }
@@ -133,13 +195,13 @@ class CatalogProvider extends ChangeNotifier {
   /// Obtiene un tabaco completo por id. Si está cargado localmente lo intenta devolver.
   Future<Tobacco?> getTobaccoById(String id) async {
     try {
-      // Primero intentar local
-      try {
-        final local = _items.firstWhere((t) => t.id == id);
-        return local;
-      } catch (_) {}
+      final currentState = _state;
+      if (currentState is CatalogLoaded) {
+        try {
+          return currentState.items.firstWhere((t) => t.id == id);
+        } catch (_) {}
+      }
 
-      // Si no, de red
       return await _repository.fetchTobaccoById(id);
     } catch (e) {
       AppLogger.error('Error fetching tobacco by id: $e');
@@ -148,30 +210,52 @@ class CatalogProvider extends ChangeNotifier {
   }
 
   Future<void> loadMore({bool resetCursor = false}) async {
-    if (_isLoading || !_hasMore) return;
-    _isLoading = true;
-    _error = null;
+    if (isLoading || (!resetCursor && !hasMore)) return;
+
+    final currentState = _state;
+    final isInitialOrReset = resetCursor || currentState is! CatalogLoaded;
+
+    if (isInitialOrReset) {
+      _state = const CatalogLoading();
+    } else {
+      _state = currentState.copyWith(isLoadingMore: true);
+    }
     notifyListeners();
+
     try {
-      final offset = resetCursor ? 0 : _items.length;
+      final currentItems =
+          isInitialOrReset ? <Tobacco>[] : currentState.items;
+      final offset = resetCursor ? 0 : currentItems.length;
+
       final newItems = await _repository.fetchTobaccos(
         offset: offset,
         limit: _pageSize,
         filter: _filter,
       );
-      _items.addAll(newItems);
-      if (newItems.length < _pageSize) {
-        _hasMore = false;
-      }
+
+      final combined = List<Tobacco>.from(currentItems)..addAll(newItems);
+      final hasMoreData = newItems.length >= _pageSize;
+
+      _state = CatalogLoaded(
+        items: combined,
+        hasMore: hasMoreData,
+        isLoadingMore: false,
+      );
     } catch (e) {
       DatabaseHealthProvider.reportFailure(e);
-      // Si es error de conexión, solo mostramos banner global y suprimimos texto en la lista
-      _error = DatabaseHealthProvider.isConnectionError(e)
-          ? null
-          : AppErrorMapper.toSpanish(e);
+      final isConn = DatabaseHealthProvider.isConnectionError(e);
+      final errorMessage = isConn ? null : AppErrorMapper.toSpanish(e);
+
+      if (errorMessage != null) {
+        _state = CatalogError(errorMessage);
+      } else {
+        if (currentState is CatalogLoaded && !resetCursor) {
+          _state = currentState.copyWith(isLoadingMore: false);
+        } else {
+          _state = const CatalogLoaded(items: [], hasMore: true, isLoadingMore: false);
+        }
+      }
     } finally {
-      _hasAttemptedLoad = true;
-      _isLoading = false;
       notifyListeners();
     }
   }

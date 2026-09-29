@@ -7,6 +7,59 @@ import '../../auth/auth_provider.dart';
 import '../data/profile_repository.dart';
 import '../domain/profile.dart';
 
+// ---------------------------------------------------------------------------
+// Estados UI (sealed class — sin booleanos fragmentados)
+// ---------------------------------------------------------------------------
+
+sealed class ProfileState {
+  const ProfileState();
+}
+
+/// Estado inicial previo a la carga o tras cerrar sesión.
+class ProfileInitial extends ProfileState {
+  const ProfileInitial();
+}
+
+/// Carga del perfil en progreso.
+class ProfileLoading extends ProfileState {
+  const ProfileLoading();
+}
+
+/// Perfil cargado con éxito.
+class ProfileLoaded extends ProfileState {
+  const ProfileLoaded({
+    required this.profile,
+    required this.mixesCount,
+    this.signedAvatarUrl,
+  });
+
+  final Profile? profile;
+  final int mixesCount;
+  final String? signedAvatarUrl;
+
+  ProfileLoaded copyWith({
+    Profile? profile,
+    int? mixesCount,
+    String? signedAvatarUrl,
+  }) {
+    return ProfileLoaded(
+      profile: profile ?? this.profile,
+      mixesCount: mixesCount ?? this.mixesCount,
+      signedAvatarUrl: signedAvatarUrl ?? this.signedAvatarUrl,
+    );
+  }
+}
+
+/// Ocurrió un error al cargar o actualizar el perfil.
+class ProfileError extends ProfileState {
+  const ProfileError(this.message);
+  final String message;
+}
+
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
+
 class ProfileProvider extends ChangeNotifier {
   ProfileProvider({
     required ProfileRepository repository,
@@ -24,41 +77,37 @@ class ProfileProvider extends ChangeNotifier {
   final AuthProvider _auth;
   StreamSubscription<void>? _reconnectedSub;
 
-  Profile? _profile;
-  bool _loading = false;
-  String? _error;
-  String? _signedAvatarUrl;
-  int _mixesCount = 0;
-  bool _hasLoadedOnce = false;
+  // Estado sellado (única fuente de verdad)
+  ProfileState _state = const ProfileInitial();
+
+  ProfileState get state => _state;
 
   /// Limpia los datos de perfil en memoria al cerrar sesión
   void clear() {
-    _profile = null;
-    _loading = false;
-    _error = null;
-    _signedAvatarUrl = null;
-    _mixesCount = 0;
-    _hasLoadedOnce = false;
+    _state = const ProfileInitial();
     notifyListeners();
   }
 
-  Profile? get profile => _profile;
-  bool get isLoading => _loading;
-  String? get error => _error;
+  // Getters derivados para compatibilidad y consumo simplificado
+  Profile? get profile =>
+      _state is ProfileLoaded ? (_state as ProfileLoaded).profile : null;
+  bool get isLoading => _state is ProfileLoading;
+  String? get error =>
+      _state is ProfileError ? (_state as ProfileError).message : null;
   bool get isAuthenticated => _auth.isAuthenticated;
-  String? get signedAvatarUrl => _signedAvatarUrl;
-  int get mixesCount => _mixesCount;
-  bool get isLoaded => _hasLoadedOnce;
+  String? get signedAvatarUrl =>
+      _state is ProfileLoaded ? (_state as ProfileLoaded).signedAvatarUrl : null;
+  int get mixesCount =>
+      _state is ProfileLoaded ? (_state as ProfileLoaded).mixesCount : 0;
+  bool get isLoaded => _state is ProfileLoaded;
 
   Future<void> load() async {
     if (!_auth.isAuthenticated) {
-      _profile = null;
-      _error = 'No autenticado';
+      _state = const ProfileError('No autenticado');
       notifyListeners();
       return;
     }
-    _loading = true;
-    _error = null;
+    _state = const ProfileLoading();
     notifyListeners();
     try {
       // Lanzar las consultas de base de datos simultáneamente
@@ -67,19 +116,24 @@ class ProfileProvider extends ChangeNotifier {
         _repo.countCurrentUserMixes(),
       ]);
 
-      _profile = results[0] as Profile?;
-      _mixesCount = results[1] as int;
+      final profile = results[0] as Profile?;
+      final mixesCount = results[1] as int;
 
       // Obtener la URL firmada depende de la carga previa del perfil
-      _signedAvatarUrl = await _repo.createSignedAvatarUrl(_profile?.avatarUrl);
-      
+      final signedAvatarUrl =
+          await _repo.createSignedAvatarUrl(profile?.avatarUrl);
+
+      _state = ProfileLoaded(
+        profile: profile,
+        mixesCount: mixesCount,
+        signedAvatarUrl: signedAvatarUrl,
+      );
+
       DatabaseHealthProvider.reportSuccess();
     } catch (e) {
-      _error = 'Error cargando perfil';
+      _state = const ProfileError('Error cargando perfil');
       DatabaseHealthProvider.reportFailure(e);
     } finally {
-      _loading = false;
-      _hasLoadedOnce = true;
       notifyListeners();
     }
   }
@@ -100,9 +154,16 @@ class ProfileProvider extends ChangeNotifier {
     if (!isAuthenticated) return 'No autenticado';
     try {
       final path = await _repo.uploadAvatarAndSave(filePath);
-      _signedAvatarUrl = await _repo.createSignedAvatarUrl(path);
-      // Evita notificar inmediatamente durante un build en curso; deja que la UI consulte luego
-      _profile = await _repo.getCurrentUserProfile();
+      final signedAvatarUrl = await _repo.createSignedAvatarUrl(path);
+      final updatedProfile = await _repo.getCurrentUserProfile();
+
+      final currentLoaded =
+          _state is ProfileLoaded ? (_state as ProfileLoaded) : null;
+      _state = ProfileLoaded(
+        profile: updatedProfile,
+        mixesCount: currentLoaded?.mixesCount ?? 0,
+        signedAvatarUrl: signedAvatarUrl,
+      );
       notifyListeners();
       return null;
     } catch (e) {
@@ -115,8 +176,14 @@ class ProfileProvider extends ChangeNotifier {
     if (!isAuthenticated) return 'No autenticado';
     try {
       await _repo.clearAvatarForCurrentUser();
-      _signedAvatarUrl = null;
-      _profile = await _repo.getCurrentUserProfile();
+      final updatedProfile = await _repo.getCurrentUserProfile();
+      final currentLoaded =
+          _state is ProfileLoaded ? (_state as ProfileLoaded) : null;
+      _state = ProfileLoaded(
+        profile: updatedProfile,
+        mixesCount: currentLoaded?.mixesCount ?? 0,
+        signedAvatarUrl: null,
+      );
       notifyListeners();
       return null;
     } catch (e) {
@@ -129,8 +196,14 @@ class ProfileProvider extends ChangeNotifier {
     if (!isAuthenticated) return 'No autenticado';
     try {
       await _repo.setAvatarIcon(index);
-      _signedAvatarUrl = null; // no imagen remota
-      _profile = await _repo.getCurrentUserProfile();
+      final updatedProfile = await _repo.getCurrentUserProfile();
+      final currentLoaded =
+          _state is ProfileLoaded ? (_state as ProfileLoaded) : null;
+      _state = ProfileLoaded(
+        profile: updatedProfile,
+        mixesCount: currentLoaded?.mixesCount ?? 0,
+        signedAvatarUrl: null, // no imagen remota
+      );
       notifyListeners();
       return null;
     } catch (e) {

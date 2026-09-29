@@ -56,11 +56,13 @@ class _UserMixesPageState extends State<UserMixesPage> {
       body: SafeArea(
         child: Consumer<UserMixesProvider>(
           builder: (context, provider, child) {
-            if (provider.isLoading && !provider.isLoaded) {
+            if (provider.state is UserMixesLoading ||
+                provider.state is UserMixesInitial) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (provider.error != null) {
+            if (provider.state is UserMixesError) {
+              final errorMsg = (provider.state as UserMixesError).message;
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -77,7 +79,7 @@ class _UserMixesPageState extends State<UserMixesPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      provider.error!,
+                      errorMsg,
                       style: Theme.of(context).textTheme.bodySmall,
                       textAlign: TextAlign.center,
                     ),

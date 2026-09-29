@@ -7,8 +7,64 @@ import '../../../core/providers/database_health_provider.dart';
 import '../data/community_repository.dart';
 import '../../community/domain/community_filters.dart';
 
-/// Estado del provider de la comunidad
+// ---------------------------------------------------------------------------
+// Estados UI (sealed class — sin booleanos fragmentados)
+// ---------------------------------------------------------------------------
+
+sealed class CommunityState {
+  const CommunityState();
+}
+
+/// Estado inicial previo a la primera carga de mezclas.
+class CommunityInitial extends CommunityState {
+  const CommunityInitial();
+}
+
+/// Primera carga o recarga completa en progreso.
+class CommunityLoading extends CommunityState {
+  const CommunityLoading();
+}
+
+/// Mezclas de la comunidad cargadas con éxito.
+class CommunityLoaded extends CommunityState {
+  const CommunityLoaded({
+    required this.mixes,
+    this.isLoadingMore = false,
+    this.hasMoreData = true,
+  });
+
+  final List<Mix> mixes;
+  final bool isLoadingMore;
+  final bool hasMoreData;
+
+  CommunityLoaded copyWith({
+    List<Mix>? mixes,
+    bool? isLoadingMore,
+    bool? hasMoreData,
+  }) {
+    return CommunityLoaded(
+      mixes: mixes ?? this.mixes,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMoreData: hasMoreData ?? this.hasMoreData,
+    );
+  }
+}
+
+/// Ocurrió un error al interactuar o cargar mezclas de la comunidad.
+class CommunityError extends CommunityState {
+  const CommunityError(this.message);
+  final String message;
+}
+
+// ---------------------------------------------------------------------------
+// Filtros legacy
+// ---------------------------------------------------------------------------
+
 enum LegacyCommunityFilter { popular, recent, topRated, favorites }
+
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
 
 /// Provider para gestionar el estado de las mezclas de la comunidad.
 class CommunityProvider extends ChangeNotifier {
@@ -24,14 +80,13 @@ class CommunityProvider extends ChangeNotifier {
   // Exponer el repositorio para acceso directo desde widgets
   CommunityRepository get repository => _repository;
 
-  List<Mix> _mixes = [];
+  // Estado sellado (única fuente de verdad)
+  CommunityState _state = const CommunityInitial();
+
+  CommunityState get state => _state;
+
   LegacyCommunityFilter _legacyFilter = LegacyCommunityFilter.popular;
   CommunityFilterState _filterState = const CommunityFilterState();
-  bool _isLoading = false;
-  bool _isLoaded = false;
-  bool _isLoadingMore = false;
-  bool _hasMoreData = true;
-  String? _error;
 
   // Cache de favoritas locales para recalcular filtros/sort sin red
   List<Mix>? _localFavoritesCache;
@@ -39,21 +94,26 @@ class CommunityProvider extends ChangeNotifier {
   static const int _pageSize = 20;
   int _currentOffset = 0;
 
-  List<Mix> get mixes => List.unmodifiable(_mixes);
+  // Getters derivados para compatibilidad y consumo simplificado
+  List<Mix> get mixes =>
+      _state is CommunityLoaded ? (_state as CommunityLoaded).mixes : const [];
+
   LegacyCommunityFilter get legacyFilter => _legacyFilter;
   CommunityFilterState get filterState => _filterState;
-  bool get isLoading => _isLoading;
-  bool get isLoaded => _isLoaded;
-  bool get isLoadingMore => _isLoadingMore;
-  bool get hasMoreData => _hasMoreData;
-  String? get error => _error;
+
+  bool get isLoading => _state is CommunityLoading;
+  bool get isLoaded => _state is CommunityLoaded;
+  bool get isLoadingMore =>
+      _state is CommunityLoaded && (_state as CommunityLoaded).isLoadingMore;
+  bool get hasMoreData =>
+      _state is CommunityLoaded ? (_state as CommunityLoaded).hasMoreData : true;
+  String? get error =>
+      _state is CommunityError ? (_state as CommunityError).message : null;
 
   /// Carga las mezclas según el filtro actual.
   Future<void> loadMixes() async {
-    _isLoading = true;
-    _error = null;
+    _state = const CommunityLoading();
     _currentOffset = 0;
-    _hasMoreData = true;
     notifyListeners();
 
     try {
@@ -64,25 +124,25 @@ class CommunityProvider extends ChangeNotifier {
       final sort = _filterState.sortOption;
 
       if (favoritesOnly) {
-        _mixes = await _repository.fetchFavorites();
+        var result = await _repository.fetchFavorites();
         // Aplicar filtro por tabaco si corresponde
         if (_filterState.tobaccoName != null) {
-          _mixes = _mixes.where((m) {
-            final name = _filterState.tobaccoName!.toLowerCase();
-            final brand = _filterState.tobaccoBrand?.toLowerCase();
+          final name = _filterState.tobaccoName!.toLowerCase();
+          final brand = _filterState.tobaccoBrand?.toLowerCase();
+          result = result.where((m) {
             final hasName = m.ingredients.any(
               (ing) => ing.toLowerCase() == name,
             );
-            // Nota: en el modelo Mix no guardamos brand por ingrediente; se filtra solo por nombre
             return hasName && (brand == null || brand.isEmpty ? true : true);
           }).toList();
         }
         // Orden local
-        _sortLocal(_mixes, sort);
-        _isLoading = false;
-        _isLoaded = true;
-        _hasMoreData = false;
-        notifyListeners();
+        _sortLocal(result, sort);
+        _state = CommunityLoaded(
+          mixes: result,
+          hasMoreData: false,
+          isLoadingMore: false,
+        );
         return;
       }
 
@@ -109,7 +169,7 @@ class CommunityProvider extends ChangeNotifier {
           break;
       }
 
-      _mixes = await _repository.fetchMixes(
+      final result = await _repository.fetchMixes(
         orderBy: orderBy,
         limit: _pageSize,
         offset: 0,
@@ -117,30 +177,35 @@ class CommunityProvider extends ChangeNotifier {
         tobaccoBrand: _filterState.tobaccoBrand,
       );
 
-      _currentOffset = _mixes.length;
-      _hasMoreData = _mixes.length >= _pageSize;
-      _isLoaded = true;
+      _currentOffset = result.length;
+      _state = CommunityLoaded(
+        mixes: result,
+        hasMoreData: result.length >= _pageSize,
+        isLoadingMore: false,
+      );
     } catch (e) {
-      _error = 'Error al cargar las mezclas: $e';
-      AppLogger.error(_error ?? 'Error desconocido');
+      final errorMsg = 'Error al cargar las mezclas: $e';
+      AppLogger.error(errorMsg);
       DatabaseHealthProvider.reportFailure(e);
+      _state = CommunityError(errorMsg);
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
 
   /// Carga más mezclas (scroll infinito).
   Future<void> loadMoreMixes() async {
-    // No cargar más si ya estamos cargando o no hay más datos
+    final currentState = _state;
+    if (currentState is! CommunityLoaded) return;
+
     final favoritesOnly =
         _legacyFilter == LegacyCommunityFilter.favorites ||
         _filterState.favoritesOnly;
-    if (_isLoadingMore || !_hasMoreData || favoritesOnly) {
+    if (currentState.isLoadingMore || !currentState.hasMoreData || favoritesOnly) {
       return;
     }
 
-    _isLoadingMore = true;
+    _state = currentState.copyWith(isLoadingMore: true);
     notifyListeners();
 
     try {
@@ -175,17 +240,24 @@ class CommunityProvider extends ChangeNotifier {
       );
 
       if (newMixes.isNotEmpty) {
-        _mixes.addAll(newMixes);
+        final combined = List<Mix>.from(currentState.mixes)..addAll(newMixes);
         _currentOffset += newMixes.length;
-        _hasMoreData = newMixes.length >= _pageSize;
+        _state = currentState.copyWith(
+          mixes: combined,
+          hasMoreData: newMixes.length >= _pageSize,
+          isLoadingMore: false,
+        );
       } else {
-        _hasMoreData = false;
+        _state = currentState.copyWith(
+          hasMoreData: false,
+          isLoadingMore: false,
+        );
       }
     } catch (e) {
       AppLogger.error('Error al cargar más mezclas: $e');
       DatabaseHealthProvider.reportFailure(e);
+      _state = currentState.copyWith(isLoadingMore: false);
     } finally {
-      _isLoadingMore = false;
       notifyListeners();
     }
   }
@@ -194,7 +266,6 @@ class CommunityProvider extends ChangeNotifier {
     int cmp<T extends Comparable>(T a, T b) => a.compareTo(b);
     switch (sort) {
       case CommunitySortOption.newest:
-        // sin createdAt en Mix; mantener orden original (asumido reciente)
         break;
       case CommunitySortOption.oldest:
         break;
@@ -236,10 +307,13 @@ class CommunityProvider extends ChangeNotifier {
     _filterState = _filterState.copyWith(sortOption: sort);
     if (_filterState.favoritesOnly) {
       // Reordenar localmente la lista actual
-      final list = List<Mix>.from(_mixes);
-      _sortLocal(list, _filterState.sortOption);
-      _mixes = list;
-      notifyListeners();
+      final currentState = _state;
+      if (currentState is CommunityLoaded) {
+        final list = List<Mix>.from(currentState.mixes);
+        _sortLocal(list, _filterState.sortOption);
+        _state = currentState.copyWith(mixes: list);
+        notifyListeners();
+      }
     } else {
       loadMixes();
     }
@@ -256,10 +330,13 @@ class CommunityProvider extends ChangeNotifier {
     _filterState = _filterState.clearTobacco();
     if (_filterState.favoritesOnly && _localFavoritesCache != null) {
       // Volver a favoritas completas y aplicar orden
-      var list = List<Mix>.from(_localFavoritesCache!);
+      final list = List<Mix>.from(_localFavoritesCache!);
       _sortLocal(list, _filterState.sortOption);
-      _mixes = list;
-      _hasMoreData = false;
+      _state = CommunityLoaded(
+        mixes: list,
+        hasMoreData: false,
+        isLoadingMore: false,
+      );
       notifyListeners();
     } else {
       loadMixes();
@@ -273,17 +350,18 @@ class CommunityProvider extends ChangeNotifier {
     );
     if (_filterState.favoritesOnly && _localFavoritesCache != null) {
       // Filtrar sobre la cache local por nombre de tabaco
-      var list = List<Mix>.from(_localFavoritesCache!);
       final needle = name.toLowerCase();
-      list = list
+      final list = List<Mix>.from(_localFavoritesCache!)
           .where((m) => m.ingredients.any((i) => i.toLowerCase() == needle))
           .toList();
       _sortLocal(list, _filterState.sortOption);
-      _mixes = list;
-      _hasMoreData = false;
+      _state = CommunityLoaded(
+        mixes: list,
+        hasMoreData: false,
+        isLoadingMore: false,
+      );
       notifyListeners();
     } else {
-      // TODO: Implementar filtrado por tabaco específico en fetchMixes (requiere modificar repositorio / vista SQL)
       loadMixes();
     }
   }
@@ -291,27 +369,23 @@ class CommunityProvider extends ChangeNotifier {
   /// Inyecta una lista local de favoritas (proveniente de FavoritesProvider) sin ir a red.
   /// Aplica filtros locales (tabaco) y orden seleccionado.
   void setLocalFavorites(List<Mix> localFavorites) {
-    // Guardar cache
     _localFavoritesCache = localFavorites;
-    // Activar modo favoritas si no lo estaba
     if (!_filterState.favoritesOnly) {
       _filterState = _filterState.copyWith(favoritesOnly: true);
     }
-    _isLoading = false;
-    _isLoaded = true;
-    _hasMoreData = false; // no hay paginación en locales
-    // Copia base
-    var list = List<Mix>.from(localFavorites);
-    // Filtro por tabaco (solo por nombre disponible)
+    final list = List<Mix>.from(localFavorites);
     if (_filterState.tobaccoName != null) {
       final needle = _filterState.tobaccoName!.toLowerCase();
-      list = list
-          .where((m) => m.ingredients.any((i) => i.toLowerCase() == needle))
-          .toList();
+      list.removeWhere(
+        (m) => !m.ingredients.any((i) => i.toLowerCase() == needle),
+      );
     }
-    // Orden
     _sortLocal(list, _filterState.sortOption);
-    _mixes = list;
+    _state = CommunityLoaded(
+      mixes: list,
+      hasMoreData: false,
+      isLoadingMore: false,
+    );
     notifyListeners();
   }
 
@@ -321,12 +395,6 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   /// Crea una nueva mezcla.
-  ///
-  /// [components] debe contener mapas con:
-  /// - tobacco_name: String
-  /// - brand: String
-  /// - percentage: double
-  /// - color: String (hex format, ej: "#72C8C1")
   Future<Mix?> createMix({
     required String name,
     String? description,
@@ -340,12 +408,17 @@ class CommunityProvider extends ChangeNotifier {
       );
 
       if (newMix != null) {
-        // Añadir la mezcla a la lista actual si estamos en vista "recientes"
         if (_legacyFilter == LegacyCommunityFilter.recent) {
-          _mixes.insert(0, newMix);
-          notifyListeners();
+          final currentState = _state;
+          if (currentState is CommunityLoaded) {
+            final updated = List<Mix>.from(currentState.mixes)..insert(0, newMix);
+            _state = currentState.copyWith(mixes: updated);
+            notifyListeners();
+          } else {
+            _state = CommunityLoaded(mixes: [newMix]);
+            notifyListeners();
+          }
         } else {
-          // Para otros filtros, recargar la lista completa
           await loadMixes();
         }
       }
@@ -359,11 +432,14 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   /// Actualiza una mezcla en la lista local.
-  /// Útil cuando se modifica una mezcla (ej: cambios en rating/reseñas).
   void updateMix(Mix updatedMix) {
-    final index = _mixes.indexWhere((m) => m.id == updatedMix.id);
+    final currentState = _state;
+    if (currentState is! CommunityLoaded) return;
+    final index = currentState.mixes.indexWhere((m) => m.id == updatedMix.id);
     if (index != -1) {
-      _mixes[index] = updatedMix;
+      final updated = List<Mix>.from(currentState.mixes);
+      updated[index] = updatedMix;
+      _state = currentState.copyWith(mixes: updated);
       notifyListeners();
     }
   }
@@ -373,8 +449,7 @@ class CommunityProvider extends ChangeNotifier {
     try {
       final ok = await _repository.deleteMix(mixId);
       if (ok) {
-        _mixes.removeWhere((m) => m.id == mixId);
-        notifyListeners();
+        removeMixLocally(mixId);
       }
       return ok;
     } catch (e) {
@@ -386,7 +461,11 @@ class CommunityProvider extends ChangeNotifier {
 
   /// Elimina una mezcla solo en memoria (por ejemplo, cuando otra vista la borra).
   void removeMixLocally(String mixId) {
-    _mixes.removeWhere((m) => m.id == mixId);
+    final currentState = _state;
+    if (currentState is! CommunityLoaded) return;
+    final updated = List<Mix>.from(currentState.mixes)
+      ..removeWhere((m) => m.id == mixId);
+    _state = currentState.copyWith(mixes: updated);
     notifyListeners();
   }
 
@@ -405,10 +484,15 @@ class CommunityProvider extends ChangeNotifier {
         components: components,
       );
       if (updated != null) {
-        final idx = _mixes.indexWhere((m) => m.id == updated.id);
-        if (idx != -1) {
-          _mixes[idx] = updated;
-          notifyListeners();
+        final currentState = _state;
+        if (currentState is CommunityLoaded) {
+          final idx = currentState.mixes.indexWhere((m) => m.id == updated.id);
+          if (idx != -1) {
+            final list = List<Mix>.from(currentState.mixes);
+            list[idx] = updated;
+            _state = currentState.copyWith(mixes: list);
+            notifyListeners();
+          }
         }
       }
       return updated;
