@@ -119,9 +119,9 @@ class SearchProvider extends ChangeNotifier {
         tobaccos: results[0] as List<Tobacco>,
         mixes: results[1] as List<Mix>,
       );
-    } catch (e) {
+    } catch (e, stack) {
       final errorMessage = 'Error en búsqueda: $e';
-      AppLogger.error(errorMessage);
+      AppLogger.error('Error en búsqueda', error: e, stackTrace: stack);
       _state = SearchError(query: query, message: errorMessage);
       DatabaseHealthProvider.reportFailure(e);
     } finally {

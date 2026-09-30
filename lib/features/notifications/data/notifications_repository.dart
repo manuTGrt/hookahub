@@ -1,4 +1,6 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hookahub/core/utils/app_logger.dart';
+import '../../../core/constants.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/notification.dart';
 
@@ -30,32 +32,34 @@ class NotificationsRepository {
           .select()
           .eq('user_id', user.id)
           .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
+          .range(offset, offset + limit - 1)
+          .timeout(supabaseReadTimeout);
 
       return (response as List)
           .map((json) => AppNotification.fromJson(json))
           .toList();
-    } catch (e) {
-      AppLogger.error('Error al obtener notificaciones: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al obtener notificaciones', error: e, stackTrace: stackTrace);
       return [];
     }
   }
 
-  /// Obtiene el contador de notificaciones no leídas
+  /// Obtiene el contador de notificaciones no leídas usando conteo exacto en servidor
   Future<int> getUnreadCount() async {
     try {
       final user = _supabase.client.auth.currentUser;
       if (user == null) return 0;
 
-      final response = await _supabase.client
+      final count = await _supabase.client
           .from('notifications')
-          .select('id')
+          .count(CountOption.exact)
           .eq('user_id', user.id)
-          .eq('is_read', false);
+          .eq('is_read', false)
+          .timeout(supabaseReadTimeout);
 
-      return (response as List).length;
-    } catch (e) {
-      AppLogger.error('Error al obtener contador de no leídas: $e');
+      return count;
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al obtener contador de no leídas', error: e, stackTrace: stackTrace);
       return 0;
     }
   }
@@ -66,10 +70,11 @@ class NotificationsRepository {
       await _supabase.client
           .from('notifications')
           .update({'is_read': true})
-          .eq('id', notificationId);
+          .eq('id', notificationId)
+          .timeout(supabaseWriteTimeout);
       return true;
-    } catch (e) {
-      AppLogger.error('Error al marcar como leída: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al marcar como leída', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -84,11 +89,12 @@ class NotificationsRepository {
           .from('notifications')
           .update({'is_read': true})
           .eq('user_id', user.id)
-          .eq('is_read', false);
+          .eq('is_read', false)
+          .timeout(supabaseWriteTimeout);
 
       return true;
-    } catch (e) {
-      AppLogger.error('Error al marcar todas como leídas: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al marcar todas como leídas', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -99,10 +105,11 @@ class NotificationsRepository {
       await _supabase.client
           .from('notifications')
           .delete()
-          .eq('id', notificationId);
+          .eq('id', notificationId)
+          .timeout(supabaseWriteTimeout);
       return true;
-    } catch (e) {
-      AppLogger.error('Error al eliminar notificación: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al eliminar notificación', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -117,11 +124,12 @@ class NotificationsRepository {
           .from('notifications')
           .delete()
           .eq('user_id', user.id)
-          .eq('is_read', true);
+          .eq('is_read', true)
+          .timeout(supabaseWriteTimeout);
 
       return true;
-    } catch (e) {
-      AppLogger.error('Error al eliminar notificaciones leídas: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al eliminar notificaciones leídas', error: e, stackTrace: stackTrace);
       return false;
     }
   }

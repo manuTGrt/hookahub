@@ -735,3 +735,27 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   4. **Resiliencia con `try/finally` y comprobación de `mounted`**:
      - El restablecimiento a `LoginIdle` se realiza obligatoriamente en un bloque `finally` con la guarda `if (mounted) setState(...)`, asegurando que cancelaciones de Google o fallos de conexión rehabiliten la interfaz limpiamente sin provocar fugas o errores de ciclo de vida tras ser desmontada por `AuthGate`.
 
+## 🚀 Preparación y Despliegue a Producción (Release Android & iOS)
+
+### Permiso de INTERNET Obligatorio en `src/main/AndroidManifest.xml` (Regla Crítica)
+
+- **Problema**: Flutter incluye por defecto `<uses-permission android:name="android.permission.INTERNET"/>` en las carpetas `android/app/src/debug/AndroidManifest.xml` y `android/app/src/profile/AndroidManifest.xml` para depuración. Sin embargo, al compilar el binario para release (`flutter build apk --release` o `flutter build appbundle`), Gradle **únicamente** toma como manifiesto base `android/app/src/main/AndroidManifest.xml`. Si no se declara explícitamente el permiso de INTERNET en `main`, la compilación final no tendrá acceso a la red y cualquier petición HTTP, WebSocket o consulta a Supabase fallará inmediatamente con `SocketException`.
+- **Solución (Regla de Oro)**:
+  - Declarar **siempre** `<uses-permission android:name="android.permission.INTERNET" />` como hijo directo de `<manifest>` en `android/app/src/main/AndroidManifest.xml`.
+
+### Limpieza de Entradas de Depuración en `ios/Runner/Info.plist` para App Store
+
+- **Problema**: Declaraciones como `NSBonjourServices` con `_dartobservatory._tcp` o `NSLocalNetworkUsageDescription` ("Permitir depuración de Flutter en la red local") son utilizadas por herramientas de depuración local. Si se envían a la Apple App Store en una compilación de producción, pueden activar alertas de permisos de red local innecesarias a los usuarios en iOS 14+ o provocar rechazos automáticos durante la revisión de Apple.
+- **Solución (Regla de Oro)**:
+  - Asegurar que `Info.plist` de producción prescinda de `NSBonjourServices` vinculados al `_dartobservatory` y descripciones de red local para depuración.
+
+### Timeouts y Registro de Excepciones Estructuradas en Repositorios (Regla de Oro)
+
+- **Problema**:
+  1. Omitir `.timeout(supabaseReadTimeout)` o `.timeout(supabaseWriteTimeout)` en llamadas a Supabase permite que operaciones en segundo plano (ej. historial o notificaciones) cuelguen indefinidamente ante pérdidas de cobertura móvil.
+  2. Llamar a `AppLogger.error('Error: $e')` interpolando el error en la cadena de texto deja los argumentos nombrados `error:` y `stackTrace:` en `null`, enviando registros vacíos en las columnas `error_details` y `stack_trace` de la tabla remota `app_logs`.
+- **Solución (Regla de Oro)**:
+  1. Toda consulta a Supabase **debe** llevar un `.timeout()` explícito.
+  2. En bloques `catch (e, stackTrace)`, invocar siempre `AppLogger.error('Mensaje descriptivo', error: e, stackTrace: stackTrace)`.
+
+

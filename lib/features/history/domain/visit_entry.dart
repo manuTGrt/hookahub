@@ -99,16 +99,21 @@ class VisitEntry {
         visitedAt: DateTime.parse(map['viewed_at'] as String),
         mixColor: mixColor,
         rating: (mixData['rating'] as num?)?.toDouble() ?? 0.0,
-        reviews: (mixData['reviews'] as num?)?.toInt() ?? 0,
+        reviews:
+            (mixData['reviews_real'] as List?)?.firstOrNull?['count'] as int? ??
+            (mixData['reviews'] as num?)?.toInt() ??
+            0,
         ingredients: ingredients,
       );
 
       AppLogger.info('✅ VisitEntry creada: ${entry.mixName}');
       return entry;
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Error en VisitEntry.fromMap: $e');
-      AppLogger.error('Stack trace: $stackTrace');
-      AppLogger.error('Data recibida: $map');
+      AppLogger.error(
+        '❌ Error en VisitEntry.fromMap (Data: $map)',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }

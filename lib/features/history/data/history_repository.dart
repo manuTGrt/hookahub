@@ -1,4 +1,6 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hookahub/core/utils/app_logger.dart';
+import '../../../core/constants.dart';
 import '../../../core/data/supabase_service.dart';
 import '../domain/visit_entry.dart';
 
@@ -32,12 +34,12 @@ class HistoryRepository {
           'viewed_at': DateTime.now().toIso8601String(),
         },
         onConflict: 'user_id,mix_id', // Columnas de la constraint única
-      );
+      ).timeout(supabaseWriteTimeout);
 
       AppLogger.info('✅ Vista de mezcla registrada/actualizada: $mixId');
       return true;
-    } catch (e) {
-      AppLogger.error('❌ Error al registrar vista de mezcla: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('❌ Error al registrar vista de mezcla', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -78,6 +80,7 @@ class HistoryRepository {
               name,
               rating,
               reviews,
+              reviews_real:reviews(count),
               profiles!mixes_author_id_fkey(username),
               mix_components(tobacco_name, brand, percentage, color)
             )
@@ -85,22 +88,18 @@ class HistoryRepository {
           .eq('user_id', user.id)
           .gte('viewed_at', cutoffDate.toIso8601String())
           .order('viewed_at', ascending: false)
-          .limit(limit);
-
-      AppLogger.info('🔍 Respuesta raw de Supabase: $response');
-      AppLogger.info('🔍 Tipo de respuesta: ${response.runtimeType}');
-      AppLogger.info('🔍 Número de registros: ${(response as List).length}');
+          .limit(limit)
+          .timeout(supabaseReadTimeout);
 
       // Convertir respuesta a lista de VisitEntry
       final entries = (response as List).map((data) {
-        AppLogger.info('🔍 Procesando entrada: $data');
         return VisitEntry.fromMap(data as Map<String, dynamic>);
       }).toList();
 
       AppLogger.info('✅ Historial cargado: ${entries.length} entradas');
       return entries;
-    } catch (e) {
-      AppLogger.error('Error al obtener historial: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al obtener historial', error: e, stackTrace: stackTrace);
       return [];
     }
   }
@@ -126,13 +125,14 @@ class HistoryRepository {
           .delete()
           .eq('user_id', user.id)
           .lt('viewed_at', cutoffDate.toIso8601String())
-          .select();
+          .select()
+          .timeout(supabaseWriteTimeout);
 
       final deletedCount = (response as List).length;
       AppLogger.info('Eliminadas $deletedCount vistas antiguas');
       return deletedCount;
-    } catch (e) {
-      AppLogger.error('Error al limpiar historial antiguo: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al limpiar historial antiguo', error: e, stackTrace: stackTrace);
       return 0;
     }
   }
@@ -148,18 +148,22 @@ class HistoryRepository {
         return false;
       }
 
-      await _supabase.client.from('mix_views').delete().eq('user_id', user.id);
+      await _supabase.client
+          .from('mix_views')
+          .delete()
+          .eq('user_id', user.id)
+          .timeout(supabaseWriteTimeout);
 
       AppLogger.info('Historial completo eliminado');
       return true;
-    } catch (e) {
-      AppLogger.error('Error al eliminar historial: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al eliminar historial', error: e, stackTrace: stackTrace);
       return false;
     }
   }
 
   /// Obtiene el número total de mezclas únicas visitadas en los últimos [days] días.
-  /// Con la constraint UNIQUE, cada registro ya representa una mezcla única.
+  /// Utiliza conteo exacto a nivel de motor SQL sin sobrecargar la red ni la memoria.
   Future<int> getUniqueVisitedCount({int days = 2}) async {
     try {
       final user = _supabase.client.auth.currentUser;
@@ -167,16 +171,16 @@ class HistoryRepository {
 
       final cutoffDate = DateTime.now().subtract(Duration(days: days));
 
-      final response = await _supabase.client
+      final count = await _supabase.client
           .from('mix_views')
-          .select('id')
+          .count(CountOption.exact)
           .eq('user_id', user.id)
-          .gte('viewed_at', cutoffDate.toIso8601String());
+          .gte('viewed_at', cutoffDate.toIso8601String())
+          .timeout(supabaseReadTimeout);
 
-      // Con la constraint UNIQUE, el conteo directo es el de mezclas únicas
-      return (response as List).length;
-    } catch (e) {
-      AppLogger.error('Error al contar visitas únicas: $e');
+      return count;
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al contar visitas únicas', error: e, stackTrace: stackTrace);
       return 0;
     }
   }

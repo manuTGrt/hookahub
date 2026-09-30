@@ -114,10 +114,10 @@ class HistoryProvider extends ChangeNotifier {
         entries: entries,
         uniqueCount: uniqueCount,
       );
-    } catch (e) {
+    } catch (e, stack) {
       final errorMessage = 'Error al cargar historial: $e';
       _state = HistoryError(errorMessage);
-      AppLogger.error('❌ HistoryProvider: $errorMessage');
+      AppLogger.error('❌ HistoryProvider: Error al cargar historial', error: e, stackTrace: stack);
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       notifyListeners();
@@ -153,8 +153,8 @@ class HistoryProvider extends ChangeNotifier {
         // Recargar historial si no es silencioso
         await load();
       }
-    } catch (e) {
-      AppLogger.error('Error al registrar vista: $e');
+    } catch (e, stack) {
+      AppLogger.error('Error al registrar vista', error: e, stackTrace: stack);
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -170,10 +170,10 @@ class HistoryProvider extends ChangeNotifier {
       }
 
       return success;
-    } catch (e) {
+    } catch (e, stack) {
       final errorMessage = 'Error al limpiar historial: $e';
       _state = HistoryError(errorMessage);
-      AppLogger.error(errorMessage);
+      AppLogger.error('Error al limpiar historial', error: e, stackTrace: stack);
       notifyListeners();
       DatabaseHealthProvider.reportFailure(e);
       return false;
@@ -191,10 +191,10 @@ class HistoryProvider extends ChangeNotifier {
       }
 
       return deletedCount;
-    } catch (e) {
+    } catch (e, stack) {
       final errorMessage = 'Error al limpiar historial antiguo: $e';
       _state = HistoryError(errorMessage);
-      AppLogger.error(errorMessage);
+      AppLogger.error('Error al limpiar historial antiguo', error: e, stackTrace: stack);
       notifyListeners();
       DatabaseHealthProvider.reportFailure(e);
       return 0;

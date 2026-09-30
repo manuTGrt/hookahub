@@ -93,8 +93,9 @@ class AppLogger {
         'platform': defaultTargetPlatform.name,
       });
     } catch (e) {
-      // Ignoramos silenciosamente si falla el registro remoto en producción
-      if (kDebugMode) {
+      // Ignoramos silenciosamente si Supabase no está inicializado (ej. en tests)
+      // o si falla el registro remoto en producción
+      if (kDebugMode && e is! AssertionError) {
         _logger.e('Fallo crítico al enviar log a Supabase: $e');
       }
     }
