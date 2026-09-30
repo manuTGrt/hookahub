@@ -51,9 +51,9 @@ class TobaccoMixesProvider extends ChangeNotifier {
 
       _currentOffset = _mixes.length;
       _hasMoreData = _mixes.length >= _pageSize;
-    } catch (e) {
+    } catch (e, stackTrace) {
       _error = 'Error al cargar las mezclas';
-      AppLogger.error('Error loading tobacco mixes: $e');
+      AppLogger.error('Error loading tobacco mixes', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       _isLoading = false;
@@ -83,8 +83,8 @@ class TobaccoMixesProvider extends ChangeNotifier {
       } else {
         _hasMoreData = false;
       }
-    } catch (e) {
-      AppLogger.error('Error loading more tobacco mixes: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error loading more tobacco mixes', error: e, stackTrace: stackTrace);
       // No seteamos error principal para no bloquear la UI ya cargada
       DatabaseHealthProvider.reportFailure(e);
     } finally {

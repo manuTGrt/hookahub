@@ -128,9 +128,9 @@ class CatalogProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _availableBrands = await _repository.fetchAvailableBrands();
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Silenciosamente ignorar errores en la carga de marcas
-      AppLogger.error('Error cargando marcas: $e');
+      AppLogger.error('Error cargando marcas', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       _isLoadingBrands = false;
@@ -187,8 +187,8 @@ class CatalogProvider extends ChangeNotifier {
       if (updated != null) {
         updateItem(updated);
       }
-    } catch (e) {
-      AppLogger.error('Error refrescando tabaco individual: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error refrescando tabaco individual', error: e, stackTrace: stackTrace);
     }
   }
 

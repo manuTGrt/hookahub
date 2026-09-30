@@ -36,19 +36,19 @@ class DatabaseHealthService {
       AppLogger.info('✅ Healthcheck: Conexión exitosa');
       return true;
     } on TimeoutException catch (e) {
-      AppLogger.error('⏱️ Healthcheck timeout: $e');
+      AppLogger.warning('⏱️ Healthcheck timeout', error: e);
       return false;
     } on SocketException catch (e) {
-      AppLogger.error('🌐 Healthcheck sin conexión de red: $e');
+      AppLogger.warning('🌐 Healthcheck sin conexión de red', error: e);
       return false;
-    } on PostgrestException catch (e) {
-      AppLogger.error('💾 Healthcheck error de BD: ${e.message}');
+    } on PostgrestException catch (e, stackTrace) {
+      AppLogger.error('💾 Healthcheck error de BD', error: e, stackTrace: stackTrace);
       return false;
-    } on AuthException catch (e) {
-      AppLogger.error('🔒 Healthcheck error de autenticación: ${e.message}');
+    } on AuthException catch (e, stackTrace) {
+      AppLogger.error('🔒 Healthcheck error de autenticación', error: e, stackTrace: stackTrace);
       return false;
-    } catch (e) {
-      AppLogger.error('❌ Healthcheck error genérico: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('❌ Healthcheck error genérico', error: e, stackTrace: stackTrace);
       return false;
     }
   }

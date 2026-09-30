@@ -35,9 +35,9 @@ class TobaccoReviewsProvider extends ChangeNotifier {
 
     try {
       _reviews = await _repository.fetchReviews(tobaccoId);
-    } catch (e) {
+    } catch (e, stackTrace) {
       _error = 'Error al cargar las reseñas';
-      AppLogger.error('Error loading tobacco reviews: $e');
+      AppLogger.error('Error loading tobacco reviews', error: e, stackTrace: stackTrace);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -60,8 +60,8 @@ class TobaccoReviewsProvider extends ChangeNotifier {
       );
       // Reload to get the updated list and server-side timestamp
       await loadReviews(_tobaccoId!);
-    } catch (e) {
-      AppLogger.error('Error adding review: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error adding review', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }

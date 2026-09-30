@@ -127,8 +127,8 @@ class _MixDetailPageState extends State<MixDetailPage> {
             _currentMix = fullMix;
           });
         }
-      } catch (e) {
-        AppLogger.error('Error al recargar mezcla completa: $e');
+      } catch (e, stackTrace) {
+        AppLogger.error('Error al recargar mezcla completa', error: e, stackTrace: stackTrace);
       }
     }
   }
@@ -140,9 +140,9 @@ class _MixDetailPageState extends State<MixDetailPage> {
       try {
         final historyProvider = context.read<HistoryProvider>();
         historyProvider.recordView(widget.mix.id, silent: true);
-      } catch (e) {
+      } catch (e, stackTrace) {
         // Ignorar si el provider no está disponible
-        AppLogger.error('No se pudo registrar visita en historial: $e');
+        AppLogger.error('No se pudo registrar visita en historial', error: e, stackTrace: stackTrace);
       }
     });
   }

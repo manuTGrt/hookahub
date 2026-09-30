@@ -517,8 +517,8 @@ class CommunityRepository {
         ingredients: ingredients,
         color: mixColor,
       );
-    } catch (e) {
-      AppLogger.error('Error al actualizar mezcla: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al actualizar mezcla', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -585,8 +585,8 @@ class CommunityRepository {
           color: mixColor,
         );
       }).toList();
-    } catch (e) {
-      AppLogger.error('Error al obtener favoritas: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al obtener favoritas', error: e, stackTrace: stackTrace);
       return [];
     }
   }
@@ -678,8 +678,8 @@ class CommunityRepository {
         ingredients: ingredients,
         color: mixColor,
       );
-    } catch (e) {
-      AppLogger.error('Error al crear mezcla: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al crear mezcla', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -747,8 +747,8 @@ class CommunityRepository {
             response['description'] as String? ?? 'Sin descripción disponible.',
         'components': components,
       };
-    } catch (e) {
-      AppLogger.error('Error al obtener detalles de mezcla: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al obtener detalles de mezcla', error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -833,8 +833,8 @@ class CommunityRepository {
       }).toList();
 
       return mixes;
-    } catch (e) {
-      AppLogger.error('Error al obtener mezclas relacionadas: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al obtener mezclas relacionadas', error: e, stackTrace: stackTrace);
       return [];
     }
   }
@@ -869,8 +869,8 @@ class CommunityRepository {
           'created_at': DateTime.parse(reviewData['created_at'] as String),
         };
       }).toList();
-    } catch (e) {
-      AppLogger.error('Error al obtener reseñas: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al obtener reseñas', error: e, stackTrace: stackTrace);
       return [];
     }
   }
@@ -902,8 +902,8 @@ class CommunityRepository {
       await _updateMixRating(mixId);
 
       return true;
-    } catch (e) {
-      AppLogger.error('Error al crear reseña: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al crear reseña', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -936,8 +936,8 @@ class CommunityRepository {
           .update({'rating': avgRating, 'reviews': ratings.length})
           .eq('id', mixId)
           .timeout(supabaseWriteTimeout);
-    } catch (e) {
-      AppLogger.error('Error al actualizar rating de mezcla: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al actualizar rating de mezcla', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -954,8 +954,8 @@ class CommunityRepository {
       await _updateMixRating(mixId);
 
       return true;
-    } catch (e) {
-      AppLogger.error('Error al eliminar reseña: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al eliminar reseña', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -978,8 +978,8 @@ class CommunityRepository {
       await _updateMixRating(mixId);
 
       return true;
-    } catch (e) {
-      AppLogger.error('Error al actualizar reseña: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al actualizar reseña', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -999,8 +999,8 @@ class CommunityRepository {
 
       final authorId = res['author_id'] as String?;
       return authorId != null && authorId == user.id;
-    } catch (e) {
-      AppLogger.error('Error al comprobar propiedad de mezcla: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al comprobar propiedad de mezcla', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -1016,8 +1016,8 @@ class CommunityRepository {
           .eq('id', mixId)
           .timeout(supabaseWriteTimeout);
       return true;
-    } catch (e) {
-      AppLogger.error('Error al eliminar mezcla: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al eliminar mezcla', error: e, stackTrace: stackTrace);
       return false;
     }
   }

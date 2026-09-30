@@ -183,9 +183,9 @@ class CommunityProvider extends ChangeNotifier {
         hasMoreData: result.length >= _pageSize,
         isLoadingMore: false,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
       final errorMsg = 'Error al cargar las mezclas: $e';
-      AppLogger.error(errorMsg);
+      AppLogger.error('Error al cargar las mezclas', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
       _state = CommunityError(errorMsg);
     } finally {
@@ -253,8 +253,8 @@ class CommunityProvider extends ChangeNotifier {
           isLoadingMore: false,
         );
       }
-    } catch (e) {
-      AppLogger.error('Error al cargar más mezclas: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al cargar más mezclas', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
       _state = currentState.copyWith(isLoadingMore: false);
     } finally {
@@ -424,8 +424,8 @@ class CommunityProvider extends ChangeNotifier {
       }
 
       return newMix;
-    } catch (e) {
-      AppLogger.error('Error al crear mezcla: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al crear mezcla', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
       return null;
     }
@@ -452,8 +452,8 @@ class CommunityProvider extends ChangeNotifier {
         removeMixLocally(mixId);
       }
       return ok;
-    } catch (e) {
-      AppLogger.error('Error en deleteMix: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error en deleteMix', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
       return false;
     }
@@ -496,8 +496,8 @@ class CommunityProvider extends ChangeNotifier {
         }
       }
       return updated;
-    } catch (e) {
-      AppLogger.error('Error en updateMix: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error en updateMix', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
       return null;
     }

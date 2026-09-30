@@ -118,6 +118,11 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
 - **Problema**: La tabla `app_logs` se satura rápidamente con falsos errores críticos provenientes de desconexiones temporales de **Supabase Realtime** (ej. `RealtimeSubscribeException` por expiración de token al estar la app en segundo plano, o `RealtimeCloseEvent` código 1006 al perder cobertura).
 - **Solución (Filtrado)**: Las excepciones transitorias derivadas de la pérdida de socket o expiración de sesión capturadas en bloques `onError` de un `Stream` **nunca** deben enviarse mediante `AppLogger.error()`. Se debe comprobar la naturaleza del error (ej. filtrando por `RealtimeSubscribeException`, `RealtimeCloseEvent` o `InvalidJWTToken`) y, en su lugar, emitir un `AppLogger.warning()`. De esta forma, el SDK de Supabase se encarga de re-conectar automáticamente en silencio sin consumir cuota de base de datos registrando falsos errores en remoto.
 
+### Healthcheck de Red vs Errores Críticos (DatabaseHealthService)
+
+- **Problema**: Registrar fallos de conectividad física (`SocketException`) o tiempos de espera (`TimeoutException`) durante la comprobación periódica de salud como `AppLogger.error()` genera inserciones fallidas o redundantes en la tabla remota `app_logs` de Supabase cuando el dispositivo no dispone de conexión a internet.
+- **Solución**: En servicios de diagnóstico y healthcheck de red (como [DatabaseHealthService](file:///Users/manutgrt/Proyectos/hookahub/lib/core/services/database_health_service.dart)), las excepciones de red (`TimeoutException`, `SocketException`) deben registrarse exclusivamente con `AppLogger.warning(...)`. Únicamente los errores genuinos de base de datos (`PostgrestException`), autenticación (`AuthException`) o excepciones inesperadas deben registrarse con `AppLogger.error(..., error: e, stackTrace: stackTrace)`.
+
 ## 🎨 UI/UX y Consistencia Visual
 
 ### Gestión de Resultados Múltiples (Pestañas Dinámicas)

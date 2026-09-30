@@ -169,9 +169,9 @@ class NotificationsProvider extends ChangeNotifier {
         unreadCount: unreadCount,
         hasMoreData: notifications.length >= _pageSize,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
       _state = const NotificationsError('Error al cargar notificaciones');
-      AppLogger.error('Error en loadNotifications: $e');
+      AppLogger.error('Error en loadNotifications', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       notifyListeners();
@@ -209,8 +209,8 @@ class NotificationsProvider extends ChangeNotifier {
           );
         }
       }
-    } catch (e) {
-      AppLogger.error('Error en loadMore: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error en loadMore', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
       if (_state is NotificationsLoaded) {
         _state = (_state as NotificationsLoaded).copyWith(isLoadingMore: false);
@@ -228,8 +228,8 @@ class NotificationsProvider extends ChangeNotifier {
         _state = (_state as NotificationsLoaded).copyWith(unreadCount: unread);
         notifyListeners();
       }
-    } catch (e) {
-      AppLogger.error('Error al actualizar contador: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al actualizar contador', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -252,8 +252,8 @@ class NotificationsProvider extends ChangeNotifier {
           notifyListeners();
         }
       }
-    } catch (e) {
-      AppLogger.error('Error al marcar como leída: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al marcar como leída', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -273,8 +273,8 @@ class NotificationsProvider extends ChangeNotifier {
         );
         notifyListeners();
       }
-    } catch (e) {
-      AppLogger.error('Error al marcar todas como leídas: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al marcar todas como leídas', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -300,8 +300,8 @@ class NotificationsProvider extends ChangeNotifier {
           notifyListeners();
         }
       }
-    } catch (e) {
-      AppLogger.error('Error al eliminar notificación: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al eliminar notificación', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -316,8 +316,8 @@ class NotificationsProvider extends ChangeNotifier {
         _state = current.copyWith(notifications: updated);
         notifyListeners();
       }
-    } catch (e) {
-      AppLogger.error('Error al eliminar notificaciones leídas: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al eliminar notificaciones leídas', error: e, stackTrace: stackTrace);
       DatabaseHealthProvider.reportFailure(e);
     }
   }
@@ -328,14 +328,14 @@ class NotificationsProvider extends ChangeNotifier {
 
     _realtimeSubscription = _repository.subscribeToNotifications().listen(
       _onNewNotification,
-      onError: (error) {
+      onError: (error, stackTrace) {
         final errorString = error.toString();
         if (errorString.contains('RealtimeSubscribeException') || 
             errorString.contains('RealtimeCloseEvent') ||
             errorString.contains('InvalidJWTToken')) {
           AppLogger.warning('Desconexión temporal en suscripción Realtime: $errorString');
         } else {
-          AppLogger.error('Error en suscripción Realtime', error: error);
+          AppLogger.error('Error en suscripción Realtime', error: error, stackTrace: stackTrace);
         }
       },
     );
