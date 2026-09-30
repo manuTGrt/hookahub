@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart' as gsi;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../config/env.dart';
 
 class SupabaseService {
   SupabaseClient get client => Supabase.instance.client;
@@ -80,19 +80,19 @@ class SupabaseService {
 
   // OAuth Google Nativo
   Future<void> signInWithGoogle() async {
-    final webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
-    final iosClientId = dotenv.env['GOOGLE_IOS_CLIENT_ID'];
+    final webClientId = Env.googleWebClientId;
+    final iosClientId = Env.googleIosClientId;
 
-    if (webClientId == null || webClientId.isEmpty) {
+    if (webClientId.isEmpty) {
       throw const AuthException(
-        'Falta GOOGLE_WEB_CLIENT_ID en el archivo .env. Por favor, configúralo.',
+        'Falta GOOGLE_WEB_CLIENT_ID en las variables de entorno. Por favor, configúralo en .env.',
       );
     }
 
     final signInInstance = gsi.GoogleSignIn.instance;
     await signInInstance.initialize(
       serverClientId: webClientId,
-      clientId: iosClientId?.isNotEmpty == true ? iosClientId : null,
+      clientId: iosClientId.isNotEmpty ? iosClientId : null,
     );
 
     gsi.GoogleSignInAccount googleUser;

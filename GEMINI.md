@@ -26,6 +26,16 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
 
 - Siempre ignorar (`.gitignore`) ficheros como `.env`, `key.properties`, y cualquier `.keystore` o `.jks` que contenga claves criptográficas o IDs críticos en texto plano.
 
+### Prohibición de .env en Assets e Inyección Vía --dart-define-from-file
+
+- **Problema**: Declarar `- .env` bajo `assets:` en `pubspec.yaml` empaqueta el archivo de variables y credenciales en texto plano dentro del bundle compilado (APK/AAB/IPA en `flutter_assets/.env`). Adicionalmente, al estar `.env` en `.gitignore`, los pipelines de CI/CD fallan durante `flutter build` al no existir el archivo físico en el runner. Además, parsear el archivo con `flutter_dotenv` en el `main()` introduce latencia innecesaria de I/O en el arranque.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Prohibido en `pubspec.yaml`**: Ningún archivo con sufijo `.env` debe incluirse bajo la clave `assets:`, y se prescinde de `flutter_dotenv`.
+  2. **Inyección en compilación**: Las variables se pasan en tiempo de build mediante el flag `--dart-define-from-file=.env` (ej. `flutter run --dart-define-from-file=.env` o `flutter build apk --dart-define-from-file=.env`).
+  3. **Acceso tipado e inmutable**: Centralizar todas las constantes en `lib/core/config/env.dart` mediante `static const String key = String.fromEnvironment('KEY')`, permitiendo al compilador incrustar los valores directamente en el código máquina AOT sin lecturas de disco en runtime.
+  4. **Soporte IDE (VS Code)**: Configurar tanto `.vscode/settings.json` con `"dart.flutterAdditionalArgs": ["--dart-define-from-file=.env"]` (para garantizar la inyección automática en cualquier modo: CodeLens sobre `main()`, barra de estado o F5) como `.vscode/launch.json` con `"args": ["--dart-define-from-file=.env"]` y `"program": "lib/main.dart"`.
+
+
 ### Estandarización de Capas por Feature (Clean Architecture)
 
 - **Regla Estricta**: Cada módulo dentro de `lib/features/[feature]/` debe seguir estrictamente la separación de responsabilidades:
