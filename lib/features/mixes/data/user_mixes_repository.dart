@@ -24,6 +24,7 @@ class UserMixesRepository implements domain.UserMixesRepository {
             description,
             rating,
             reviews,
+            reviews_real:reviews(count),
             created_at,
             profiles!mixes_author_id_fkey(username, display_name),
             mix_components(tobacco_name, brand, percentage, color)
@@ -59,7 +60,11 @@ class UserMixesRepository implements domain.UserMixesRepository {
           name: mixData['name'] as String,
           author: authorName,
           rating: (mixData['rating'] as num?)?.toDouble() ?? 0.0,
-          reviews: (mixData['reviews'] as num?)?.toInt() ?? 0,
+          reviews:
+              (mixData['reviews_real'] as List?)?.firstOrNull?['count']
+                  as int? ??
+              (mixData['reviews'] as num?)?.toInt() ??
+              0,
           ingredients: ingredients,
           color: mixColor,
         );

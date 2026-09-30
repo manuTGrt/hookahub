@@ -100,52 +100,7 @@ class _UserMixesPageState extends State<UserMixesPage> {
               child: CustomScrollView(
                 controller: _scrollController,
                 slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16.0),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Barra de navegación superior (atrás + título)
-                          Row(
-                            children: [
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(24),
-                                  onTap: () => Navigator.of(context).maybePop(),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Icon(
-                                      Icons.arrow_back,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Tus mezclas',
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(
-                                          context,
-                                        ).textTheme.headlineSmall?.color,
-                                      ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                      ),
-                    ),
-                  ),
-
+                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
                   if (provider.mixes.isEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
@@ -228,10 +183,7 @@ class _EmptyMyMixesState extends StatelessWidget {
 }
 
 class _UserMixItem extends StatelessWidget {
-  const _UserMixItem({
-    super.key,
-    required this.mix,
-  });
+  const _UserMixItem({super.key, required this.mix});
 
   final Mix mix;
 
@@ -259,10 +211,8 @@ class _UserMixItem extends StatelessWidget {
       onEdit: () async {
         final updated = await Navigator.of(context).push<Mix>(
           MaterialPageRoute(
-            builder: (_) => CreateMixPage(
-              currentUser: mix.author,
-              mixToEdit: mix,
-            ),
+            builder: (_) =>
+                CreateMixPage(currentUser: mix.author, mixToEdit: mix),
           ),
         );
         if (updated != null && context.mounted) {
@@ -291,12 +241,8 @@ class _UserMixItem extends StatelessWidget {
           ),
         );
         if (confirmed == true && context.mounted) {
-          final repository = CommunityRepository(
-            SupabaseService(),
-          );
-          final success = await repository.deleteMix(
-            mix.id,
-          );
+          final repository = CommunityRepository(SupabaseService());
+          final success = await repository.deleteMix(mix.id);
           if (!context.mounted) return;
           if (success) {
             context.read<UserMixesProvider>().refresh();
@@ -307,11 +253,9 @@ class _UserMixItem extends StatelessWidget {
         }
       },
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => MixDetailPage(mix: mix),
-          ),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)));
       },
     );
   }

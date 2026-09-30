@@ -92,6 +92,19 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
     2. **Cálculo a nivel de motor SQL**: PostgreSQL resuelve `COUNT(*)` optimizado por índices de clave foránea/primaria.
     3. **Resiliencia en UI**: En conteos secundarios o cosméticos, capturar `(e, stackTrace)`, registrar con `AppLogger.warning` y retornar `0` como fallback para evitar saturar la tabla remota `app_logs` ante micro-cortes.
 
+### Sincronización de Ratings y Reseñas en Tablas Principales: Conflicto RLS y Triggers PostgreSQL
+
+- **Problema**: Intentar actualizar columnas agregadas (ej. `mixes.rating` y `mixes.reviews`) desde el cliente Flutter tras crear una reseña (`reviews`) mediante `_updateMixRating()` falla de forma silenciosa debido a las políticas RLS. La tabla `mixes` solo permite `UPDATE` al propio autor (`author_id = (select auth.uid())`). Cuando un tercero reseña una mezcla, la actualización del cliente afecta a 0 filas y las columnas quedan desincronizadas.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **En Base de Datos (Triggers)**: La agregación y sincronización de columnas denormalizadas (`rating`, `reviews`) debe ser responsabilidad exclusiva de **Triggers de PostgreSQL** con `SECURITY DEFINER` y `SET search_path = public` sobre la tabla de eventos (`reviews`), nunca delegarse en llamadas del cliente.
+  2. **En Consultas Flutter (PostgREST Embedding)**: En todos los repositorios que consultan mezclas (`UserMixesRepository`, `CommunityRepository`, `FavoritesRepository`), solicitar siempre el conteo real embebido mediante `reviews_real:reviews(count)` en el `.select()` y mapearlo como fallback prioritario:
+     ```dart
+     reviews: (mixData['reviews_real'] as List?)?.firstOrNull?['count'] as int? ??
+              (mixData['reviews'] as num?)?.toInt() ??
+              0,
+     ```
+     Esto garantiza que la interfaz muestre el conteo fidedigno de reseñas en vivo sin depender de columnas estáticas desincronizadas.
+
 ## 📝 Logging Centralizado (AppLogger)
 
 - **Regla Estricta**: Está **PROHIBIDO** el uso directo de `print()` y `debugPrint()` a lo largo de toda la aplicación.
