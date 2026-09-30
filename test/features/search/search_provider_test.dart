@@ -64,9 +64,17 @@ class FakeCommunityRepository implements CommunityRepository {
     int offset = 0,
     String? tobaccoName,
     String? tobaccoBrand,
+    String? query,
   }) async {
     if (shouldThrow) {
       throw Exception('Fallo en CommunityRepository');
+    }
+    if (query != null && query.isNotEmpty) {
+      final lowerQuery = query.toLowerCase();
+      return mixes.where((m) {
+        return m.name.toLowerCase().contains(lowerQuery) ||
+            m.ingredients.any((ing) => ing.toLowerCase().contains(lowerQuery));
+      }).toList();
     }
     return mixes;
   }

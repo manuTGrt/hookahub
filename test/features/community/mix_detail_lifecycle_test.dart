@@ -45,6 +45,7 @@ class FakeCommunityRepository implements CommunityRepository {
     int offset = 0,
     String? tobaccoName,
     String? tobaccoBrand,
+    String? query,
   }) async => [];
 
   @override

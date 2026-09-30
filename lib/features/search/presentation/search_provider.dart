@@ -138,36 +138,14 @@ class SearchProvider extends ChangeNotifier {
     );
   }
 
-  /// Busca mezclas por nombre o ingredientes.
-  /// Nota: Como el repositorio actual no tiene búsqueda, obtenemos todas
-  /// y filtramos en cliente. Ideal: agregar búsqueda en el repositorio.
+  /// Busca mezclas directamente en servidor (PostgreSQL) por nombre o ingredientes.
   Future<List<Mix>> _searchMixes(String query) async {
-    // Obtener un lote grande de mezclas recientes
-    final allMixes = await _communityRepository.fetchMixes(
-      orderBy: 'recent',
-      limit: 100, // Ajustar según necesidad
+    return await _communityRepository.fetchMixes(
+      query: query,
+      limit: 50,
       offset: 0,
+      orderBy: 'recent',
     );
-
-    // Filtrar localmente por nombre o ingredientes
-    final lowerQuery = query.toLowerCase().trim();
-    return allMixes.where((mix) {
-      // Buscar en el nombre
-      if (mix.name.toLowerCase().contains(lowerQuery)) {
-        return true;
-      }
-      // Buscar en ingredientes
-      if (mix.ingredients.any(
-        (ing) => ing.toLowerCase().contains(lowerQuery),
-      )) {
-        return true;
-      }
-      // Buscar en autor
-      if (mix.author.toLowerCase().contains(lowerQuery)) {
-        return true;
-      }
-      return false;
-    }).toList();
   }
 
   /// Limpia los resultados de búsqueda.

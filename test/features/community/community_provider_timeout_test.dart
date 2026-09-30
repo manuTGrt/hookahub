@@ -21,6 +21,7 @@ class FakeTimeoutCommunityRepository implements CommunityRepository {
     int offset = 0,
     String? tobaccoName,
     String? tobaccoBrand,
+    String? query,
   }) async {
     if (shouldTimeout) {
       throw TimeoutException('Supabase query timeout');

@@ -84,21 +84,108 @@ class CommunityRepository {
   ///
   /// [limit] cantidad de mezclas a obtener
   /// [offset] desde qué posición empezar (para paginación)
+  /// [query] búsqueda por texto en nombre, descripción o componentes (tabaco)
   Future<List<Mix>> fetchMixes({
     String orderBy = 'recent',
     int limit = 20,
     int offset = 0,
     String? tobaccoName,
     String? tobaccoBrand,
+    String? query,
   }) async {
     try {
       final bool filterByTobacco =
           (tobaccoName != null && tobaccoName.isNotEmpty);
+      final bool hasQuery = (query != null && query.trim().isNotEmpty);
 
-      // Si filtramos por tabaco, primero obtenemos los IDs de mixes que coinciden
       List<dynamic> response;
       List<String> targetIds = [];
-      if (filterByTobacco) {
+
+      if (hasQuery) {
+        final q = query.trim();
+        // 1. Resolver IDs en paralelo por nombre/descripción de mezcla y por componente
+        final idResults = await Future.wait([
+          _supabase.client
+              .from('mixes')
+              .select('id')
+              .or('name.ilike.%$q%,description.ilike.%$q%')
+              .timeout(supabaseReadTimeout),
+          _supabase.client
+              .from('mix_components')
+              .select('mix_id')
+              .ilike('tobacco_name', '%$q%')
+              .timeout(supabaseReadTimeout),
+        ]);
+
+        final mixIdsFromMixes =
+            (idResults[0] as List).map((r) => r['id'] as String);
+        final mixIdsFromComponents =
+            (idResults[1] as List).map((r) => r['mix_id'] as String);
+
+        Set<String> targetIdSet = {...mixIdsFromMixes, ...mixIdsFromComponents};
+
+        // Si adicionalmente hay filtro específico por tabaco
+        if (filterByTobacco) {
+          dynamic idQuery = _supabase.client
+              .from('mixes')
+              .select('id, mix_components!inner(tobacco_name, brand)');
+
+          idQuery = idQuery.eq('mix_components.tobacco_name', tobaccoName);
+          if (tobaccoBrand != null && tobaccoBrand.isNotEmpty) {
+            idQuery = idQuery.eq('mix_components.brand', tobaccoBrand);
+          }
+          final tobaccoFilterResults =
+              await idQuery.timeout(supabaseReadTimeout);
+          final tobaccoMixIds = (tobaccoFilterResults as List)
+              .map((row) => (row as Map<String, dynamic>)['id'] as String)
+              .toSet();
+          targetIdSet = targetIdSet.intersection(tobaccoMixIds);
+        }
+
+        if (targetIdSet.isEmpty) {
+          return [];
+        }
+
+        // 2. Traer los mixes completos con TODOS sus componentes intactos
+        dynamic request = _supabase.client.from('mixes').select('''
+              id,
+              name,
+              description,
+              rating,
+              reviews,
+              created_at,
+              profiles!mixes_author_id_fkey(username, display_name),
+              reviews_real:reviews(count),
+              mix_components(tobacco_name, brand, percentage, color)
+            ''').inFilter('id', targetIdSet.toList());
+
+        switch (orderBy) {
+          case 'recent':
+            request = request.order('created_at', ascending: false);
+            break;
+          case 'recent_asc':
+            request = request.order('created_at', ascending: true);
+            break;
+          case 'name_asc':
+            request = request.order('name', ascending: true);
+            break;
+          case 'name_desc':
+            request = request.order('name', ascending: false);
+            break;
+          case 'popular':
+          case 'top_rated':
+            request = request
+                .order('rating', ascending: false)
+                .order('reviews', ascending: false);
+            break;
+          default:
+            request = request.order('created_at', ascending: false);
+        }
+
+        response = await request
+            .range(offset, offset + limit - 1)
+            .timeout(supabaseReadTimeout);
+      } else if (filterByTobacco) {
         dynamic idQuery = _supabase.client
             .from('mixes')
             .select('id, mix_components!inner(tobacco_name, brand)');
