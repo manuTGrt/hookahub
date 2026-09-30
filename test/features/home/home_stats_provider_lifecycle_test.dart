@@ -40,4 +40,25 @@ void main() {
     provider.dispose();
     fakeRepo.controller.close();
   });
+
+  test('HomeStatsProvider transita por estados sellados (Initial -> Loading -> Loaded)', () async {
+    final fakeRepo = FakeHomeStatsRepository();
+    final provider = HomeStatsProvider(fakeRepo);
+
+    expect(provider.state, isA<HomeStatsInitial>());
+    expect(provider.isLoading, isFalse);
+
+    final future = provider.load();
+    expect(provider.state, isA<HomeStatsLoading>());
+    expect(provider.isLoading, isTrue);
+
+    await future;
+    expect(provider.state, isA<HomeStatsLoaded>());
+    expect((provider.state as HomeStatsLoaded).stats.tobaccos, equals(20));
+    expect(provider.isLoading, isFalse);
+    expect(provider.hasData, isTrue);
+
+    provider.dispose();
+    fakeRepo.controller.close();
+  });
 }

@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../core/models/mix.dart';
-import '../../auth/auth_provider.dart';
+import '../../../core/providers/database_health_provider.dart';
+import '../../../core/utils/app_logger.dart';
+import '../../auth/presentation/auth_provider.dart';
 import '../domain/favorites_repository.dart';
 
 class FavoritesProvider extends ChangeNotifier {
@@ -44,13 +46,21 @@ class FavoritesProvider extends ChangeNotifier {
 
   Future<void> load() async {
     final userId = _currentUserId;
-    _favorites = await _repo.loadFavorites(userId: userId);
-    _top5Ids = await _repo.loadTop5Ids(userId: userId);
-    // Limpiar ids no existentes
-    final favIds = _favorites.map((e) => e.id).toSet();
-    _top5Ids = _top5Ids.where(favIds.contains).toList();
-    _loaded = true;
-    notifyListeners();
+    try {
+      _favorites = await _repo.loadFavorites(userId: userId);
+      _top5Ids = await _repo.loadTop5Ids(userId: userId);
+      // Limpiar ids no existentes
+      final favIds = _favorites.map((e) => e.id).toSet();
+      _top5Ids = _top5Ids.where(favIds.contains).toList();
+      _loaded = true;
+      DatabaseHealthProvider.reportSuccess();
+    } catch (e, stack) {
+      _loaded = true;
+      AppLogger.error('Error al cargar favoritos', error: e, stackTrace: stack);
+      DatabaseHealthProvider.reportFailure(e);
+    } finally {
+      notifyListeners();
+    }
   }
 
   Future<void> addFavorite(Mix mix) async {

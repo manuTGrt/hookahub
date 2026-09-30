@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants.dart';
 import '../../../widgets/pastel_textfield.dart';
 import 'package:provider/provider.dart';
-import 'package:hookahub/features/auth/auth_provider.dart';
+import 'auth_provider.dart';
 import '../../../core/utils/app_toast.dart';
 
 class PastelPasswordField extends StatelessWidget {

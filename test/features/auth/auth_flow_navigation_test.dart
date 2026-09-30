@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hookahub/core/providers/database_health_provider.dart';
 import 'package:hookahub/core/services/database_health_service.dart';
 import 'package:hookahub/core/theme_provider.dart';
-import 'package:hookahub/features/auth/auth_gate.dart';
-import 'package:hookahub/features/auth/auth_provider.dart';
-import 'package:hookahub/features/auth/login_page.dart';
+import 'package:hookahub/features/auth/presentation/auth_gate.dart';
+import 'package:hookahub/features/auth/presentation/auth_provider.dart';
+import 'package:hookahub/features/auth/presentation/login_page.dart';
 import 'package:hookahub/features/catalog/presentation/providers/catalog_provider.dart';
 import 'package:hookahub/features/community/presentation/community_provider.dart';
 import 'package:hookahub/features/favorites/presentation/favorites_provider.dart';
@@ -94,6 +94,9 @@ class MockFavoritesProvider extends ChangeNotifier
 }
 
 class MockHomeStatsProvider extends ChangeNotifier implements HomeStatsProvider {
+  @override
+  HomeStatsState get state => const HomeStatsLoaded(HomeStats.empty);
+
   @override
   HomeStats get stats => HomeStats.empty;
 

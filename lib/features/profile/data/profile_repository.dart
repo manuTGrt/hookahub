@@ -141,8 +141,8 @@ class ProfileRepository {
     // Limpieza: eliminar avatares antiguos en la carpeta del usuario (mantener solo el recién subido)
     try {
       await _cleanupOldAvatars(userId: user.id, keepPath: storagePath);
-    } catch (_) {
-      // No bloquear si la limpieza falla
+    } catch (e) {
+      AppLogger.debug('Fallo no bloqueante al limpiar avatares antiguos: $e');
     }
 
     return storagePath;
@@ -188,8 +188,8 @@ class ProfileRepository {
           .toList();
       if (toRemove.isEmpty) return;
       await _client.storage.from(StorageConfig.avatarsBucket).remove(toRemove);
-    } catch (_) {
-      // Ignorar errores de limpieza
+    } catch (e) {
+      AppLogger.debug('Aviso no bloqueante al limpiar ficheros de avatar: $e');
     }
   }
 
@@ -227,7 +227,9 @@ class ProfileRepository {
             .from(StorageConfig.avatarsBucket)
             .remove(toRemove);
       }
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.debug('Aviso no bloqueante al remover avatares previos para icono: $e');
+    }
 
     // Guardar referencia de icono en DB
     await _client
@@ -257,8 +259,8 @@ class ProfileRepository {
             .from(StorageConfig.avatarsBucket)
             .remove(toRemove);
       }
-    } catch (_) {
-      // ignorar errores de borrado
+    } catch (e) {
+      AppLogger.debug('Aviso no bloqueante al vaciar carpeta de avatar: $e');
     }
 
     // Poner avatar_url a null en profiles

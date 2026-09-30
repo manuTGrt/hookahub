@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants.dart';
 import 'settings_page.dart';
 import 'edit_profile_page.dart';
 import '../../favorites/presentation/favorites_page.dart';
 import '../../mixes/presentation/user_mixes_page.dart';
-import 'package:hookahub/features/auth/auth_provider.dart';
+import '../../auth/presentation/auth_provider.dart';
 import 'profile_provider.dart';
 import '../../favorites/presentation/favorites_provider.dart';
 import '../../history/presentation/history_page.dart';
@@ -30,7 +31,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final profileProvider = context.watch<ProfileProvider>();
-    final favoritesProvider = context.watch<FavoritesProvider>();
+    final favoritesCount = context.select<FavoritesProvider, int>(
+      (p) => p.favorites.length,
+    );
     final profile = profileProvider.profile;
     final signedUrl = profileProvider.signedAvatarUrl;
     final hasPhoto = signedUrl != null && signedUrl.isNotEmpty;
@@ -80,7 +83,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: isDark ? darkTurquoise : turquoise,
-                    backgroundImage: hasPhoto ? NetworkImage(signedUrl) : null,
+                    backgroundImage:
+                        hasPhoto ? CachedNetworkImageProvider(signedUrl) : null,
                     child: hasPhoto
                         ? null
                         : Icon(
@@ -139,7 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildStatCard(
-                    favoritesProvider.favorites.length.toString(),
+                    favoritesCount.toString(),
                     'Favoritas',
                     Theme.of(context).primaryColor,
                     onTap: () {

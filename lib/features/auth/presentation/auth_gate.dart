@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants.dart';
+import '../../../core/constants.dart';
 import 'auth_provider.dart';
-import '../onboarding/presentation/onboarding_provider.dart';
-import '../onboarding/presentation/onboarding_page.dart';
-import '../../widgets/main_navigation.dart';
+import '../../onboarding/presentation/onboarding_provider.dart';
+import '../../onboarding/presentation/onboarding_page.dart';
+import '../../../widgets/main_navigation.dart';
 import 'login_page.dart';
 
 class AuthGate extends StatelessWidget {

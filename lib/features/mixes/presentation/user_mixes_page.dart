@@ -41,6 +41,7 @@ class _UserMixesPageState extends State<UserMixesPage> {
   }
 
   void _onScroll() {
+    if (!mounted) return;
     final provider = context.read<UserMixesProvider>();
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 200 &&

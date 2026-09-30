@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../../core/models/mix.dart';
 import '../../../core/providers/database_health_provider.dart';
-import '../../auth/auth_provider.dart';
+import '../../auth/presentation/auth_provider.dart';
 import '../domain/user_mixes_repository.dart';
 
 // ---------------------------------------------------------------------------

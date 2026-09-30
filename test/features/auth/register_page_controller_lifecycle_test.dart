@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hookahub/core/data/supabase_service.dart';
-import 'package:hookahub/features/auth/auth_provider.dart';
+import 'package:hookahub/features/auth/presentation/auth_provider.dart';
 import 'package:hookahub/features/auth/presentation/register_page.dart';
 import 'package:hookahub/widgets/pastel_textfield.dart';
 import 'package:provider/provider.dart';

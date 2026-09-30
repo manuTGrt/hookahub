@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hookahub/core/data/supabase_service.dart';
 import 'package:hookahub/core/providers/database_health_provider.dart';
 import 'package:hookahub/core/services/database_health_service.dart';
-import 'package:hookahub/features/auth/auth_provider.dart';
+import 'package:hookahub/features/auth/presentation/auth_provider.dart';
 import 'package:hookahub/features/profile/data/profile_repository.dart';
 import 'package:hookahub/features/profile/domain/profile.dart';
 import 'package:hookahub/features/profile/presentation/profile_provider.dart';

@@ -1,6 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart' as gsi;
 import '../config/env.dart';
+import '../constants.dart';
+import '../utils/app_logger.dart';
 
 class SupabaseService {
   SupabaseClient get client => Supabase.instance.client;
@@ -32,7 +34,9 @@ class SupabaseService {
     // Sign out del proveedor nativo de Google si fue utilizado
     try {
       await gsi.GoogleSignIn.instance.signOut();
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.debug('GoogleSignIn.signOut no requirió acción o falló: $e');
+    }
     return client.auth.signOut();
   }
 
@@ -121,14 +125,17 @@ class SupabaseService {
         [],
       );
       accessToken = authClient.accessToken;
-    } catch (_) {
-      // Ignorar de forma segura si no podemos obtener accessToken
+    } catch (e) {
+      // Ignorar de forma segura si no podemos obtener accessToken opcional
+      AppLogger.debug('AccessToken opcional de Google no concedido: $e');
     }
 
-    await client.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: accessToken,
-    );
+    await client.auth
+        .signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+          accessToken: accessToken,
+        )
+        .timeout(supabaseWriteTimeout);
   }
 }

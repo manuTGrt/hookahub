@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/constants.dart';
-import '../../core/data/supabase_service.dart';
-import '../../core/providers/database_health_provider.dart';
-import '../../core/utils/app_error_mapper.dart';
-import '../../core/utils/app_logger.dart';
+import '../../../core/constants.dart';
+import '../../../core/data/supabase_service.dart';
+import '../../../core/providers/database_health_provider.dart';
+import '../../../core/utils/app_error_mapper.dart';
+import '../../../core/utils/app_logger.dart';
 
 class AuthProvider extends ChangeNotifier {
   AuthProvider(this._svc) {

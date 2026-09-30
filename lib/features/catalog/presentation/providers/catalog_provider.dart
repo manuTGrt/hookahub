@@ -197,14 +197,13 @@ class CatalogProvider extends ChangeNotifier {
     try {
       final currentState = _state;
       if (currentState is CatalogLoaded) {
-        try {
-          return currentState.items.firstWhere((t) => t.id == id);
-        } catch (_) {}
+        final local = currentState.items.where((t) => t.id == id).firstOrNull;
+        if (local != null) return local;
       }
 
       return await _repository.fetchTobaccoById(id);
-    } catch (e) {
-      AppLogger.error('Error fetching tobacco by id: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error('Error fetching tobacco by id', error: e, stackTrace: stackTrace);
       return null;
     }
   }

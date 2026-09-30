@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants.dart';
-import '../../core/theme_provider.dart';
-import '../../widgets/pastel_textfield.dart';
-import '../../widgets/social_login_button.dart';
-import 'package:hookahub/features/auth/auth_provider.dart';
-import 'presentation/register_page.dart';
-import '../../core/utils/app_toast.dart';
+import '../../../core/constants.dart';
+import '../../../core/theme_provider.dart';
+import '../../../widgets/pastel_textfield.dart';
+import '../../../widgets/social_login_button.dart';
+import 'auth_provider.dart';
+import 'register_page.dart';
+import '../../../core/utils/app_toast.dart';
 
 // ---------------------------------------------------------------------------
 // Estados UI (sealed class — sin booleanos fragmentados)

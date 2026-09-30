@@ -3,7 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import '../../../core/providers/database_health_provider.dart';
-import '../../auth/auth_provider.dart';
+import '../../auth/presentation/auth_provider.dart';
 import '../data/history_repository.dart';
 import '../domain/visit_entry.dart';
 

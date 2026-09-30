@@ -39,6 +39,7 @@ class _CommunityPageState extends State<CommunityPage> {
   }
 
   void _onScroll() {
+    if (!mounted) return;
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       // Cuando estamos a 200 píxeles del final, cargar más

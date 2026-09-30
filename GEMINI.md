@@ -261,6 +261,22 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   3. **Delegación Desacoplada para Acciones Externas (ej. scrollToTop)**: Si un componente externo (como la barra de navegación en `main_navigation.dart`) necesita ordenar un scroll al inicio, el provider **no debe** contener controladores. En su lugar, debe exponer un callback delegado `VoidCallback? onScrollToTopRequested`. La vista lo suscribe en `didChangeDependencies()` y lo limpia a `null` en `dispose()`.
   4. **Protección `_isDisposed` en Providers Asíncronos**: Para evitar la excepción `A <Provider> was used after being disposed` provocada por llamadas asíncronas no esperadas que resuelven tras la destrucción del provider, se debe implementar una bandera `bool _isDisposed = false` y sobrescribir `@override void notifyListeners()` para ignorar notificaciones una vez que `_isDisposed == true`.
 
+### Guarda `if (!mounted) return;` Obligatoria en Listeners de Scroll (Regla de Oro)
+
+- **Problema**: Los métodos `_onScroll` vinculados a un `ScrollController.addListener()` se ejecutan activados por la inercia del motor de renderizado. Si el usuario abandona la pantalla haciendo pop mientras el scroll sigue rodando por inercia, el callback `_onScroll` se dispara después de que el widget haya sido desmontado del árbol. Ejecutar `context.read<T>()` en ese punto lanza la excepción fatal: `FlutterError: Looking up a deactivated widget's ancestor is unsafe`.
+- **Solución**: Todo método listener registrado en un `ScrollController` **debe** incluir al inicio de su cuerpo una guarda temprana:
+  ```dart
+  void _onScroll() {
+    if (!mounted) return;
+    // ... lectura de controlador y provider seguros
+  }
+  ```
+
+### Límite en Streams Realtime de Supabase (.limit) para Protección de Memoria (Regla de Oro)
+
+- **Problema**: Invocar `.stream(primaryKey: ['id']).eq(...)` en Supabase Flutter sin limitar la consulta descarga el **snapshot completo** de la tabla para ese usuario. Al encadenar transformadores como `.expand()`, cada nuevo evento retransmite y deserializa la lista histórica completa, colapsando el heap de Dart y saturando el canal WebSocket en usuarios activos con cientos de registros.
+- **Solución**: Todo stream de eventos continuos en tiempo real sobre tablas históricas (ej. `notifications`) debe acotarse con `.limit(N)` (ej. `.limit(20)`) o estructurarse mediante canales de difusión específicos (`onPostgresChanges(event: PostgresChangeEvent.insert)`), descargando el historial antiguo de forma paginada y bajo demanda mediante peticiones REST puntuales (`fetch`).
+
 ### Cancelación de Suscripciones Realtime y Purga de Estado en Logout/Login (Regla de Oro)
 
 - **Problema**: Los providers registrados en el `MultiProvider` raíz (`app.dart`) son singletons de larga duración que persisten incluso tras el cierre de sesión (`signOut()`). Si un provider mantiene un `StreamSubscription` a canales Realtime de Supabase (ej. `NotificationsProvider` escuchando la tabla `notifications` para el `user_id` del usuario) o datos en memoria (`UserMixesProvider`, `HistoryProvider`, `ProfileProvider`):

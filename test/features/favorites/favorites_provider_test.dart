@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hookahub/core/models/mix.dart';
-import 'package:hookahub/features/auth/auth_provider.dart';
+import 'package:hookahub/features/auth/presentation/auth_provider.dart';
 import 'package:hookahub/features/favorites/domain/favorites_repository.dart';
 import 'package:hookahub/features/favorites/presentation/favorites_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

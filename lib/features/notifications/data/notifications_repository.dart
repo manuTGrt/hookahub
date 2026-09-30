@@ -140,6 +140,7 @@ class NotificationsRepository {
         .stream(primaryKey: ['id'])
         .eq('user_id', user.id)
         .order('created_at', ascending: false)
+        .limit(20)
         .map((data) {
           if (data.isEmpty) return <AppNotification>[];
           return data.map((json) => AppNotification.fromJson(json)).toList();
