@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -132,8 +133,9 @@ class MainNavigationPageState extends State<MainNavigationPage> {
         } else {
           // Estamos en Home y no hay atrás posible.
           // En Android, enviar la app a segundo plano manteniendo el motor.
-          // En otras plataformas, pop estándar.
-          MethodChannel('app_retain').invokeMethod('sendToBackground');
+          if (Platform.isAndroid) {
+            MethodChannel('app_retain').invokeMethod('sendToBackground');
+          }
         }
       },
       child: Scaffold(

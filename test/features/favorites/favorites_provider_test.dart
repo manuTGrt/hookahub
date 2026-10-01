@@ -11,9 +11,13 @@ class MockFavoritesRepository implements FavoritesRepository {
   List<String> top5Ids = [];
   String? lastLoadedUserId;
   String? lastSavedUserId;
+  bool shouldThrow = false;
 
   @override
   Future<List<Mix>> loadFavorites({String? userId}) async {
+    if (shouldThrow) {
+      throw Exception('Fallo al cargar favoritos');
+    }
     lastLoadedUserId = userId;
     return List.from(favorites);
   }
@@ -212,6 +216,32 @@ void main() {
       expect(provider.favorites.isEmpty, isTrue);
       expect(provider.top5.isEmpty, isTrue);
       expect(provider.isLoaded, isFalse);
+      expect(provider.state, isA<FavoritesInitial>());
+    });
+
+    test('transita por estados sellados (Initial -> Loading -> Loaded)', () async {
+      expect(provider.state, isA<FavoritesInitial>());
+      expect(provider.isLoading, isFalse);
+
+      final future = provider.load();
+      expect(provider.state, isA<FavoritesLoading>());
+      expect(provider.isLoading, isTrue);
+
+      await future;
+      expect(provider.state, isA<FavoritesLoaded>());
+      expect(provider.isLoading, isFalse);
+      expect(provider.isLoaded, isTrue);
+    });
+
+    test('transita a FavoritesError si el repositorio lanza excepción', () async {
+      mockRepo.shouldThrow = true;
+
+      await provider.load();
+
+      expect(provider.state, isA<FavoritesError>());
+      expect(provider.error, isNotNull);
+      expect(provider.isLoaded, isFalse);
+      expect(provider.isLoading, isFalse);
     });
   });
 }

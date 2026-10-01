@@ -10,6 +10,7 @@ import 'package:file_picker/file_picker.dart' as fp;
 import 'dart:io' show Platform;
 import 'package:image_cropper/image_cropper.dart';
 import '../../../core/utils/app_toast.dart';
+import '../../../core/utils/app_logger.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -178,7 +179,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         final file = await fp.FilePicker.pickFile(type: fp.FileType.image);
         return file?.path;
       }
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.error('Error al seleccionar imagen de perfil', error: e, stackTrace: stack);
       return null;
     }
   }
@@ -244,7 +246,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     } on MissingPluginException {
       // Si el plugin no está registrado (p.ej., no se reinició completamente la app), seguimos sin recortar.
       return path;
-    } catch (_) {
+    } catch (e) {
+      AppLogger.warning('No se pudo recortar la imagen de perfil: $e');
       return path;
     }
   }

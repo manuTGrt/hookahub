@@ -12,6 +12,7 @@ import '../../favorites/presentation/favorites_provider.dart';
 import '../../history/presentation/history_page.dart';
 import '../../../widgets/main_navigation.dart';
 import '../../../core/utils/app_toast.dart';
+import '../../../core/utils/app_logger.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -335,7 +336,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       final auth = context.read<AuthProvider>();
                       try {
                         await auth.signOut();
-                      } catch (_) {
+                      } catch (e, stack) {
+                        AppLogger.error('Error al cerrar sesión', error: e, stackTrace: stack);
                         if (context.mounted) {
                           AppToast.showInfo(context, 'Error al cerrar sesión');
                         }

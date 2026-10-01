@@ -1125,7 +1125,7 @@ class _SearchField extends StatelessWidget {
                     onPressed: enabled
                         ? () {
                             controller.clear();
-                            FocusScope.of(context).requestFocus(FocusNode());
+                            FocusScope.of(context).unfocus();
                           }
                         : null,
                   )

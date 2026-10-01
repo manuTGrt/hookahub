@@ -39,8 +39,38 @@ class _FavoritesPageState extends State<FavoritesPage> {
       // AppBar removida: título y navegación manejados por barra superior global
       body: Consumer<FavoritesProvider>(
         builder: (context, fav, child) {
-          if (!fav.isLoaded) {
+          if (fav.isLoading || fav.state is FavoritesInitial) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (fav.state is FavoritesError) {
+            final error = (fav.state as FavoritesError).message;
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      error,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => fav.load(force: true),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
           final top5 = fav.top5;
           final rest = fav.favorites.where((m) => !fav.isTop5(m.id)).toList();

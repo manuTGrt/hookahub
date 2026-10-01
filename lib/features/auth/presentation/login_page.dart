@@ -93,22 +93,22 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        final bool isDark = Theme.of(context).brightness == Brightness.dark;
-        final bool isSubmitting = _loginState is! LoginIdle;
-        final bool isEmailLoading = _loginState is LoginEmailLoading;
-        final bool isGoogleLoading = _loginState is LoginGoogleLoading;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isSubmitting = _loginState is! LoginIdle;
+    final bool isEmailLoading = _loginState is LoginEmailLoading;
+    final bool isGoogleLoading = _loginState is LoginGoogleLoading;
 
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: IconButton(
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Consumer<ThemeProvider>(
+              builder: (context, themeProvider, _) {
+                return IconButton(
                   tooltip: 'Cambiar tema',
                   icon: Icon(
                     switch (themeProvider.themeMode) {
@@ -128,11 +128,13 @@ class _LoginPageState extends State<LoginPage> {
                           };
                           themeProvider.setThemeMode(nextMode);
                         },
-                ),
-              ),
-            ],
-            automaticallyImplyLeading: false,
+                );
+              },
+            ),
           ),
+        ],
+        automaticallyImplyLeading: false,
+      ),
           body: Center(
             child: SingleChildScrollView(
               child: Padding(
@@ -287,7 +289,5 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         );
-      },
-    );
   }
 }

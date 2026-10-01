@@ -87,7 +87,7 @@ class MockFavoritesProvider extends ChangeNotifier
   bool get isLoaded => true;
 
   @override
-  Future<void> load() async {}
+  Future<void> load({bool force = false}) async {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

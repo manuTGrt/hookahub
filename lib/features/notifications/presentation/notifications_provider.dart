@@ -345,8 +345,8 @@ class NotificationsProvider extends ChangeNotifier {
   void _onNewNotification(AppNotification notification) {
     if (_state is NotificationsLoaded) {
       final current = _state as NotificationsLoaded;
-      final exists = current.notifications.any((n) => n.id == notification.id);
-      if (!exists) {
+      final index = current.notifications.indexWhere((n) => n.id == notification.id);
+      if (index == -1) {
         final updated = [notification, ...current.notifications];
         final newUnread = notification.isRead ? current.unreadCount : current.unreadCount + 1;
         _state = current.copyWith(
@@ -355,8 +355,20 @@ class NotificationsProvider extends ChangeNotifier {
         );
         notifyListeners();
         AppLogger.info('Nueva notificación recibida: ${notification.title}');
+      } else {
+        final existing = current.notifications[index];
+        if (existing.isRead != notification.isRead || existing.title != notification.title || existing.message != notification.message) {
+          final updated = List<AppNotification>.from(current.notifications);
+          updated[index] = notification;
+          final diff = (notification.isRead ? 0 : 1) - (existing.isRead ? 0 : 1);
+          _state = current.copyWith(
+            notifications: updated,
+            unreadCount: (current.unreadCount + diff).clamp(0, 999999),
+          );
+          notifyListeners();
+        }
       }
-    } else {
+    } else if (_state is! NotificationsLoading) {
       unawaited(loadNotifications());
     }
   }
