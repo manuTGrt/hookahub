@@ -28,19 +28,19 @@ class OnboardingProvider extends ChangeNotifier {
     OnboardingItem(
       title: 'Crea mezclas con precisión',
       description:
-          'Ajusta porcentajes exactos, balancea intensidades y documenta tus recetas secretas como un auténtico maestro.',
+          'Ajusta porcentajes exactos, balancea intensidades y documenta tus mezclas secretas como un auténtico maestro.',
       icon: Icons.donut_small_outlined,
       badgeText: 'LABORATORIO',
       highlights: [
         'Proporciones exactas',
-        'Recetas propias',
+        'Mezclas propias',
         'Cálculo automático',
       ],
     ),
     OnboardingItem(
       title: 'Inspiración de la comunidad',
       description:
-          'Descubre las combinaciones más valoradas en tiempo real, califica recetas y comparte tus éxitos con el mundo.',
+          'Descubre las combinaciones más valoradas en tiempo real, califica mezclas y comparte tus éxitos con el mundo.',
       icon: Icons.stars_rounded,
       badgeText: 'COMUNIDAD EN VIVO',
       highlights: ['Top Rankings', 'Reseñas reales', 'Estadísticas live'],
