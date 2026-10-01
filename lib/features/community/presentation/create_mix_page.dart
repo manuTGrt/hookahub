@@ -11,6 +11,7 @@ import '../../../core/data/supabase_service.dart';
 import '../../catalog/data/tobacco_repository.dart';
 import '../../catalog/presentation/providers/tobacco_lookup_provider.dart';
 import 'community_provider.dart';
+import '../domain/mix_percentage_calculator.dart';
 import '../../../core/utils/app_error_mapper.dart';
 import '../../../core/utils/app_toast.dart';
 
@@ -162,11 +163,13 @@ class _CreateMixPageState extends State<CreateMixPage> {
           reviews: 0,
         );
 
-        final sel = _SelectedIngredient(tobacco: t);
-        // Formatear el porcentaje sin decimales si es entero
-        sel.percentCtrl.text = percent.truncateToDouble() == percent
-            ? percent.toStringAsFixed(0)
-            : percent.toStringAsFixed(1);
+        final sel = _SelectedIngredient(
+          tobacco: t,
+          isManual: true,
+          initialPercent: percent.truncateToDouble() == percent
+              ? percent.toStringAsFixed(0)
+              : percent.toStringAsFixed(1),
+        );
         loaded.add(sel);
       }
 
@@ -200,6 +203,7 @@ class _CreateMixPageState extends State<CreateMixPage> {
     }
     setState(() {
       _ingredients.add(_SelectedIngredient(tobacco: t));
+      MixPercentageCalculator.rebalance(_ingredients);
       _pendingSelection = null;
     });
   }
@@ -213,6 +217,7 @@ class _CreateMixPageState extends State<CreateMixPage> {
         }
         return matches;
       });
+      MixPercentageCalculator.rebalance(_ingredients);
     });
   }
 
@@ -617,7 +622,10 @@ class _CreateMixPageState extends State<CreateMixPage> {
                                     _removeIngredient(ing.tobacco.id),
                                 child: _IngredientRow(
                                   ingredient: ing,
-                                  onChanged: () => setState(() {}),
+                                  onChanged: () {
+                                    ing.isManual = true;
+                                    setState(() {});
+                                  },
                                 ),
                               ),
                           ],
@@ -1433,13 +1441,29 @@ class _SlidableIngredientRowState extends State<_SlidableIngredientRow>
 }
 
 @visibleForTesting
-class SelectedIngredient {
-  SelectedIngredient({required this.tobacco})
-    : percentCtrl = TextEditingController(
-        text: _defaultPercent.toStringAsFixed(0),
-      );
+class SelectedIngredient implements MixPercentageItem {
+  SelectedIngredient({
+    required this.tobacco,
+    this.isManual = false,
+    String? initialPercent,
+  }) : percentCtrl = TextEditingController(
+          text: initialPercent ?? _defaultPercent.toStringAsFixed(0),
+        );
   final Tobacco tobacco;
   final TextEditingController percentCtrl;
+
+  @override
+  bool isManual;
+
+  @override
+  double get percentage => double.tryParse(percentCtrl.text) ?? 0.0;
+
+  @override
+  set percentage(double value) {
+    percentCtrl.text = value.truncateToDouble() == value
+        ? value.toStringAsFixed(0)
+        : value.toStringAsFixed(1);
+  }
 
   void dispose() {
     percentCtrl.dispose();

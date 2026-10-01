@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hookahub/core/models/tobacco.dart';
+import 'package:hookahub/features/community/domain/mix_percentage_calculator.dart';
 import 'package:hookahub/features/community/presentation/create_mix_page.dart';
 
 void main() {
@@ -180,6 +181,40 @@ void main() {
 
       expect(() => ctrlA.addListener(() {}), throwsA(isA<FlutterError>()));
       expect(() => ctrlB.addListener(() {}), throwsA(isA<FlutterError>()));
+    });
+
+    test('Simulating _addIngredient flow rebalances SelectedIngredient instances to sum 100%', () {
+      final ingredients = <SelectedIngredient>[];
+
+      // 1. Añadir primer tabaco -> 100%
+      ingredients.add(SelectedIngredient(tobacco: tobaccoA));
+      MixPercentageCalculator.rebalance(ingredients);
+      expect(ingredients.first.percentCtrl.text, '100');
+      expect(ingredients.first.percentage, 100.0);
+
+      // 2. Añadir segundo tabaco -> 50% y 50%
+      ingredients.add(SelectedIngredient(tobacco: tobaccoB));
+      MixPercentageCalculator.rebalance(ingredients);
+      expect(ingredients[0].percentCtrl.text, '50');
+      expect(ingredients[1].percentCtrl.text, '50');
+      expect(ingredients.fold<double>(0, (acc, i) => acc + i.percentage), 100.0);
+
+      // 3. Usuario edita el primer tabaco a 70% (marca isManual = true)
+      ingredients[0].percentCtrl.text = '70';
+      ingredients[0].isManual = true;
+
+      // 4. Añadir tercer tabaco -> tabaco A se mantiene en 70%, tabacos B y C reciben 15% cada uno
+      ingredients.add(SelectedIngredient(tobacco: tobaccoC));
+      MixPercentageCalculator.rebalance(ingredients);
+      expect(ingredients[0].percentCtrl.text, '70');
+      expect(ingredients[1].percentCtrl.text, '15');
+      expect(ingredients[2].percentCtrl.text, '15');
+      expect(ingredients.fold<double>(0, (acc, i) => acc + i.percentage), 100.0);
+
+      // Limpieza
+      for (final ing in ingredients) {
+        ing.dispose();
+      }
     });
   });
 }

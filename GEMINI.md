@@ -777,4 +777,26 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   1. Toda consulta a Supabase **debe** llevar un `.timeout()` explícito.
   2. En bloques `catch (e, stackTrace)`, invocar siempre `AppLogger.error('Mensaje descriptivo', error: e, stackTrace: stackTrace)`.
 
+## ⚖️ Lógica de Mezclas y Balanceo Dinámico de Porcentajes (MixPercentageCalculator)
+
+### Reparto Equitativo al 100% y Preservación de Porcentajes Manuales (Regla de Oro)
+
+- **Problema**:
+  1. Al instanciar ingredientes en la pantalla de creación/edición de mezclas (`CreateMixPage`), inicializar el porcentaje con un valor fijo por defecto (ej. `25%`) provocaba que mezclas de 1, 2 o 3 tabacos tuvieran sumas incompletas (25%, 50%, 75%), obligando al usuario a editar manualmente cada campo para alcanzar el 100%.
+  2. Al añadir o eliminar tabacos, no existía un mecanismo para redistribuir el porcentaje entre los tabacos existentes.
+  3. No se distinguía si un porcentaje provenía de la asignación automática del sistema o había sido fijado explícitamente por el usuario (`isManual`).
+
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Servicio Puro de Dominio (`MixPercentageCalculator`)**:
+     - Desacoplado de widgets y controladores de Flutter mediante el contrato `MixPercentageItem` (`isManual`, `percentage`).
+     - Al añadir (`_addIngredient`) o eliminar (`_removeIngredient`) tabacos, se ejecuta `MixPercentageCalculator.rebalance(ingredients)`.
+  2. **Reglas del Algoritmo de Balanceo**:
+     - **Preservación Estricta**: Si un ingrediente tiene `isManual == true`, su porcentaje permanece intacto y nunca se recalcula.
+     - **Cálculo de Remanente**: Se calcula `remaining = 100.0 - suma_manuales`.
+     - **Distribución de Restos Enteros (Largest Remainder Method)**: Si `remaining > 0`, se reparte `remaining ~/ count` de forma entera, y el residuo `remaining % count` se distribuye sumando 1% a los primeros elementos de la lista automática, garantizando que la suma total sea rigurosamente 100% sin decimales infinitos.
+     - **Tolerancia a Over-allocation**: Si los ingredientes manuales suman 100% o más (`remaining <= 0`), los ingredientes automáticos se asignan a `0.0`, activando la alerta visual y bloqueando la creación hasta que el usuario corrija los valores manuales.
+  3. **Activación de `isManual`**:
+     - Únicamente se conmuta a `isManual = true` cuando el usuario interactúa directamente con el campo (`onChanged` del `_PercentField`) o cuando la mezcla se carga en modo edición desde la base de datos (`_loadExistingMix`).
+
+
 
