@@ -1,6 +1,6 @@
 import 'package:hookahub/core/utils/app_logger.dart';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import '../../../core/models/notification.dart';
 import '../../../core/providers/database_health_provider.dart';
 import '../../auth/presentation/auth_provider.dart';
@@ -78,11 +78,21 @@ class NotificationsProvider extends ChangeNotifier {
         _subscribeToRealtime();
       }
     });
+
+    _lifecycleListener = AppLifecycleListener(
+      onResume: () {
+        if (_repository.hasActiveUser) {
+          unawaited(loadNotifications(refresh: true));
+          _subscribeToRealtime();
+        }
+      },
+    );
   }
 
   final NotificationsRepository _repository;
   final AuthProvider? _auth;
   StreamSubscription<void>? _reconnectedSub;
+  AppLifecycleListener? _lifecycleListener;
 
   NotificationsState _state = const NotificationsInitial();
   StreamSubscription<AppNotification>? _realtimeSubscription;
@@ -379,6 +389,7 @@ class NotificationsProvider extends ChangeNotifier {
     _auth?.removeSignOutListener(_handleSignOut);
     _realtimeSubscription?.cancel();
     _reconnectedSub?.cancel();
+    _lifecycleListener?.dispose();
     super.dispose();
   }
 }

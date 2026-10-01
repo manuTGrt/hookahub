@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hookahub/core/data/supabase_service.dart';
 import 'package:hookahub/core/models/notification.dart';
@@ -194,6 +195,21 @@ void main() {
       expect(errorState.message, 'Error al cargar notificaciones');
       expect(provider.error, 'Error al cargar notificaciones');
 
+      provider.dispose();
+    });
+
+    test('sincroniza notificaciones al reanudar la app desde background (AppLifecycleState.resumed)', () async {
+      fakeRepo.activeUser = true;
+      final provider = NotificationsProvider(fakeRepo);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      final countBeforeResume = fakeRepo.fetchCallCount;
+
+      // Simular evento del sistema: app reanudada a primer plano
+      TestWidgetsFlutterBinding.ensureInitialized();
+      TestWidgetsFlutterBinding.instance.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(fakeRepo.fetchCallCount, greaterThan(countBeforeResume));
       provider.dispose();
     });
   });

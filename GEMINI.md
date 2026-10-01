@@ -35,6 +35,12 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
   3. **Acceso tipado e inmutable**: Centralizar todas las constantes en `lib/core/config/env.dart` mediante `static const String key = String.fromEnvironment('KEY')`, permitiendo al compilador incrustar los valores directamente en el código máquina AOT sin lecturas de disco en runtime.
   4. **Soporte IDE (VS Code)**: Configurar tanto `.vscode/settings.json` con `"dart.flutterAdditionalArgs": ["--dart-define-from-file=.env"]` (para garantizar la inyección automática en cualquier modo: CodeLens sobre `main()`, barra de estado o F5) como `.vscode/launch.json` con `"args": ["--dart-define-from-file=.env"]` y `"program": "lib/main.dart"`.
 
+### Endurecimiento Nativo y Prevención de Fugas de Sesión en Backups de la Nube
+
+- **Problema**: Por defecto, Android respalda automáticamente el contenido del almacenamiento interno de la app (incluyendo archivos XML de `SharedPreferences` con los tokens JWT de sesión de Supabase) en el Google Drive personal del usuario si `android:allowBackup` no está configurado explícitamente.
+- **Solución (Regla de Oro)**: Configurar indefectiblemente `android:allowBackup="false"` dentro de la etiqueta `<application>` en `android/app/src/main/AndroidManifest.xml` para garantizar que las sesiones no se sincronicen fuera del sandbox seguro del dispositivo físico.
+- **Protección ProGuard/R8 para Release**: En compilaciones productivas (`buildTypes.release` en `android/app/build.gradle.kts`), se debe vincular un archivo `proguard-rules.pro` que declare explícitamente `-keep` sobre los bindings de Flutter y los paquetes `com.google.android.gms.auth.api.signin.**` para evitar que el compilador R8 descarte o dañe clases requeridas por Google Sign-In durante la ofuscación.
+
 
 ### Estandarización de Capas por Feature (Clean Architecture)
 
@@ -255,6 +261,14 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
 - **Solución (Regla de Oro)**:
   - Todo `ChangeNotifier` o `StatefulWidget` que mantenga suscripciones a `Stream`, controladores o temporizadores (`Timer`) **debe** sobrescribir explícitamente `@override void dispose()` a nivel de clase.
   - Cancelar todas las suscripciones (`_sub?.cancel()`), cerrar controladores y siempre invocar `super.dispose()` al final.
+
+### Resiliencia de WebSockets Realtime ante Suspensión Móvil (AppLifecycleListener)
+
+- **Problema**: Cuando el usuario minimiza la aplicación o el dispositivo entra en modo reposo (Doze Mode en Android / Suspensión de sockets en iOS), el socket TCP de Supabase Realtime se desconecta o congela. Las notificaciones o eventos que ocurran mientras la app está minimizada nunca llegan por el stream, dejando la interfaz desactualizada al regresar.
+- **Solución (Regla de Oro)**:
+  1. En providers que dependan de WebSockets in-app (como `NotificationsProvider`), registrar un `AppLifecycleListener` escuchando `onResume: () => ...`.
+  2. Al reanudarse la app (`AppLifecycleState.resumed`), disparar inmediatamente una consulta REST de sincronización (`loadNotifications(refresh: true)`) y renovar la suscripción al canal si fue cerrada por el sistema operativo.
+  3. Desregistrar siempre el listener en el método `dispose()` (`_lifecycleListener?.dispose()`).
 
 ### Ciclo de Vida de Controladores en Pantallas de Auth y Listas Dinámicas (Regla de Oro)
 
