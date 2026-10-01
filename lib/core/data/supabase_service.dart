@@ -5,6 +5,11 @@ import '../constants.dart';
 import '../utils/app_logger.dart';
 
 class SupabaseService {
+  // Singleton — todas las llamadas a SupabaseService() devuelven la misma instancia.
+  static final SupabaseService _instance = SupabaseService._internal();
+  factory SupabaseService() => _instance;
+  SupabaseService._internal();
+
   SupabaseClient get client => Supabase.instance.client;
 
   // Auth API

@@ -65,19 +65,41 @@ class FavoritesProvider extends ChangeNotifier {
 
   Future<void> addFavorite(Mix mix) async {
     if (_favorites.any((m) => m.id == mix.id)) return;
+    // Backup para rollback
+    final backup = List<Mix>.from(_favorites);
     _favorites = [..._favorites, mix];
     notifyListeners();
-    await _repo.addFavorite(mix, userId: _currentUserId);
+    try {
+      await _repo.addFavorite(mix, userId: _currentUserId);
+    } catch (e, stack) {
+      // Rollback
+      _favorites = backup;
+      notifyListeners();
+      AppLogger.error('Error al añadir favorito', error: e, stackTrace: stack);
+      DatabaseHealthProvider.reportFailure(e);
+    }
   }
 
   Future<void> removeFavorite(String mixId) async {
+    // Backup para rollback
+    final backupFavs = List<Mix>.from(_favorites);
+    final backupTop5 = List<String>.from(_top5Ids);
     _favorites = _favorites.where((m) => m.id != mixId).toList();
     final hadTop5 = _top5Ids.contains(mixId);
     _top5Ids = _top5Ids.where((id) => id != mixId).toList();
     notifyListeners();
-    await _repo.removeFavorite(mixId, userId: _currentUserId);
-    if (hadTop5) {
-      await _repo.saveTop5Ids(_top5Ids, userId: _currentUserId);
+    try {
+      await _repo.removeFavorite(mixId, userId: _currentUserId);
+      if (hadTop5) {
+        await _repo.saveTop5Ids(_top5Ids, userId: _currentUserId);
+      }
+    } catch (e, stack) {
+      // Rollback
+      _favorites = backupFavs;
+      _top5Ids = backupTop5;
+      notifyListeners();
+      AppLogger.error('Error al eliminar favorito', error: e, stackTrace: stack);
+      DatabaseHealthProvider.reportFailure(e);
     }
   }
 
@@ -87,6 +109,8 @@ class FavoritesProvider extends ChangeNotifier {
     // Solo se puede top5 si está en favoritos
     final isFavorite = _favorites.any((m) => m.id == mixId);
     if (!isFavorite) return;
+    // Backup para rollback
+    final backupTop5 = List<String>.from(_top5Ids);
     if (_top5Ids.contains(mixId)) {
       _top5Ids = _top5Ids.where((id) => id != mixId).toList();
     } else {
@@ -98,32 +122,59 @@ class FavoritesProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
-    await _repo.saveTop5Ids(_top5Ids, userId: _currentUserId);
+    try {
+      await _repo.saveTop5Ids(_top5Ids, userId: _currentUserId);
+    } catch (e, stack) {
+      // Rollback
+      _top5Ids = backupTop5;
+      notifyListeners();
+      AppLogger.error('Error al actualizar Top 5', error: e, stackTrace: stack);
+      DatabaseHealthProvider.reportFailure(e);
+    }
   }
 
   Future<void> reorderTop5(int oldIndex, int newIndex) async {
     if (oldIndex < 0 || oldIndex >= _top5Ids.length) return;
     if (newIndex < 0 || newIndex >= _top5Ids.length) return;
+    // Backup para rollback
+    final backupTop5 = List<String>.from(_top5Ids);
     final ids = [..._top5Ids];
     final String item = ids.removeAt(oldIndex);
     ids.insert(newIndex, item);
     _top5Ids = ids;
     notifyListeners();
-    await _repo.saveTop5Ids(_top5Ids, userId: _currentUserId);
+    try {
+      await _repo.saveTop5Ids(_top5Ids, userId: _currentUserId);
+    } catch (e, stack) {
+      // Rollback
+      _top5Ids = backupTop5;
+      notifyListeners();
+      AppLogger.error('Error al reordenar Top 5', error: e, stackTrace: stack);
+      DatabaseHealthProvider.reportFailure(e);
+    }
   }
 
   /// Actualiza una mezcla existente en la lista de favoritos
   Future<void> updateFavorite(Mix updatedMix) async {
     final index = _favorites.indexWhere((m) => m.id == updatedMix.id);
     if (index == -1) return; // No está en favoritos
-
+    // Backup para rollback
+    final backup = List<Mix>.from(_favorites);
     _favorites = [
       ..._favorites.take(index),
       updatedMix,
       ..._favorites.skip(index + 1),
     ];
     notifyListeners();
-    await _repo.saveFavorites(_favorites, userId: _currentUserId);
+    try {
+      await _repo.saveFavorites(_favorites, userId: _currentUserId);
+    } catch (e, stack) {
+      // Rollback
+      _favorites = backup;
+      notifyListeners();
+      AppLogger.error('Error al actualizar favorito', error: e, stackTrace: stack);
+      DatabaseHealthProvider.reportFailure(e);
+    }
   }
 
   @override

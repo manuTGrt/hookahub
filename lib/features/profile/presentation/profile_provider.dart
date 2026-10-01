@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../../core/providers/database_health_provider.dart';
 import '../../../core/utils/app_error_mapper.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../data/profile_repository.dart';
 import '../domain/profile.dart';
@@ -130,8 +131,9 @@ class ProfileProvider extends ChangeNotifier {
       );
 
       DatabaseHealthProvider.reportSuccess();
-    } catch (e) {
+    } catch (e, stack) {
       _state = const ProfileError('Error cargando perfil');
+      AppLogger.error('Error cargando perfil', error: e, stackTrace: stack);
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       notifyListeners();
@@ -144,7 +146,8 @@ class ProfileProvider extends ChangeNotifier {
       await _repo.updateCurrentUser(update);
       await load();
       return null;
-    } catch (e) {
+    } catch (e, stack) {
+      AppLogger.error('Error guardando perfil', error: e, stackTrace: stack);
       DatabaseHealthProvider.reportFailure(e);
       return 'Error guardando cambios';
     }
@@ -166,7 +169,8 @@ class ProfileProvider extends ChangeNotifier {
       );
       notifyListeners();
       return null;
-    } catch (e) {
+    } catch (e, stack) {
+      AppLogger.error('Error subiendo avatar', error: e, stackTrace: stack);
       DatabaseHealthProvider.reportFailure(e);
       return AppErrorMapper.toSpanish(e);
     }
@@ -186,7 +190,8 @@ class ProfileProvider extends ChangeNotifier {
       );
       notifyListeners();
       return null;
-    } catch (e) {
+    } catch (e, stack) {
+      AppLogger.error('Error eliminando avatar', error: e, stackTrace: stack);
       DatabaseHealthProvider.reportFailure(e);
       return 'No se pudo quitar el avatar';
     }
@@ -206,7 +211,8 @@ class ProfileProvider extends ChangeNotifier {
       );
       notifyListeners();
       return null;
-    } catch (e) {
+    } catch (e, stack) {
+      AppLogger.error('Error estableciendo avatar', error: e, stackTrace: stack);
       DatabaseHealthProvider.reportFailure(e);
       return 'No se pudo establecer el avatar';
     }

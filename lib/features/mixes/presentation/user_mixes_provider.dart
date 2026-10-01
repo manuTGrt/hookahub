@@ -1,3 +1,4 @@
+import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/models/mix.dart';
 import '../../../core/providers/database_health_provider.dart';
@@ -109,8 +110,9 @@ class UserMixesProvider extends ChangeNotifier {
         hasMore: result.length >= _pageSize,
         isLoadingMore: false,
       );
-    } catch (e) {
+    } catch (e, stack) {
       _state = const UserMixesError('No se pudieron cargar tus mezclas');
+      AppLogger.error('Error cargando mezclas del usuario', error: e, stackTrace: stack);
       DatabaseHealthProvider.reportFailure(e);
     } finally {
       notifyListeners();
@@ -148,7 +150,8 @@ class UserMixesProvider extends ChangeNotifier {
           isLoadingMore: false,
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppLogger.error('Error cargando más mezclas', error: e, stackTrace: stack);
       DatabaseHealthProvider.reportFailure(e);
       _state = currentState.copyWith(isLoadingMore: false);
     } finally {

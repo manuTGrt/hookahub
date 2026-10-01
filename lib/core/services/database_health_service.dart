@@ -26,7 +26,7 @@ class DatabaseHealthService {
       // 2. Luego verificar acceso a la base de datos con query ligera
       await _supabaseService.client
           .from('profiles')
-          .select()
+          .select('id')
           .limit(1)
           .timeout(
             const Duration(seconds: 3),
