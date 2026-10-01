@@ -317,26 +317,29 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
 
         // Si no hay reviews y no está cargando
         if (reviews.isEmpty && !provider.isLoading) {
-          return SliverList(
-            delegate: SliverChildListDelegate([
-              _ReviewStats(average: 0, total: 0),
-              const SizedBox(height: 16),
-              _ReviewForm(
-                controller: _reviewController,
-                rating: _newRating,
-                onRatingChanged: (v) => setState(() => _newRating = v),
-                onSubmit: _handleSubmitReview,
-              ),
-              const SizedBox(height: 32),
-              Center(
-                child: Text(
-                  'Sé el primero en valorar este tabaco',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).disabledColor,
+          return SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _ReviewStats(average: 0, total: 0),
+                const SizedBox(height: 16),
+                _ReviewForm(
+                  controller: _reviewController,
+                  rating: _newRating,
+                  onRatingChanged: (v) => setState(() => _newRating = v),
+                  onSubmit: _handleSubmitReview,
+                ),
+                const SizedBox(height: 32),
+                Center(
+                  child: Text(
+                    'Sé el primero en valorar este tabaco',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).disabledColor,
+                    ),
                   ),
                 ),
-              ),
-            ]),
+              ]),
+            ),
           );
         }
 
