@@ -4,16 +4,21 @@ import 'ad_banner_widget.dart';
 /// Tarjeta publicitaria que envuelve un banner de AdMob adaptándolo a la
 /// estética visual de las tarjetas del catálogo de Hookahub.
 class AdBannerCard extends StatelessWidget {
-  const AdBannerCard({super.key, this.color});
+  const AdBannerCard({
+    super.key,
+    this.color,
+    this.margin = const EdgeInsets.symmetric(vertical: 6.0),
+  });
 
   final Color? color;
+  final EdgeInsetsGeometry margin;
 
   @override
   Widget build(BuildContext context) {
     final accent = color ?? Theme.of(context).primaryColor;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6.0),
+      margin: margin,
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.05),

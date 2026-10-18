@@ -1,6 +1,8 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/mix_card.dart';
+import '../../../widgets/ad_banner_card.dart';
 import '../../../core/models/mix.dart';
 import '../../favorites/presentation/favorites_provider.dart';
 import '../../profile/presentation/profile_provider.dart';
@@ -406,6 +408,8 @@ class _CommunityMixesSliver extends StatelessWidget {
   Widget build(BuildContext context) {
     final mixes = context.select<CommunityProvider, List<Mix>>((p) => p.mixes);
 
+    final primaryColor = Theme.of(context).primaryColor;
+
     if (mixes.isEmpty) {
       return SliverFillRemaining(
         child: Center(
@@ -438,21 +442,58 @@ class _CommunityMixesSliver extends StatelessWidget {
       );
     }
 
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            return _CommunityMixItem(
-              key: ValueKey(mixes[index].id),
-              mix: mixes[index],
-              scaleFactor: scaleFactor,
-            );
-          },
-          childCount: mixes.length,
+    // Generador pseudo-aleatorio con semilla basada en la lista para garantizar
+    // estabilidad de posiciones durante el scroll y paginación
+    final random = Random(mixes.firstOrNull?.id.hashCode ?? 42);
+    final slivers = <Widget>[];
+    int currentIndex = 0;
+
+    while (currentIndex < mixes.length) {
+      // Intervalo aleatorio entre 5 y 12 mezclas: 5 + (0..7) => [5, 12]
+      final int chunkSize = 5 + random.nextInt(8);
+      final int chunkEnd = (currentIndex + chunkSize < mixes.length)
+          ? currentIndex + chunkSize
+          : mixes.length;
+      final chunk = mixes.sublist(currentIndex, chunkEnd);
+
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final mix = chunk[index];
+                return _CommunityMixItem(
+                  key: ValueKey(mix.id),
+                  mix: mix,
+                  scaleFactor: scaleFactor,
+                );
+              },
+              childCount: chunk.length,
+            ),
+          ),
         ),
-      ),
-    );
+      );
+
+      // Si aún quedan más elementos por mostrar tras este bloque, insertar tarjeta de banner
+      if (chunkEnd < mixes.length) {
+        slivers.add(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: AdBannerCard(
+                color: primaryColor,
+                margin: const EdgeInsets.only(bottom: 16.0),
+              ),
+            ),
+          ),
+        );
+      }
+
+      currentIndex = chunkEnd;
+    }
+
+    return SliverMainAxisGroup(slivers: slivers);
   }
 }
 
