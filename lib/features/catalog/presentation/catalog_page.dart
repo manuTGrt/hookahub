@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // import '../../../core/constants.dart';
 import '../../../core/models/tobacco.dart';
 import '../../../widgets/tobacco_image.dart';
+import '../../../widgets/ad_banner_card.dart';
 import 'providers/catalog_provider.dart';
 import '../domain/catalog_filters.dart';
 import 'tobacco_detail_page.dart';
@@ -346,7 +348,7 @@ class _SortFilterDropdown extends StatelessWidget {
   }
 }
 
-// Widget de cuadrícula de tabacos con selector granular
+// Widget de cuadrícula de tabacos con selector granular y banners intercalados
 class _CatalogGridSliver extends StatelessWidget {
   const _CatalogGridSliver({required this.scaleFactor});
 
@@ -359,33 +361,67 @@ class _CatalogGridSliver extends StatelessWidget {
     );
     final primaryColor = Theme.of(context).primaryColor;
 
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-      sliver: SliverGrid(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: scaleFactor > 1.5
-              ? 0.65
-              : (scaleFactor > 1.3 ? 0.7 : 0.8),
+    if (items.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    // Generador pseudo-aleatorio con semilla basada en la lista para garantizar
+    // estabilidad de posiciones durante el scroll y la paginación infinita
+    final random = Random(items.firstOrNull?.id.hashCode ?? 42);
+    final slivers = <Widget>[];
+    int currentIndex = 0;
+
+    while (currentIndex < items.length) {
+      // Número par aleatorio entre 6 y 20: 6 + (0..7) * 2 => {6, 8, 10, 12, 14, 16, 18, 20}
+      final int chunkSize = 6 + (random.nextInt(8) * 2);
+      final int chunkEnd = (currentIndex + chunkSize < items.length)
+          ? currentIndex + chunkSize
+          : items.length;
+      final chunk = items.sublist(currentIndex, chunkEnd);
+
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: scaleFactor > 1.5
+                  ? 0.65
+                  : (scaleFactor > 1.3 ? 0.7 : 0.8),
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final t = chunk[index];
+                return _TobaccoCard(
+                  tobacco: t,
+                  scaleFactor: scaleFactor,
+                  baseColor: primaryColor,
+                );
+              },
+              childCount: chunk.length,
+            ),
+          ),
         ),
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            if (index >= items.length) {
-              return const SizedBox.shrink();
-            }
-            final t = items[index];
-            return _TobaccoCard(
-              tobacco: t,
-              scaleFactor: scaleFactor,
-              baseColor: primaryColor,
-            );
-          },
-          childCount: items.length,
-        ),
-      ),
-    );
+      );
+
+      // Si aún quedan más elementos por mostrar tras este bloque, insertar tarjeta de banner
+      if (chunkEnd < items.length) {
+        slivers.add(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+              child: AdBannerCard(color: primaryColor),
+            ),
+          ),
+        );
+      }
+
+      currentIndex = chunkEnd;
+    }
+
+    return SliverMainAxisGroup(slivers: slivers);
   }
 }
 
