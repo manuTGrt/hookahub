@@ -828,3 +828,31 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
      CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES
      ```
   3. Ejecutar `cd ios && pod install` para propagar los cambios a `Pods.xcodeproj`.
+
+## 🔍 Búsqueda Predictiva y Autocompletado Instantáneo
+
+### Arquitectura de Dos Niveles: Historial Local LIFO + Sugerencias Ligeras con Debounce
+
+- **Problema**: Realizar búsquedas completas contra Supabase en cada pulsación de tecla (`onChanged`) satura el ancho de banda móvil, provoca bloqueos en el UI thread y genera carreras de peticiones (*race conditions*) desordenadas si una respuesta lenta llega después de una nueva consulta. Adicionalmente, el usuario espera recordar sus búsquedas recientes sin conexión y poder reutilizarlas o eliminarlas de forma fluida.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Desacoplamiento de Búsqueda Completa vs Sugerencias**:
+     - `SearchProvider`: Responsable de ejecutar la búsqueda profunda (`fetchTobaccos`, `fetchMixes`) con todos sus metadatos y paginación para la pantalla de resultados `SearchResultsPage`.
+     - `SearchSuggestionsProvider`: Responsable de la experiencia instantánea (historial local + autocompletado en vivo).
+  2. **Persistencia Local con LIFO y Deduplicación Case-Insensitive**:
+     - Implementar `SearchHistoryLocalDataSource` respaldado por `SharedPreferences`.
+     - Limitar estrictamente a 8 términos. Al guardar un término, eliminar ocurrencias previas insensibles a mayúsculas/minúsculas y agregarlo al inicio (LIFO).
+  3. **Debouncing (280ms) y Prevención de Carreras de Peticiones (`_latestRequestId`)**:
+     - Toda consulta predictiva se difiere mediante `Timer(const Duration(milliseconds: 280), ...)`.
+     - Cada emisión incrementa un contador secuencial `_latestRequestId`. Al completarse la petición de red, se valida `if (currentRequestId != _latestRequestId) return;`, descartando cualquier respuesta obsoleta generada por mecanografía rápida o retrasos de red.
+  4. **Proyecciones Mínimas y Caché L1 en Memoria**:
+     - Las sugerencias remotas solo solicitan columnas esenciales (`id, name, brand, image_url, rating` en tabacos; `id, name, rating, profiles, mix_components` en mezclas) limitadas a 4 registros por categoría.
+     - `SearchSuggestionsRepository` mantiene un `Map<String, List<SearchSuggestion>>` en memoria (LRU de hasta 40 entradas) para que al retroceder caracteres (backspace) el autocompletado sea instantáneo (0ms).
+  5. **Modelado Estricto de Estados (`SearchSuggestionsState`)**:
+     - Implementar una `sealed class` con `SearchSuggestionsInitial`, `SearchSuggestionsLoading`, `SearchSuggestionsLoaded` y `SearchSuggestionsError`.
+     - **Regla Estricta**: La propiedad `recentSearches: List<String>` debe ser obligatoria en la clase base sellada, garantizando que el historial reciente esté disponible ininterrumpidamente durante estados de carga o error sin parpadeos en pantalla.
+  6. **Capa Visual en Stack (`SearchSuggestionsOverlay`) y Manejo de Teclado**:
+     - En `MainNavigation`, montar `SearchSuggestionsOverlay` dentro del `body: Stack(...)` condicionado por `_isSearching`.
+     - Configurar `CustomScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag)` para ocultar el teclado suavemente al hacer scroll.
+     - Integrar `PopScope` para que el botón de retroceso colapse el modo de búsqueda antes de cerrar la pantalla.
+     - Ocultar `bottomNavigationBar` durante la búsqueda (`bottomNavigationBar: _isSearching ? null : Container(...)`) para maximizar el área visible de sugerencias sobre el teclado virtual.
+

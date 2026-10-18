@@ -24,6 +24,9 @@ import 'features/history/data/history_repository.dart';
 import 'features/home/data/home_stats_repository.dart';
 import 'features/home/presentation/home_stats_provider.dart';
 import 'features/search/presentation/search_provider.dart';
+import 'features/search/data/datasources/search_history_local_data_source.dart';
+import 'features/search/data/repositories/search_suggestions_repository.dart';
+import 'features/search/presentation/providers/search_suggestions_provider.dart';
 import 'features/catalog/data/tobacco_repository.dart';
 import 'features/catalog/presentation/providers/catalog_provider.dart';
 import 'features/notifications/data/notifications_repository.dart';
@@ -85,6 +88,14 @@ class HookahubApp extends StatelessWidget {
           create: (_) => SearchProvider(
             tobaccoRepository: TobaccoRepository(SupabaseService()),
             communityRepository: CommunityRepository(SupabaseService()),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SearchSuggestionsProvider(
+            historyDataSource: SearchHistoryLocalDataSourceImpl(),
+            suggestionsRepository: SearchSuggestionsRepositoryImpl(
+              SupabaseService(),
+            ),
           ),
         ),
         ChangeNotifierProvider(

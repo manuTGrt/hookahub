@@ -17,6 +17,11 @@ import '../features/profile/presentation/profile_provider.dart';
 import '../core/providers/database_health_provider.dart';
 import '../features/search/presentation/search_provider.dart';
 import '../features/search/presentation/search_results_page.dart';
+import '../features/search/domain/models/search_suggestion.dart';
+import '../features/search/presentation/providers/search_suggestions_provider.dart';
+import '../features/search/presentation/widgets/search_suggestions_overlay.dart';
+import '../features/catalog/presentation/tobacco_detail_page.dart';
+import '../features/community/presentation/mix_detail_page.dart';
 import 'notification_icon.dart';
 import '../features/favorites/presentation/favorites_provider.dart';
 
@@ -92,6 +97,81 @@ class MainNavigationPageState extends State<MainNavigationPage> {
     });
   }
 
+  Future<void> _executeSearch(String query) async {
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty) return;
+
+    // Cerrar teclado
+    FocusScope.of(context).unfocus();
+
+    // Capturar providers antes del gap asíncrono
+    final suggestionsProvider = context.read<SearchSuggestionsProvider>();
+    final searchProvider = context.read<SearchProvider>();
+
+    // Guardar en historial local
+    await suggestionsProvider.saveSearch(cleanQuery);
+
+    // Ejecutar búsqueda global completa
+    await searchProvider.search(cleanQuery);
+
+    if (!mounted || !context.mounted) return;
+
+    // Resetear modo de búsqueda y limpiar input
+    setState(() {
+      _isSearching = false;
+      _searchController.clear();
+    });
+    suggestionsProvider.reset();
+
+    // Navegar a la página de resultados
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SearchResultsPage(
+          query: cleanQuery,
+          tobaccos: searchProvider.tobaccoResults,
+          mixes: searchProvider.mixResults,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSuggestionSelected(SearchSuggestion suggestion) async {
+    FocusScope.of(context).unfocus();
+
+    final suggestionsProvider = context.read<SearchSuggestionsProvider>();
+    await suggestionsProvider.saveSearch(suggestion.title);
+
+    if (!mounted || !context.mounted) return;
+
+    setState(() {
+      _isSearching = false;
+      _searchController.clear();
+    });
+    suggestionsProvider.reset();
+
+    if (suggestion.isTobacco) {
+      if (suggestion.tobacco != null) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => TobaccoDetailPage(tobacco: suggestion.tobacco!),
+          ),
+        );
+      } else {
+        await _executeSearch(suggestion.title);
+      }
+    } else if (suggestion.isMix) {
+      if (suggestion.mix != null) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => MixDetailPage(mix: suggestion.mix!),
+          ),
+        );
+      } else {
+        await _executeSearch(suggestion.title);
+      }
+    }
+  }
+
   final List<WidgetBuilder> _pageBuilders = [
     (_) => const HomePage(), // Index 0: Home
     (_) => const CatalogPage(), // Index 1: Catálogo
@@ -118,6 +198,16 @@ class MainNavigationPageState extends State<MainNavigationPage> {
       canPop: canSystemPop,
       onPopInvokedWithResult: (bool didPop, dynamic result) async {
         if (didPop) return;
+
+        if (_isSearching) {
+          setState(() {
+            _isSearching = false;
+            _searchController.clear();
+          });
+          context.read<SearchSuggestionsProvider>().reset();
+          FocusScope.of(context).unfocus();
+          return;
+        }
 
         final nav = _navigatorKeys[_currentIndex].currentState;
         if (nav != null && nav.canPop()) {
@@ -204,6 +294,17 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                   size: 24,
                                 ),
                                 onPressed: () {
+                                  if (_isSearching) {
+                                    setState(() {
+                                      _isSearching = false;
+                                      _searchController.clear();
+                                    });
+                                    context
+                                        .read<SearchSuggestionsProvider>()
+                                        .reset();
+                                    FocusScope.of(context).unfocus();
+                                    return;
+                                  }
                                   final nav = _navigatorKeys[_currentIndex]
                                       .currentState;
                                   if (nav != null && nav.canPop()) {
@@ -247,39 +348,14 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                         focusNode: _searchFocusNode,
                                         controller: _searchController,
                                         textInputAction: TextInputAction.search,
-                                        onSubmitted: (value) async {
-                                          if (value.trim().isEmpty) return;
-
-                                          // Cerrar teclado
-                                          FocusScope.of(context).unfocus();
-
-                                          // Navegar a la página de búsqueda
-                                          final searchProvider = context
-                                              .read<SearchProvider>();
-                                          await searchProvider.search(value);
-
-                                          if (!mounted || !context.mounted) {
-                                            return;
-                                          }
-
-                                          // Navegar a la página de resultados
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) => SearchResultsPage(
-                                                query: value,
-                                                tobaccos: searchProvider
-                                                    .tobaccoResults,
-                                                mixes:
-                                                    searchProvider.mixResults,
-                                              ),
-                                            ),
-                                          );
-
-                                          // Resetear el estado de búsqueda
-                                          setState(() {
-                                            _isSearching = false;
-                                            _searchController.clear();
-                                          });
+                                        onChanged: (value) {
+                                          context
+                                              .read<SearchSuggestionsProvider>()
+                                              .onQueryChanged(value);
+                                          setState(() {});
+                                        },
+                                        onSubmitted: (value) {
+                                          _executeSearch(value);
                                         },
                                         decoration: InputDecoration(
                                           hintText:
@@ -304,6 +380,9 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                                     setState(() {
                                                       _searchController.clear();
                                                     });
+                                                    context
+                                                        .read<SearchSuggestionsProvider>()
+                                                        .onQueryChanged('');
                                                     _searchFocusNode
                                                         .requestFocus();
                                                   },
@@ -495,6 +574,9 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                         _isSearching = !_isSearching;
                                       });
                                       if (_isSearching) {
+                                        context
+                                            .read<SearchSuggestionsProvider>()
+                                            .loadRecentSearches();
                                         // Enfocar tras el siguiente frame para asegurar que el widget exista
                                         WidgetsBinding.instance
                                             .addPostFrameCallback((_) {
@@ -502,6 +584,9 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                             });
                                       } else {
                                         _searchController.clear();
+                                        context
+                                            .read<SearchSuggestionsProvider>()
+                                            .reset();
                                         FocusScope.of(context).unfocus();
                                       }
                                     },
@@ -533,23 +618,48 @@ class MainNavigationPageState extends State<MainNavigationPage> {
 
         // Contenido con Navigator por pestaña y montaje bajo demanda
         body: Stack(
-          children: List.generate(_pageBuilders.length, (index) {
-            final bool isActive = _currentIndex == index;
-            // Construir Navigator solo cuando el tab se activa por primera vez
-            _navigatorCache[index] ??= index == 0
-                ? _buildTabNavigator(index)
-                : null;
-            final Widget child =
-                _navigatorCache[index] ?? const SizedBox.shrink();
-            return Offstage(
-              offstage: !isActive,
-              child: TickerMode(enabled: isActive, child: child),
-            );
-          }),
+          children: [
+            ...List.generate(_pageBuilders.length, (index) {
+              final bool isActive = _currentIndex == index;
+              // Construir Navigator solo cuando el tab se activa por primera vez
+              _navigatorCache[index] ??= index == 0
+                  ? _buildTabNavigator(index)
+                  : null;
+              final Widget child =
+                  _navigatorCache[index] ?? const SizedBox.shrink();
+              return Offstage(
+                offstage: !isActive,
+                child: TickerMode(enabled: isActive, child: child),
+              );
+            }),
+            if (_isSearching)
+              Positioned.fill(
+                child: SearchSuggestionsOverlay(
+                  onTermSelected: (term) {
+                    _searchController.text = term;
+                    _executeSearch(term);
+                  },
+                  onSuggestionSelected: (suggestion) {
+                    _handleSuggestionSelected(suggestion);
+                  },
+                  onFillQuery: (fill) {
+                    _searchController.text = fill;
+                    _searchController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: fill.length),
+                    );
+                    context
+                        .read<SearchSuggestionsProvider>()
+                        .onQueryChanged(fill);
+                  },
+                ),
+              ),
+          ],
         ),
 
         // Barra de navegación inferior personalizada
-        bottomNavigationBar: Container(
+        bottomNavigationBar: _isSearching
+            ? null
+            : Container(
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
             boxShadow: [
