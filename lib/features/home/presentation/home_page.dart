@@ -7,6 +7,7 @@ import '../../favorites/presentation/favorites_page.dart';
 import '../../catalog/domain/catalog_filters.dart';
 import '../../community/domain/community_filters.dart';
 import '../../../widgets/main_navigation.dart';
+import '../../../widgets/ad_banner_widget.dart';
 import 'home_stats_provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -239,6 +240,8 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ),
+            const SizedBox(height: 16),
+            const AdBannerWidget(),
           ],
         ),
       ),

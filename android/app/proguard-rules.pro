@@ -8,6 +8,18 @@
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 
+# Flutter Deferred Components (evita errores de R8 al no usar Play Core split install)
+-dontwarn com.google.android.play.core.**
+
+# Google Mobile Ads (AdMob)
+-keep public class com.google.android.gms.ads.** {
+    public *;
+}
+-keep class com.google.ads.mediation.** {
+    public *;
+}
+-dontwarn com.google.android.gms.ads.**
+
 # Google Play Services & Google Sign-In
 -keep class com.google.android.gms.auth.api.signin.** { *; }
 -keep class com.google.android.gms.common.api.** { *; }

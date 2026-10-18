@@ -800,3 +800,31 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
 
 
 
+
+### Cabeceras No Modulares en Frameworks iOS (google_mobile_ads y use_frameworks!)
+
+- **Problema**: En iOS, al compilar con Xcode proyectos Flutter que usan `google_mobile_ads` y CocoaPods con `use_frameworks!`, el compilador Clang falla con el error:
+  ```text
+  Include of non-modular header inside framework module 'google_mobile_ads.FLTAd_Internal': '.../GoogleMobileAds.framework/PrivateHeaders/GoogleMobileAds_Beta.h'
+  ```
+- **Causa**: Clang impone límites estrictos entre módulos. `FLTAd_Internal.h` y `FLTAdPreloader.h` incluyen cabeceras privadas (`GoogleMobileAds_Beta.h`) de otro framework (`GoogleMobileAds`), lo que Clang prohíbe por defecto en módulos de framework.
+- **Solución (Regla de Oro)**:
+  1. En `ios/Podfile`, dentro de `post_install`, iterar sobre todos los targets y configurar `CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = 'YES'`:
+     ```ruby
+     post_install do |installer|
+       installer.pods_project.targets.each do |target|
+         flutter_additional_ios_build_settings(target)
+         target.build_configurations.each do |config|
+           config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+           if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.0
+             config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+           end
+         end
+       end
+     end
+     ```
+  2. En `ios/Flutter/Debug.xcconfig` y `ios/Flutter/Release.xcconfig`, añadir la línea:
+     ```xcconfig
+     CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES
+     ```
+  3. Ejecutar `cd ios && pod install` para propagar los cambios a `Pods.xcodeproj`.

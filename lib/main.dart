@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/env.dart';
 import 'core/utils/app_logger.dart';
@@ -50,6 +51,9 @@ Future<void> main() async {
     // Para OAuth (Google) el redirect URL se gestiona via deep links en cada plataforma.
     // y podremos pasar opciones adicionales si fuese necesario.
   );
+
+  // Inicializar el SDK de Google Mobile Ads (AdMob)
+  await MobileAds.instance.initialize();
 
   runApp(const HookahubApp());
 }

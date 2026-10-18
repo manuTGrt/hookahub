@@ -14,6 +14,7 @@ import 'community_provider.dart';
 import '../domain/mix_percentage_calculator.dart';
 import '../../../core/utils/app_error_mapper.dart';
 import '../../../core/utils/app_toast.dart';
+import '../../../core/services/interstitial_ad_manager.dart';
 
 // Utilidad: convierte cada palabra a "Title Case" (primera mayúscula, resto minúsculas).
 String titleCase(String input) {
@@ -64,6 +65,8 @@ class _CreateMixPageState extends State<CreateMixPage> {
   @override
   void initState() {
     super.initState();
+    // Precargar con antelación el anuncio intersticial
+    InterstitialAdManager.instance.preload();
     if (_isEdit) {
       // Usar addPostFrameCallback para asegurar que el contexto esté disponible
       SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -324,14 +327,20 @@ class _CreateMixPageState extends State<CreateMixPage> {
       ).pop(); // Cerrar diálogo de carga
 
       if (resultMix != null) {
-        // Retornar a la pantalla anterior con la mezcla creada/editada
-        Navigator.of(context).pop(resultMix);
+        // Mostrar anuncio intersticial precargado en la transición natural post-creación
+        InterstitialAdManager.instance.show(
+          onComplete: () {
+            if (!mounted) return;
+            // Retornar a la pantalla anterior con la mezcla creada/editada
+            Navigator.of(context).pop(resultMix);
 
-        AppToast.showSuccess(
-          context,
-          _isEdit
-              ? '¡Mezcla actualizada exitosamente!'
-              : '¡Mezcla creada exitosamente!',
+            AppToast.showSuccess(
+              context,
+              _isEdit
+                  ? '¡Mezcla actualizada exitosamente!'
+                  : '¡Mezcla creada exitosamente!',
+            );
+          },
         );
       } else {
         AppToast.showError(
