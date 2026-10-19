@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants.dart';
 import '../../../core/theme_provider.dart';
 import '../../../core/utils/app_toast.dart';
+import '../../../widgets/main_navigation.dart';
+import '../../feedback/presentation/contact_page.dart';
 
 /// Página de configuración donde el usuario puede ajustar
 /// las preferencias de la aplicación
@@ -242,7 +244,7 @@ class SettingsPage extends StatelessWidget {
         context,
         icon: Icons.contact_mail_outlined,
         title: 'Contáctanos',
-        subtitle: 'Sugiere nuevos tabacos o reporta un error',
+        subtitle: 'Envía sugerencias, dudas o reporta un error',
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () => _contactUs(context),
       ),
@@ -353,87 +355,16 @@ class SettingsPage extends StatelessWidget {
     }
   }
 
-  void _contactUs(BuildContext context) async {
-    final Uri emailUri = Uri(
-      scheme: 'mailto',
-      path: 'manutgrt@gmail.com',
-      queryParameters: {'subject': 'Hookahub'},
-    );
-
-    try {
-      // Intentar abrir directamente el mailto (no dependemos de canLaunchUrl)
-      final launched = await launchUrl(
-        emailUri,
-        mode: LaunchMode.externalApplication,
+  void _contactUs(BuildContext context) {
+    final nav = MainNavigationPage.of(context);
+    if (nav != null) {
+      nav.pushInCurrentTab('Contáctanos', const ContactPage());
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const ContactPage(),
+        ),
       );
-      if (launched) return;
-
-      // Fallback: ofrecer opciones para instalar/usar correo
-      if (context.mounted) {
-        await showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('No hay app de correo por defecto'),
-            content: const Text(
-              'Puedes abrir Gmail en el navegador o instalar una app de correo.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(ctx).pop();
-                  final webCompose = Uri.parse(
-                    'https://mail.google.com/mail/?view=cm&to=manutgrt@gmail.com&su=Hookahub',
-                  );
-                  await launchUrl(
-                    webCompose,
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
-                child: const Text('Abrir Gmail Web'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(ctx).pop();
-                  // Abrir Play Store/App Store para apps de correo
-                  if (Platform.isAndroid) {
-                    final market = Uri.parse('market://search?q=email');
-                    if (!await launchUrl(market)) {
-                      await launchUrl(
-                        Uri.parse(
-                          'https://play.google.com/store/search?q=email&c=apps',
-                        ),
-                        mode: LaunchMode.externalApplication,
-                      );
-                    }
-                  } else if (Platform.isIOS) {
-                    await launchUrl(
-                      Uri.parse('https://apps.apple.com/search?term=email'),
-                      mode: LaunchMode.externalApplication,
-                    );
-                  }
-                },
-                child: const Text('Buscar app de correo'),
-              ),
-            ],
-          ),
-        );
-      }
-
-      // Último recurso: abrir Gmail web compose
-      final webCompose = Uri.parse(
-        'https://mail.google.com/mail/?view=cm&to=manutgrt@gmail.com&su=Hookahub',
-      );
-      if (await launchUrl(webCompose, mode: LaunchMode.externalApplication)) {
-        return;
-      }
-
-      if (context.mounted) {
-        AppToast.showInfo(context, 'No se pudo abrir ninguna app de correo');
-      }
-    } catch (e) {
-      if (context.mounted) {
-        AppToast.showError(context, 'Error al abrir correo: $e');
-      }
     }
   }
 

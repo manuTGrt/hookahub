@@ -208,12 +208,6 @@ class _CommunityPageState extends State<CommunityPage> {
           elevation: 12,
           color: Theme.of(context).cardColor,
         ),
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          },
-        ),
       ),
       child: PopupMenuButton<CommunitySortOption>(
         onSelected: (CommunitySortOption option) =>

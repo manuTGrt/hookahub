@@ -928,13 +928,18 @@ class MainNavigationPageState extends State<MainNavigationPage> {
       _navigatorCache[_currentIndex] = _buildTabNavigator(_currentIndex);
     }
     final nav = _navigatorKeys[_currentIndex].currentState;
+    final previousTitle = _overrideTitles[_currentIndex];
     setState(() {
       _overrideTitles[_currentIndex] = title;
       _showBack = true;
     });
     nav?.push(MaterialPageRoute(builder: (_) => page)).then((_) {
-      // Al volver, actualizar estado
-      _updateBackAndTitle();
+      if (mounted) {
+        setState(() {
+          _overrideTitles[_currentIndex] = previousTitle;
+        });
+        _updateBackAndTitle();
+      }
     });
   }
 }

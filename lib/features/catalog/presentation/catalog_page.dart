@@ -175,13 +175,6 @@ class _SortFilterDropdown extends StatelessWidget {
           elevation: 12,
           color: Theme.of(context).cardColor,
         ),
-        // Animación de transición suave
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          },
-        ),
       ),
       child: PopupMenuButton<SortOption>(
         onSelected: (SortOption option) {

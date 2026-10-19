@@ -543,6 +543,17 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
      ```
   3. Ejecutar `pod install` dentro del directorio `ios/` para regenerar `Pods.xcodeproj` con los nuevos targets.
 
+### Error PhaseScriptExecution por `CupertinoPageTransitionsBuilder` en Flutter 3.47+
+
+- **Problema**: Tras actualizar a Flutter 3.47+ / Dart 3.13+, Xcode falla durante la fase `Run Script` (`kernel_snapshot_program`) con el error opaco:
+  `Command PhaseScriptExecution failed with a nonzero exit code`
+  Al inspeccionar la salida detallada de compilación de Dart, se revela el fallo subyacente:
+  `Error: The method 'CupertinoPageTransitionsBuilder' isn't defined` / `Error: Not a constant expression`.
+- **Causa**: `CupertinoPageTransitionsBuilder` fue refactorizado en Flutter 3.47 para dar soporte a gestos predictivos de retroceso en iOS, perdiendo compatibilidad con llamadas `const` o requiriendo imports específicos si se invoca fuera de las transiciones globales de página. Además, instanciar `pageTransitionsTheme` dentro de `Theme.copyWith()` para envolver componentes individuales (como `PopupMenuButton`) es un antipatrón redundante, pues los popups utilizan `popupMenuTheme` y no rutas de página (`PageRoute`).
+- **Solución (Regla de Oro)**:
+  1. Eliminar cualquier declaración innecesaria de `pageTransitionsTheme` en `Theme` widgets locales que solo estilizan menús emergentes o diálogos (como ocurría en `CatalogPage` y `CommunityPage`).
+  2. Si se configuran transiciones de página a nivel global en `ThemeData` (`lib/core/theme.dart`), asegurarse de no usar `const` en builders que ya no posean constructores constantes en versiones recientes del SDK.
+
 ## 🚀 Migración y Resolución de Deprecaciones (Flutter 3.27+ & Dependencias Modernas)
 
 ### 1. Inicialización de Supabase (`publishableKey`)
