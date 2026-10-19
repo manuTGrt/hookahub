@@ -41,6 +41,21 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
 - **Solución (Regla de Oro)**: Configurar indefectiblemente `android:allowBackup="false"` dentro de la etiqueta `<application>` en `android/app/src/main/AndroidManifest.xml` para garantizar que las sesiones no se sincronicen fuera del sandbox seguro del dispositivo físico.
 - **Protección ProGuard/R8 para Release**: En compilaciones productivas (`buildTypes.release` en `android/app/build.gradle.kts`), se debe vincular un archivo `proguard-rules.pro` que declare explícitamente `-keep` sobre los bindings de Flutter y los paquetes `com.google.android.gms.auth.api.signin.**` para evitar que el compilador R8 descarte o dañe clases requeridas por Google Sign-In durante la ofuscación.
 
+### Compatibilidad de Toolchain Android en Flutter 3.47+ (Gradle, AGP, Kotlin y JDK)
+
+- **Problema**: Tras actualizar a Flutter 3.47+ (o al cambiar de versión de Android Studio), pueden surgir múltiples incompatibilidades en cascada durante `flutter build apk`:
+  1. Gradle 8.11.1 inferior al mínimo requerido por Flutter 3.47 (`8.14.0`).
+  2. Android Studio incluye un JBR (Java 25) que no es compatible con Gradle 8.x (requiere Gradle 9+).
+  3. El Android Gradle Plugin (AGP) 8.9.1 es inferior al mínimo soportado por Flutter (`8.11.1`).
+  4. El plugin de Kotlin (`org.jetbrains.kotlin.android`) 2.2.0 es inferior al mínimo soportado (`2.2.20`).
+- **Solución y Matriz de Versiones**:
+  - **JDK**: Apuntar Flutter a JDK 21 LTS mediante `flutter config --jdk-dir=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home` para evitar el JBR experimental de Android Studio.
+  - **Gradle Wrapper** (`android/gradle/wrapper/gradle-wrapper.properties`): Fijar `distributionUrl=https\://services.gradle.org/distributions/gradle-8.14-bin.zip`.
+  - **AGP y Kotlin** (`android/settings.gradle.kts`):
+    - `id("com.android.application") version "8.11.1"`
+    - `id("org.jetbrains.kotlin.android") version "2.2.20"`
+  - **Flags DSL** (`android/gradle.properties`): Declarar `android.builtInKotlin=false` y `android.newDsl=false` para garantizar compatibilidad con los plugins actuales.
+
 
 ### Estandarización de Capas por Feature (Clean Architecture)
 
