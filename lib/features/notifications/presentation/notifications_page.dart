@@ -4,11 +4,9 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'notifications_provider.dart';
 import '../../../core/models/notification.dart';
 import '../../../core/constants.dart';
-import '../../community/presentation/mix_detail_page.dart';
-import '../../../core/models/mix.dart';
-import '../../catalog/presentation/tobacco_detail_page.dart';
-import '../../catalog/presentation/providers/catalog_provider.dart';
 import '../../../core/utils/app_toast.dart';
+import 'adapters/notification_presentation_adapter.dart';
+import 'handlers/notification_action_handler.dart';
 
 /// Página completa de notificaciones
 class NotificationsPage extends StatefulWidget {
@@ -221,7 +219,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       child: NotificationTile(
                         notification: notification,
                         isDark: isDark,
-                        onTap: () => _handleNotificationTap(context, notification),
+                        onTap: () => NotificationActionHandler.handleTap(
+                          context,
+                          notification,
+                        ),
                         onDismiss: () =>
                             provider.deleteNotification(notification.id),
                       ),
@@ -233,83 +234,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
         },
       ),
     );
-  }
-
-  /// Manejar tap en notificación
-  void _handleNotificationTap(
-    BuildContext context,
-    AppNotification notification,
-  ) {
-    // Marcar como leída
-    if (!notification.isRead) {
-      context.read<NotificationsProvider>().markAsRead(notification.id);
-    }
-
-    // Navegar según el tipo
-    _navigateToNotificationTarget(context, notification);
-  }
-
-  /// Navegar al destino de la notificación
-  Future<void> _navigateToNotificationTarget(
-    BuildContext context,
-    AppNotification notification,
-  ) async {
-    // Navegar según el tipo de notificación
-    switch (notification.type) {
-      case NotificationType.reviewOnMyMix:
-      case NotificationType.favoriteMyMix:
-      case NotificationType.mixTrending:
-        // Navegar a la página de detalle de la mezcla
-        final mixId = notification.data['mix_id'] as String?;
-        final mixName = notification.data['mix_name'] as String?;
-
-        if (mixId != null && mixName != null) {
-          // Crear un objeto Mix mínimo para la navegación
-          final mix = Mix(
-            id: mixId,
-            name: mixName,
-            author: 'Cargando...',
-            rating: 0.0,
-            reviews: 0,
-            ingredients: [],
-            color: const Color(0xFF72C8C1),
-          );
-
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => MixDetailPage(mix: mix)),
-          );
-        }
-        break;
-
-      case NotificationType.newTobacco:
-        final tobaccoId = notification.data['tobacco_id'] as String?;
-
-        if (tobaccoId != null) {
-          // Mostrar pequeño feedback visual si tarda
-          final tobacco = await context.read<CatalogProvider>().getTobaccoById(
-            tobaccoId,
-          );
-
-          if (!context.mounted) return;
-
-          if (tobacco != null) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => TobaccoDetailPage(tobacco: tobacco),
-              ),
-            );
-          } else {
-            AppToast.showInfo(context, 'El tabaco ya no se encuentra disponible');
-          }
-        } else {
-          AppToast.showInfo(context, 'No se pudo abrir el tabaco (datos incompletos)');
-        }
-        break;
-
-      default:
-        // Para otros tipos, mostrar mensaje
-        AppToast.showInfo(context, 'Notificación: ${notification.title}');
-    }
   }
 }
 
@@ -330,6 +254,8 @@ class NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final uiModel = NotificationPresentationAdapter.adapt(context, notification);
+
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
@@ -373,42 +299,49 @@ class NotificationTile extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Icono de la notificación
+                  // Icono temático de la notificación
                   Container(
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: notification.color.withValues(alpha: 0.15),
+                      color: uiModel.accentColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      notification.icon,
-                      color: notification.color,
+                      uiModel.icon,
+                      color: uiModel.accentColor,
                       size: 24,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Contenido
+                  // Contenido enriquecido
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Expanded(
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: uiModel.accentColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
                               child: Text(
-                                notification.title,
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(
-                                      fontWeight: notification.isRead
-                                          ? FontWeight.w500
-                                          : FontWeight.bold,
-                                      color: isDark ? darkNavy : navy,
-                                    ),
+                                uiModel.categoryBadge,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.6,
+                                  color: uiModel.accentColor,
+                                ),
                               ),
                             ),
+                            const Spacer(),
                             if (!notification.isRead) ...[
-                              const SizedBox(width: 8),
                               Container(
                                 width: 8,
                                 height: 8,
@@ -422,11 +355,20 @@ class NotificationTile extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          notification.message,
+                          uiModel.title,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: notification.isRead
+                                    ? FontWeight.w600
+                                    : FontWeight.bold,
+                                color: isDark ? darkNavy : navy,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          uiModel.message,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: isDark
                                     ? darkNavy.withValues(alpha: 0.8)
                                     : navy.withValues(alpha: 0.7),

@@ -878,3 +878,26 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   3. **Aislamiento de Rebuilds en Listas/Slivers**: Extraer un widget dedicado (ej. `_TobaccoMixCard` o `_MixItem`) como `StatelessWidget`. Esto aísla el scope de `context.select`, asegurando que al marcar o desmarcar una mezcla solo se reconstruya dicha tarjeta y no el sliver/listado completo.
   4. **Garantía de Inicialización**: Si la pantalla puede ser abierta directamente desde navegación externa o catálogo, asegurar en el `initState` que si `!favProvider.isLoaded && !favProvider.isLoading`, se invoque `favProvider.load()`.
 
+## 🔔 Notificaciones Forward-Compatible y Defensa en Frontera
+
+### Deserialización Defensiva, Adaptador de Presentación y Manejo Desacoplado de Acciones
+
+- **Problema**: La emisión de nuevos tipos de notificación desde Supabase o el panel administrativo (ej. `general_announcement`, `feedback_response`, `system_maintenance`) generaba fallos silenciosos o crashes:
+  1. Enums cerrados con fallback ciego a `reviewOnMyMix` que transformaba cualquier anuncio o respuesta en *"Alguien comentó en tu mezcla"*.
+  2. Parseo rígido del JSONB `data` que asumía claves específicas de mezclas e ignoraba títulos y mensajes dinámicos enviados por el backend (`title`, `message`, `subject`, `body`).
+  3. Violación de Clean Architecture al acoplar colores (`Colors.blue`) e iconos (`IconData`) fijos dentro del modelo de dominio.
+  4. Falta de navegación/interacción al pulsar anuncios o respuestas de soporte (solo se mostraba un toast sin posibilidad de leer el contenido extenso).
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Enum Tolerante (`NotificationType`)**:
+     - Declarar un caso `unknown` con wireValue `'unknown'`.
+     - Implementar `fromString` seguro que compare valores normalizados (`wireValue == normalized`) y garantice fallback a `NotificationType.unknown` sin lanzar jamás una excepción.
+  2. **Value Object de Payload (`NotificationPayload`)**:
+     - Deserializar el mapa `data` inspeccionando aliases semánticos comunes (`title`/`subject`/`heading` y `message`/`body`/`content`/`description`) con null-safety estricto.
+  3. **Entidad Pura de Dominio (`AppNotification`)**:
+     - Residir en `lib/features/notifications/domain/entities/app_notification.dart` sin dependencias de Flutter UI.
+     - Resolver `title` y `message` de forma dinámica: priorizando el valor explícito en el payload y recurriendo a un fallback semántico basado en el tipo.
+  4. **Adaptador de Presentación (`NotificationPresentationAdapter`)**:
+     - Mapear la entidad pura hacia `NotificationUiModel` (icono temático, micro-badge de categoría como `SOPORTE`, `ANUNCIO` o `SISTEMA`, y colores reactivos al brillo activo mediante `constants.dart`).
+  5. **Manejador Desacoplado de Acciones (`NotificationActionHandler`)**:
+     - Centralizar la pulsación: marcar como leída de forma optimista, navegar a rutas específicas si existen `mix_id` o `tobacco_id`, o desplegar un modal inferior accesible (`NotificationDetailSheet`) con diseño plano y scrollable para anuncios y soporte.
+
