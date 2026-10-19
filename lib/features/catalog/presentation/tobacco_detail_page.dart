@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/models/tobacco.dart';
+import '../../../core/models/mix.dart';
 import '../../../core/models/review.dart';
+import '../../favorites/presentation/favorites_provider.dart';
 import '../../../widgets/mix_card.dart';
 import '../../../widgets/app_segmented_control.dart';
 import '../../../widgets/tobacco_image.dart';
@@ -86,6 +88,14 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
     // Cargar reseñas reales
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TobaccoReviewsProvider>().loadReviews(widget.tobacco.id);
+    });
+
+    // Sincronizar favoritos si aún no han cargado
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final fav = context.read<FavoritesProvider>();
+      if (!fav.isLoaded && !fav.isLoading) {
+        fav.load();
+      }
     });
   }
 
@@ -276,21 +286,7 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
               }
 
               final m = provider.mixes[index];
-              return MixCard(
-                mix: m,
-                isFavorite:
-                    false, // TODO: Conectar con favoritos si es necesario
-                onFavoriteTap: () {},
-                onShare: () => SharePlus.instance.share(
-                  ShareParams(text: 'Mira esta mezcla: ${m.name}'),
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => MixDetailPage(mix: m)),
-                  );
-                },
-              );
+              return _TobaccoMixCard(mix: m);
             },
           ),
         );
@@ -738,5 +734,40 @@ class _ReviewTile extends StatelessWidget {
     if (diff.inHours >= 1) return '${diff.inHours}h';
     if (diff.inMinutes >= 1) return '${diff.inMinutes}m';
     return 'ahora';
+  }
+}
+
+class _TobaccoMixCard extends StatelessWidget {
+  const _TobaccoMixCard({required this.mix});
+
+  final Mix mix;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFavorite = context.select<FavoritesProvider, bool>(
+      (fav) => fav.favorites.any((m) => m.id == mix.id),
+    );
+
+    return MixCard(
+      mix: mix,
+      isFavorite: isFavorite,
+      onFavoriteTap: () async {
+        final fav = context.read<FavoritesProvider>();
+        if (isFavorite) {
+          await fav.removeFavorite(mix.id);
+        } else {
+          await fav.addFavorite(mix);
+        }
+      },
+      onShare: () => SharePlus.instance.share(
+        ShareParams(text: 'Mira esta mezcla: ${mix.name}'),
+      ),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)),
+        );
+      },
+    );
   }
 }

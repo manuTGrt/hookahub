@@ -867,3 +867,14 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
      - Integrar `PopScope` para que el botón de retroceso colapse el modo de búsqueda antes de cerrar la pantalla.
      - Ocultar `bottomNavigationBar` durante la búsqueda (`bottomNavigationBar: _isSearching ? null : Container(...)`) para maximizar el área visible de sugerencias sobre el teclado virtual.
 
+## ❤️ Consistencia de Estado en Componentes Globales
+
+### Integración Reactiva de Favoritos en Tarjetas de Mezclas (`MixCard`)
+
+- **Problema**: Al mostrar tarjetas `MixCard` en pantallas secundarias o de agregación (ej. detalles de tabaco `TobaccoDetailPage`), dejar `isFavorite: false` con `TODO` o callbacks `onFavoriteTap` vacíos rompe la consistencia del estado de la aplicación, haciendo que el corazón aparezca desmarcado a pesar de que la mezcla esté guardada en la lista de favoritos del usuario.
+- **Solución (Regla de Oro)**:
+  1. **Vinculación Reactiva**: En cualquier pantalla que renderice listas de mezclas con `MixCard`, se debe vincular `isFavorite` reactivamente con `context.select<FavoritesProvider, bool>((fav) => fav.favorites.any((m) => m.id == mix.id))`.
+  2. **Interacción Bidireccional**: En el callback `onFavoriteTap`, consultar `context.read<FavoritesProvider>()` y ejecutar `removeFavorite(mix.id)` o `addFavorite(mix)` según corresponda para reflejar cambios instantáneos y consistentes en toda la app.
+  3. **Aislamiento de Rebuilds en Listas/Slivers**: Extraer un widget dedicado (ej. `_TobaccoMixCard` o `_MixItem`) como `StatelessWidget`. Esto aísla el scope de `context.select`, asegurando que al marcar o desmarcar una mezcla solo se reconstruya dicha tarjeta y no el sliver/listado completo.
+  4. **Garantía de Inicialización**: Si la pantalla puede ser abierta directamente desde navegación externa o catálogo, asegurar en el `initState` que si `!favProvider.isLoaded && !favProvider.isLoading`, se invoque `favProvider.load()`.
+
