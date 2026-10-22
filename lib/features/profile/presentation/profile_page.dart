@@ -450,13 +450,4 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
 // Conjunto de iconos posibles para avatares por icono
-const List<IconData> _avatarIcons = [
-  Icons.person,
-  Icons.account_circle,
-  Icons.face,
-  Icons.sentiment_satisfied,
-  Icons.mood,
-  Icons.emoji_emotions,
-  Icons.psychology,
-  Icons.elderly,
-];
+const List<IconData> _avatarIcons = appAvatarIcons;

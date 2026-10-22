@@ -32,6 +32,9 @@ class VisitEntry {
   /// Ingredientes de la mezcla
   final List<String> ingredients;
 
+  /// Avatar del autor
+  final String? authorAvatarUrl;
+
   const VisitEntry({
     required this.id,
     required this.mixId,
@@ -42,6 +45,7 @@ class VisitEntry {
     required this.rating,
     required this.reviews,
     required this.ingredients,
+    this.authorAvatarUrl,
   });
 
   /// Crea una instancia desde un mapa (respuesta de Supabase)
@@ -90,6 +94,9 @@ class VisitEntry {
       final authorName = profile != null
           ? (profile['username'] as String? ?? 'Anónimo')
           : 'Anónimo';
+      final authorAvatarUrl = profile != null
+          ? profile['avatar_url'] as String?
+          : null;
 
       final entry = VisitEntry(
         id: map['id'] as String,
@@ -104,6 +111,7 @@ class VisitEntry {
             (mixData['reviews'] as num?)?.toInt() ??
             0,
         ingredients: ingredients,
+        authorAvatarUrl: authorAvatarUrl,
       );
 
       AppLogger.info('✅ VisitEntry creada: ${entry.mixName}');

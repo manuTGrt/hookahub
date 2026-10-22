@@ -81,6 +81,18 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
 - **Problema**: Supabase reporta "Public Bucket Allows Listing" (o data scraping) cuando un bucket público tiene una política RLS que permite `SELECT` genérico al rol `public` sobre la tabla `storage.objects`. Esto permite que cualquier atacante consulte el endpoint `/list` de la API de Storage para obtener el árbol completo de tus archivos.
 - **Solución**: Dado que los archivos de un bucket marcado como "Público" (`public: true` en `storage.buckets`) ya son accesibles de forma individual por URL (`getPublicUrl()`), **no se requiere ninguna política `SELECT`** para que las imágenes puedan descargarse. La mejor práctica de seguridad es eliminar cualquier política `SELECT` genérica en buckets públicos, bloqueando así el listado de directorios sin romper la visualización de imágenes en la aplicación.
 
+### Avatares de Usuario y Caché de Imágenes (UserAvatar)
+
+- **Problema**: En listados masivos (como la pantalla de Comunidad o Favoritos), intentar generar signed URLs para avatares privados de otros usuarios genera un problema severo de N+1 peticiones de red asíncronas y falla debido a que las políticas RLS restringen la lectura de carpetas ajenas.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Bucket Público**: El bucket `avatars` se configura como público (`public: true`) sin política `SELECT` genérica sobre `storage.objects` (previniendo enumeración por scraping). Las operaciones de mutación (`INSERT`, `UPDATE`, `DELETE`) permanecen estrictamente restringidas al propietario de la carpeta (`name ~~ (auth.uid() || '/%')`).
+  2. **Descarga Directa y Caché**: La URL se resuelve con `getPublicUrl()` y se consume con `CachedNetworkImage` fijando `memCacheWidth` y `memCacheHeight` proporcionales al tamaño del avatar en píxeles físicos del dispositivo, reduciendo el consumo de RAM.
+  3. **Soporte Multiformato**: El widget `UserAvatar` gestiona automáticamente:
+     - `icon:<index>`: Iconos predefinidos del sistema (`appAvatarIcons` en `constants.dart`).
+     - Fotos (`storage path` o URL completa): Renderizado con caché de red y placeholders suaves.
+     - Fallback / Error: Inicial del nombre de usuario en mayúscula sobre el color de la tarjeta/tema.
+
+
 ### Tablas Públicas y Logs: Vulnerabilidad "RLS Policy Always True"
 
 - **Problema**: Supabase reporta la advertencia "RLS Policy Always True" cuando una tabla pública (ej. `app_logs`) tiene una política RLS que permite operaciones `INSERT`, `UPDATE` o `DELETE` con `WITH CHECK (true)`. Esto permite que usuarios maliciosos inyecten datos basura de forma indiscriminada, evadiendo la seguridad a nivel de filas.

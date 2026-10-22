@@ -81,7 +81,7 @@ class HistoryRepository {
               rating,
               reviews,
               reviews_real:reviews(count),
-              profiles!mixes_author_id_fkey(username),
+              profiles!mixes_author_id_fkey(username, avatar_url),
               mix_components(tobacco_name, brand, percentage, color)
             )
           ''')

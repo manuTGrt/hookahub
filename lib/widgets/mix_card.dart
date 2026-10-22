@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/models/mix.dart';
+import 'user_avatar.dart';
 
 /// Tarjeta reutilizable de mezcla con el mismo estilo que las tarjetas
 /// de `CommunityPage`, pero con acciones configurables por props.
@@ -71,18 +72,11 @@ class MixCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 20,
+                    UserAvatar(
+                      username: mix.author,
+                      avatarUrl: mix.authorAvatarUrl,
                       backgroundColor: mixColor,
-                      child: Text(
-                        mix.author.isNotEmpty
-                            ? mix.author[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      radius: 20,
                     ),
                     const SizedBox(width: 12),
                     Expanded(

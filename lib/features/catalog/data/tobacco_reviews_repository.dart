@@ -10,7 +10,7 @@ class TobaccoReviewsRepository {
   Future<List<Review>> fetchReviews(String tobaccoId) async {
     final List<dynamic> response = await _supabase
         .from('tobacco_reviews')
-        .select('*, profiles:author_id(username, display_name)')
+        .select('*, profiles:author_id(username, display_name, avatar_url)')
         .eq('tobacco_id', tobaccoId)
         .order('created_at', ascending: false);
 
@@ -19,11 +19,15 @@ class TobaccoReviewsRepository {
       final authorName = profile != null
           ? (profile['username'] ?? profile['display_name'] ?? 'Unknown')
           : 'Unknown';
+      final authorAvatarUrl = profile != null
+          ? profile['avatar_url'] as String?
+          : null;
 
       return Review(
         id: data['id'] as String,
         author: authorName as String,
         authorId: data['author_id'] as String?,
+        authorAvatarUrl: authorAvatarUrl,
         rating: (data['rating'] as num).toDouble(),
         comment: data['comment'] as String? ?? '',
         createdAt: DateTime.parse(data['created_at'] as String),

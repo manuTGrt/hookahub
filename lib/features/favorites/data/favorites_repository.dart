@@ -60,7 +60,7 @@ class FavoritesRepository implements domain.FavoritesRepository {
                 reviews,
                 reviews_real:reviews(count),
                 created_at,
-                profiles!mixes_author_id_fkey(username, display_name),
+                profiles!mixes_author_id_fkey(username, display_name, avatar_url),
                 mix_components(tobacco_name, brand, percentage, color)
               )
             ''')
@@ -88,6 +88,9 @@ class FavoritesRepository implements domain.FavoritesRepository {
           final authorName = profile != null
               ? (profile['username'] as String? ?? 'Anónimo')
               : 'Anónimo';
+          final authorAvatarUrl = profile != null
+              ? profile['avatar_url'] as String?
+              : null;
 
           return Mix(
             id: mixData['id'] as String,
@@ -101,6 +104,7 @@ class FavoritesRepository implements domain.FavoritesRepository {
                 0,
             ingredients: ingredients,
             color: mixColor,
+            authorAvatarUrl: authorAvatarUrl,
           );
         }).toList();
 

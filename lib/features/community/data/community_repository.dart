@@ -25,7 +25,7 @@ class CommunityRepository {
             reviews,
             reviews_real:reviews(count),
             created_at,
-            profiles!mixes_author_id_fkey(username, display_name),
+            profiles!mixes_author_id_fkey(username, display_name, avatar_url),
             mix_components(tobacco_name, brand, percentage, color)
           ''')
           .eq('id', mixId)
@@ -54,6 +54,9 @@ class CommunityRepository {
       final authorName = profile != null
           ? (profile['username'] as String? ?? 'Anónimo')
           : 'Anónimo';
+      final authorAvatarUrl = profile != null
+          ? profile['avatar_url'] as String?
+          : null;
 
       return Mix(
         id: response['id'] as String,
@@ -68,6 +71,7 @@ class CommunityRepository {
             0,
         ingredients: ingredients,
         color: mixColor,
+        authorAvatarUrl: authorAvatarUrl,
       );
     } catch (e, stackTrace) {
       AppLogger.error('Error al obtener mezcla por ID', error: e, stackTrace: stackTrace);
@@ -154,7 +158,7 @@ class CommunityRepository {
               rating,
               reviews,
               created_at,
-              profiles!mixes_author_id_fkey(username, display_name),
+              profiles!mixes_author_id_fkey(username, display_name, avatar_url),
               reviews_real:reviews(count),
               mix_components(tobacco_name, brand, percentage, color)
             ''').inFilter('id', targetIdSet.toList());
@@ -240,7 +244,7 @@ class CommunityRepository {
               reviews,
               reviews_real:reviews(count),
               created_at,
-              profiles!mixes_author_id_fkey(username, display_name),
+              profiles!mixes_author_id_fkey(username, display_name, avatar_url),
               mix_components(tobacco_name, brand, percentage, color)
             ''')
             .inFilter('id', targetIds);
@@ -279,7 +283,7 @@ class CommunityRepository {
               rating,
               reviews,
               created_at,
-              profiles!mixes_author_id_fkey(username, display_name),
+              profiles!mixes_author_id_fkey(username, display_name, avatar_url),
               reviews_real:reviews(count),
               mix_components(tobacco_name, brand, percentage, color)
             ''');
@@ -336,6 +340,9 @@ class CommunityRepository {
         final authorName = profile != null
             ? (profile['username'] as String? ?? 'Anónimo')
             : 'Anónimo';
+        final authorAvatarUrl = profile != null
+            ? profile['avatar_url'] as String?
+            : null;
 
         return Mix(
           id: mixData['id'] as String,
@@ -349,6 +356,7 @@ class CommunityRepository {
               0,
           ingredients: ingredients,
           color: mixColor,
+          authorAvatarUrl: authorAvatarUrl,
         );
       }).toList();
     } catch (e, stackTrace) {
@@ -473,14 +481,15 @@ class CommunityRepository {
             .timeout(supabaseWriteTimeout);
       }
 
-      // Obtener username del autor para regresar un Mix coherente
+      // Obtener username y avatar_url del autor para regresar un Mix coherente
       final profileResponse = await _supabase.client
           .from('profiles')
-          .select('username')
+          .select('username, avatar_url')
           .eq('id', user.id)
           .single()
           .timeout(supabaseReadTimeout);
       final authorName = profileResponse['username'] as String? ?? 'Anónimo';
+      final authorAvatarUrl = profileResponse['avatar_url'] as String?;
 
       final ingredients = components
           .map((c) => c['tobacco_name'] as String)
@@ -516,6 +525,7 @@ class CommunityRepository {
             0,
         ingredients: ingredients,
         color: mixColor,
+        authorAvatarUrl: authorAvatarUrl,
       );
     } catch (e, stackTrace) {
       AppLogger.error('Error al actualizar mezcla', error: e, stackTrace: stackTrace);
@@ -541,7 +551,7 @@ class CommunityRepository {
               reviews,
               reviews_real:reviews(count),
               created_at,
-              profiles!mixes_author_id_fkey(username, display_name),
+              profiles!mixes_author_id_fkey(username, display_name, avatar_url),
               mix_components(tobacco_name, brand, percentage, color)
             )
           ''')
@@ -570,6 +580,9 @@ class CommunityRepository {
         final authorName = profile != null
             ? (profile['username'] as String? ?? 'Anónimo')
             : 'Anónimo';
+        final authorAvatarUrl = profile != null
+            ? profile['avatar_url'] as String?
+            : null;
 
         return Mix(
           id: mixData['id'] as String,
@@ -583,6 +596,7 @@ class CommunityRepository {
               0,
           ingredients: ingredients,
           color: mixColor,
+          authorAvatarUrl: authorAvatarUrl,
         );
       }).toList();
     } catch (e, stackTrace) {
@@ -644,15 +658,16 @@ class CommunityRepository {
           .insert(componentsData)
           .timeout(supabaseWriteTimeout);
 
-      // Obtener perfil del usuario (usar username)
+      // Obtener perfil del usuario (usar username y avatar_url)
       final profileResponse = await _supabase.client
           .from('profiles')
-          .select('username')
+          .select('username, avatar_url')
           .eq('id', user.id)
           .single()
           .timeout(supabaseReadTimeout);
 
       final authorName = profileResponse['username'] as String? ?? 'Anónimo';
+      final authorAvatarUrl = profileResponse['avatar_url'] as String?;
 
       // Construir objeto Mix
       final ingredients = components
@@ -677,6 +692,7 @@ class CommunityRepository {
         reviews: 0,
         ingredients: ingredients,
         color: mixColor,
+        authorAvatarUrl: authorAvatarUrl,
       );
     } catch (e, stackTrace) {
       AppLogger.error('Error al crear mezcla', error: e, stackTrace: stackTrace);
@@ -776,7 +792,7 @@ class CommunityRepository {
               reviews,
               reviews_real:reviews(count),
               created_at,
-              profiles!mixes_author_id_fkey(username, display_name),
+              profiles!mixes_author_id_fkey(username, display_name, avatar_url),
               mix_components(tobacco_name, brand, percentage, color)
             )
           ''')
@@ -816,6 +832,9 @@ class CommunityRepository {
         final authorName = profile != null
             ? (profile['username'] as String? ?? 'Anónimo')
             : 'Anónimo';
+        final authorAvatarUrl = profile != null
+            ? profile['avatar_url'] as String?
+            : null;
 
         return Mix(
           id: mixData['id'] as String,
@@ -829,6 +848,7 @@ class CommunityRepository {
               0,
           ingredients: ingredients,
           color: mixColor,
+          authorAvatarUrl: authorAvatarUrl,
         );
       }).toList();
 
@@ -864,6 +884,9 @@ class CommunityRepository {
               ? (profile['username'] as String? ?? 'Anónimo')
               : 'Anónimo',
           'author_id': reviewData['author_id'] as String?,
+          'author_avatar_url': profile != null
+              ? profile['avatar_url'] as String?
+              : null,
           'rating': (reviewData['rating'] as num).toDouble(),
           'comment': reviewData['comment'] as String? ?? '',
           'created_at': DateTime.parse(reviewData['created_at'] as String),

@@ -6,6 +6,7 @@ class Review {
   final double rating; // 0..5
   final String comment;
   final DateTime createdAt;
+  final String? authorAvatarUrl;
 
   const Review({
     required this.id,
@@ -14,6 +15,7 @@ class Review {
     required this.rating,
     required this.comment,
     required this.createdAt,
+    this.authorAvatarUrl,
   });
 
   Review copyWith({
@@ -23,6 +25,7 @@ class Review {
     double? rating,
     String? comment,
     DateTime? createdAt,
+    String? authorAvatarUrl,
   }) {
     return Review(
       id: id ?? this.id,
@@ -31,6 +34,7 @@ class Review {
       rating: rating ?? this.rating,
       comment: comment ?? this.comment,
       createdAt: createdAt ?? this.createdAt,
+      authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
     );
   }
 }

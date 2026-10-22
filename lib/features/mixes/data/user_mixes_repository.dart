@@ -26,7 +26,7 @@ class UserMixesRepository implements domain.UserMixesRepository {
             reviews,
             reviews_real:reviews(count),
             created_at,
-            profiles!mixes_author_id_fkey(username, display_name),
+            profiles!mixes_author_id_fkey(username, display_name, avatar_url),
             mix_components(tobacco_name, brand, percentage, color)
           ''')
           .eq('author_id', user.id)
@@ -54,6 +54,9 @@ class UserMixesRepository implements domain.UserMixesRepository {
         final authorName = profile != null
             ? (profile['username'] as String? ?? 'Yo')
             : 'Yo';
+        final authorAvatarUrl = profile != null
+            ? profile['avatar_url'] as String?
+            : null;
 
         return Mix(
           id: mixData['id'] as String,
@@ -67,6 +70,7 @@ class UserMixesRepository implements domain.UserMixesRepository {
               0,
           ingredients: ingredients,
           color: mixColor,
+          authorAvatarUrl: authorAvatarUrl,
         );
       }).toList();
     } catch (e, stackTrace) {

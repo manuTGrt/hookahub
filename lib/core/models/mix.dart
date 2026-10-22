@@ -10,6 +10,7 @@ class Mix {
   final int reviews; // nº reseñas (opcional, por defecto 0)
   final List<String> ingredients;
   final Color color; // usado para UI; serializado como ARGB int
+  final String? authorAvatarUrl;
 
   const Mix({
     required this.id,
@@ -19,6 +20,7 @@ class Mix {
     required this.ingredients,
     required this.color,
     this.reviews = 0,
+    this.authorAvatarUrl,
   });
 
   Mix copyWith({
@@ -29,6 +31,7 @@ class Mix {
     List<String>? ingredients,
     Color? color,
     int? reviews,
+    String? authorAvatarUrl,
   }) {
     return Mix(
       id: id ?? this.id,
@@ -38,6 +41,7 @@ class Mix {
       ingredients: ingredients ?? this.ingredients,
       color: color ?? this.color,
       reviews: reviews ?? this.reviews,
+      authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
     );
   }
 
@@ -49,6 +53,7 @@ class Mix {
     'ingredients': ingredients,
     'color': color.toARGB32(),
     'reviews': reviews,
+    if (authorAvatarUrl != null) 'authorAvatarUrl': authorAvatarUrl,
   };
 
   factory Mix.fromMap(Map<String, dynamic> map) {
@@ -62,6 +67,7 @@ class Mix {
           .toList(),
       color: Color(map['color'] as int),
       reviews: (map['reviews'] as num?)?.toInt() ?? 0,
+      authorAvatarUrl: map['authorAvatarUrl'] as String?,
     );
   }
 }

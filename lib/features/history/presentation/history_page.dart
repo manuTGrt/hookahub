@@ -280,6 +280,7 @@ class _HistoryPageState extends State<HistoryPage> {
       reviews: entry.reviews,
       ingredients: entry.ingredients,
       color: entry.mixColor,
+      authorAvatarUrl: entry.authorAvatarUrl,
     );
 
     final isFavorite = favoritesProvider.favorites.any((f) => f.id == mix.id);

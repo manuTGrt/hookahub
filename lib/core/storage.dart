@@ -4,7 +4,8 @@ class StorageConfig {
   static const String tobaccoImagesBucket = 'tobacco-images';
 
   // Marca si el bucket es privado (true) o público (false)
-  static const bool avatarsPrivate = true;
+  static const bool avatarsPrivate =
+      false; // Público para descarga directa y caché de avatares
   static const bool tobaccoImagesPrivate =
       false; // Público para mejor rendimiento
 

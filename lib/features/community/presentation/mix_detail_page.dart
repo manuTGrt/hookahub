@@ -14,6 +14,7 @@ import '../../../core/models/tobacco.dart';
 import '../../catalog/presentation/tobacco_detail_page.dart';
 import '../../../core/models/review.dart';
 import '../../../widgets/app_segmented_control.dart';
+import '../../../widgets/user_avatar.dart';
 import 'community_provider.dart';
 import 'create_mix_page.dart';
 import '../../catalog/data/tobacco_repository.dart';
@@ -252,6 +253,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
                 id: r['id'] as String,
                 author: r['author'] as String,
                 authorId: r['author_id'] as String?,
+                authorAvatarUrl: r['author_avatar_url'] as String?,
                 rating: r['rating'] as double,
                 comment: r['comment'] as String,
                 createdAt: r['created_at'] as DateTime,
@@ -1422,14 +1424,10 @@ class _ReviewTile extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CircleAvatar(
-                backgroundColor: Theme.of(context).primaryColor,
-                child: Text(
-                  review.author.isNotEmpty
-                      ? review.author[0].toUpperCase()
-                      : '?',
-                  style: const TextStyle(color: Colors.white),
-                ),
+              UserAvatar(
+                username: review.author,
+                avatarUrl: review.authorAvatarUrl,
+                radius: 20,
               ),
               const SizedBox(width: 8),
               Expanded(

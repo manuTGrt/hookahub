@@ -36,16 +36,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       true; // Nuevo: indica si estamos cargando los datos iniciales
 
   // Lista de avatares predefinidos
-  final List<IconData> _avatarIcons = [
-    Icons.person,
-    Icons.account_circle,
-    Icons.face,
-    Icons.sentiment_satisfied,
-    Icons.mood,
-    Icons.emoji_emotions,
-    Icons.psychology,
-    Icons.elderly,
-  ];
+  final List<IconData> _avatarIcons = appAvatarIcons;
 
   @override
   void initState() {

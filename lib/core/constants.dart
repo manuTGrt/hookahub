@@ -31,3 +31,16 @@ const supabaseWriteTimeout = Duration(seconds: 8);
 
 /// Clave global para el navegador raíz de la aplicación (usada por AuthGate y MaterialApp)
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Conjunto de iconos predefinidos para avatares (índices 0..7)
+const List<IconData> appAvatarIcons = [
+  Icons.person,
+  Icons.account_circle,
+  Icons.face,
+  Icons.sentiment_satisfied,
+  Icons.mood,
+  Icons.emoji_emotions,
+  Icons.psychology,
+  Icons.elderly,
+];
+

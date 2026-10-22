@@ -8,6 +8,7 @@ import '../../favorites/presentation/favorites_provider.dart';
 import '../../../widgets/mix_card.dart';
 import '../../../widgets/app_segmented_control.dart';
 import '../../../widgets/tobacco_image.dart';
+import '../../../widgets/user_avatar.dart';
 import '../../community/presentation/community_provider.dart'; // Import provider
 import 'providers/tobacco_mixes_provider.dart';
 import '../../community/presentation/mix_detail_page.dart';
@@ -676,14 +677,10 @@ class _ReviewTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                backgroundColor: Theme.of(context).primaryColor,
-                child: Text(
-                  review.author.isNotEmpty
-                      ? review.author[0].toUpperCase()
-                      : '?',
-                  style: const TextStyle(color: Colors.white),
-                ),
+              UserAvatar(
+                username: review.author,
+                avatarUrl: review.authorAvatarUrl,
+                radius: 20,
               ),
               const SizedBox(width: 8),
               Expanded(
