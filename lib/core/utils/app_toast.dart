@@ -7,6 +7,7 @@ import '../constants.dart';
 /// Uso:
 ///   AppToast.showSuccess(context, 'Mezcla guardada');
 ///   AppToast.showError(context, 'Error al guardar');
+///   AppToast.showWarning(context, 'Campo obligatorio');
 ///   AppToast.showInfo(context, 'Cambios aplicados');
 class AppToast {
   // ─── API pública ────────────────────────────────────────────────────────────
@@ -16,6 +17,9 @@ class AppToast {
 
   static void showError(BuildContext context, String message) =>
       _show(context: context, message: message, config: _ToastConfig.error());
+
+  static void showWarning(BuildContext context, String message) =>
+      _show(context: context, message: message, config: _ToastConfig.warning());
 
   static void showInfo(BuildContext context, String message) =>
       _show(context: context, message: message, config: _ToastConfig.info());
@@ -90,6 +94,14 @@ class _ToastConfig {
     darkSurface: warningSurfaceDark,
     lightSurface: warningSurfaceLight,
     label: 'Error',
+  );
+
+  factory _ToastConfig.warning() => const _ToastConfig(
+    icon: Icons.warning_amber_rounded,
+    accentColor: Color(0xFFE5A93C),
+    darkSurface: Color(0xFF2B2215),
+    lightSurface: Color(0xFFFFF8ED),
+    label: 'Aviso',
   );
 
   factory _ToastConfig.info() => const _ToastConfig(

@@ -661,8 +661,12 @@ class _MixDetailPageState extends State<MixDetailPage> {
   }
 
   void _handleSubmitReview() {
-    if (_reviewController.text.trim().isEmpty || _newRating <= 0) {
-      AppToast.showInfo(context, 'Añade comentario y puntuación');
+    final validationError = _validateReviewInput(
+      rating: _newRating,
+      comment: _reviewController.text,
+    );
+    if (validationError != null) {
+      AppToast.showWarning(context, validationError);
       return;
     }
 
@@ -684,6 +688,7 @@ class _MixDetailPageState extends State<MixDetailPage> {
       if (!mounted || !context.mounted) return;
 
       if (success) {
+        FocusScope.of(context).unfocus();
         AppToast.showSuccess(context, 'Reseña publicada');
 
         // Limpiar formulario
@@ -1361,8 +1366,12 @@ class _EditReviewDialogState extends State<_EditReviewDialog> {
               ? null
               : () async {
                   final text = _controller.text.trim();
-                  if (text.isEmpty || _rating <= 0) {
-                    AppToast.showInfo(context, 'Añade comentario y puntuación');
+                  final validationError = _validateReviewInput(
+                    rating: _rating,
+                    comment: text,
+                  );
+                  if (validationError != null) {
+                    AppToast.showWarning(context, validationError);
                     return;
                   }
 
@@ -1553,4 +1562,23 @@ List<Color> _turquoisePaletteFrom(Color base, {int count = 4}) {
     }
   }
   return colors;
+}
+
+/// Valida los campos de una reseña (puntuación y comentario).
+/// Devuelve el mensaje de advertencia correspondiente o `null` si es válida.
+String? _validateReviewInput({
+  required double rating,
+  required String comment,
+}) {
+  final hasComment = comment.trim().isNotEmpty;
+  final hasRating = rating > 0;
+
+  if (!hasRating && !hasComment) {
+    return 'Añade una puntuación y un comentario';
+  } else if (!hasRating) {
+    return 'Indica una puntuación para continuar';
+  } else if (!hasComment) {
+    return 'Escribe un comentario sobre tu experiencia';
+  }
+  return null;
 }

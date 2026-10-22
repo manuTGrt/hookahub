@@ -370,9 +370,32 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
     SharePlus.instance.share(ShareParams(text: text));
   }
 
+/// Valida los campos de una reseña (puntuación y comentario).
+/// Devuelve el mensaje de advertencia correspondiente o `null` si es válida.
+String? _validateReviewInput({
+  required double rating,
+  required String comment,
+}) {
+  final hasComment = comment.trim().isNotEmpty;
+  final hasRating = rating > 0;
+
+  if (!hasRating && !hasComment) {
+    return 'Añade una puntuación y un comentario';
+  } else if (!hasRating) {
+    return 'Indica una puntuación para continuar';
+  } else if (!hasComment) {
+    return 'Escribe un comentario sobre tu experiencia';
+  }
+  return null;
+}
+
   void _handleSubmitReview() async {
-    if (_reviewController.text.trim().isEmpty || _newRating <= 0) {
-      AppToast.showInfo(context, 'Añade comentario y puntuación');
+    final validationError = _validateReviewInput(
+      rating: _newRating,
+      comment: _reviewController.text,
+    );
+    if (validationError != null) {
+      AppToast.showWarning(context, validationError);
       return;
     }
 
@@ -398,6 +421,7 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
       });
 
       if (mounted) {
+        FocusScope.of(context).unfocus();
         AppToast.showSuccess(context, 'Reseña publicada');
       }
     } catch (e) {
