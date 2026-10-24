@@ -1,9 +1,11 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../widgets/mix_card.dart';
 import '../../../widgets/ad_banner_card.dart';
 import '../../../core/models/mix.dart';
+import '../../../core/services/deep_link_service.dart';
 import '../../favorites/presentation/favorites_provider.dart';
 import '../../profile/presentation/profile_provider.dart';
 import '../data/community_repository.dart';
@@ -578,7 +580,12 @@ class _CommunityMixItem extends StatelessWidget {
           communityProvider.setLocalFavorites(fav.favorites);
         }
       },
-      onShare: () {},
+      onShare: () => SharePlus.instance.share(
+        ShareParams(
+          text:
+              '¡Descubre la mezcla "${mix.name}" por ${mix.author} en Hookahub!\n${DeepLinkService.buildMixShareUrl(mix.id)}',
+        ),
+      ),
       isOwned: isOwned,
       onEdit: isOwned
           ? () async {

@@ -49,6 +49,9 @@ dependencies:
   # Sharing
   share_plus: ^13.3.0
 
+  # Deep Linking
+  app_links: ^6.3.2
+
   # URL Launcher for opening external links
   url_launcher: ^6.3.1
 

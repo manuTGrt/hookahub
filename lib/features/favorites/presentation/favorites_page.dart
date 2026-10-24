@@ -10,6 +10,7 @@ import '../../community/data/community_repository.dart';
 import '../../community/presentation/mix_detail_page.dart';
 import '../../community/presentation/create_mix_page.dart';
 import '../../../core/data/supabase_service.dart';
+import '../../../core/services/deep_link_service.dart';
 import 'favorites_provider.dart';
 import '../../../core/utils/app_toast.dart';
 
@@ -118,7 +119,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
                             trailingIcon: Icons.push_pin_outlined,
                             onTrailingTap: () => fav.toggleTop5(mix.id),
                             onShare: () => SharePlus.instance.share(
-                              ShareParams(text: 'Mezcla: ${mix.name} por ${mix.author}'),
+                              ShareParams(
+                                text:
+                                    '¡Descubre la mezcla "${mix.name}" por ${mix.author} en Hookahub!\n${DeepLinkService.buildMixShareUrl(mix.id)}',
+                              ),
                             ),
                             isOwned: isOwned,
                             onEdit: isOwned
@@ -278,7 +282,10 @@ class _Top5Section extends StatelessWidget {
                             trailingIcon: Icons.push_pin,
                             onTrailingTap: () => onToggle(mix.id),
                             onShare: () => SharePlus.instance.share(
-                              ShareParams(text: 'Mezcla: ${mix.name} por ${mix.author}'),
+                              ShareParams(
+                                text:
+                                    '¡Descubre la mezcla "${mix.name}" por ${mix.author} en Hookahub!\n${DeepLinkService.buildMixShareUrl(mix.id)}',
+                              ),
                             ),
                             isOwned: isOwned,
                             onEdit: isOwned

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/env.dart';
+import 'core/services/deep_link_service.dart';
 import 'core/utils/app_logger.dart';
 import 'app.dart';
 
@@ -56,5 +57,10 @@ Future<void> main() async {
   await MobileAds.instance.initialize();
 
   runApp(const HookahubApp());
+
+  // Inicializar el servicio de Deep Links tras arrancar los servicios principales y la UI
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    DeepLinkService.instance.init();
+  });
 }
 

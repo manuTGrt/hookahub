@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/models/mix.dart';
+import '../../../core/services/deep_link_service.dart';
 import '../../favorites/presentation/favorites_provider.dart';
 import '../../../widgets/mix_card.dart';
 import '../../../widgets/tobacco_card.dart';
@@ -867,7 +868,8 @@ class _HeaderArea extends StatelessWidget {
                   icon: Icon(Icons.share_outlined, color: textColor),
                   tooltip: 'Compartir',
                   onPressed: () {
-                    final text = 'Mezcla: ${mix.name} por ${mix.author}';
+                    final text =
+                        '¡Descubre la mezcla "${mix.name}" por ${mix.author} en Hookahub!\n${DeepLinkService.buildMixShareUrl(mix.id)}';
                     SharePlus.instance.share(ShareParams(text: text));
                   },
                 ),
@@ -1189,7 +1191,10 @@ class _RelatedMixItem extends StatelessWidget {
         }
       },
       onShare: () => SharePlus.instance.share(
-        ShareParams(text: 'Mezcla: ${mix.name} por ${mix.author}'),
+        ShareParams(
+          text:
+              '¡Descubre la mezcla "${mix.name}" por ${mix.author} en Hookahub!\n${DeepLinkService.buildMixShareUrl(mix.id)}',
+        ),
       ),
       onTap: () {
         Navigator.of(

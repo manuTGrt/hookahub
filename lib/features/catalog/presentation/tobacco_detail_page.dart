@@ -15,6 +15,7 @@ import '../../community/presentation/mix_detail_page.dart';
 import '../data/tobacco_reviews_repository.dart';
 import 'providers/tobacco_reviews_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/services/deep_link_service.dart';
 import '../../../core/utils/app_toast.dart';
 
 class TobaccoDetailPage extends StatelessWidget {
@@ -366,7 +367,8 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
 
   void _handleShare() {
     final t = widget.tobacco;
-    final text = 'Echa un vistazo a ${t.brand} - ${t.name} en Hookahub';
+    final text =
+        '¡Echa un vistazo a ${t.brand} - ${t.name} en Hookahub!\n${DeepLinkService.buildTobaccoShareUrl(t.id)}';
     SharePlus.instance.share(ShareParams(text: text));
   }
 
@@ -781,7 +783,10 @@ class _TobaccoMixCard extends StatelessWidget {
         }
       },
       onShare: () => SharePlus.instance.share(
-        ShareParams(text: 'Mira esta mezcla: ${mix.name}'),
+        ShareParams(
+          text:
+              '¡Descubre la mezcla "${mix.name}" por ${mix.author} en Hookahub!\n${DeepLinkService.buildMixShareUrl(mix.id)}',
+        ),
       ),
       onTap: () {
         Navigator.push(

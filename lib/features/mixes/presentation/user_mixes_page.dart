@@ -9,6 +9,7 @@ import '../../community/data/community_repository.dart';
 import 'user_mixes_provider.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/mix.dart';
+import '../../../core/services/deep_link_service.dart';
 import '../../../core/utils/app_toast.dart';
 
 class UserMixesPage extends StatefulWidget {
@@ -205,7 +206,10 @@ class _UserMixItem extends StatelessWidget {
         }
       },
       onShare: () => SharePlus.instance.share(
-        ShareParams(text: 'Mezcla: ${mix.name} por ${mix.author}'),
+        ShareParams(
+          text:
+              '¡Descubre la mezcla "${mix.name}" por ${mix.author} en Hookahub!\n${DeepLinkService.buildMixShareUrl(mix.id)}',
+        ),
       ),
       isOwned: true, // En "Mis Mezclas" todas son del usuario
       onEdit: () async {
