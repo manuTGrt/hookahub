@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants.dart';
 import 'settings_page.dart';
 import 'edit_profile_page.dart';
@@ -10,6 +12,7 @@ import '../../auth/presentation/auth_provider.dart';
 import 'profile_provider.dart';
 import '../../favorites/presentation/favorites_provider.dart';
 import '../../history/presentation/history_page.dart';
+import '../../feedback/presentation/contact_page.dart';
 import '../../../widgets/main_navigation.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/app_logger.dart';
@@ -278,6 +281,20 @@ class _ProfilePageState extends State<ProfilePage> {
           },
         ),
         const SizedBox(height: 12),
+        _buildOptionTile(
+          icon: Icons.star_outline,
+          title: 'Calificar la app',
+          subtitle: 'Comparte tu experiencia',
+          onTap: () => _rateApp(context),
+        ),
+        const SizedBox(height: 12),
+        _buildOptionTile(
+          icon: Icons.contact_mail_outlined,
+          title: 'Contáctanos',
+          subtitle: 'Envía sugerencias, dudas o reporta un error',
+          onTap: () => _contactUs(context),
+        ),
+        const SizedBox(height: 12),
 
         Container(
           margin: const EdgeInsets.symmetric(vertical: 16.0),
@@ -292,6 +309,9 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ),
+
+        _buildAppFooter(context),
+        const SizedBox(height: 16),
 
         Builder(
           builder: (context) {
@@ -455,6 +475,130 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       },
     );
+  }
+
+  Widget _buildAppFooter(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subtleColor = isDark
+        ? darkNavy.withValues(alpha: 0.6)
+        : navy.withValues(alpha: 0.6);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Versión 1.0.0',
+          style: TextStyle(
+            fontSize: 12,
+            color: subtleColor,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Text(
+            '•',
+            style: TextStyle(
+              fontSize: 12,
+              color: subtleColor,
+            ),
+          ),
+        ),
+        InkWell(
+          borderRadius: BorderRadius.circular(4),
+          onTap: () => _showLicenses(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+            child: Text(
+              'Licencias de código abierto',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: subtleColor,
+                decoration: TextDecoration.underline,
+                decorationColor: subtleColor,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showLicenses(BuildContext context) {
+    showLicensePage(
+      context: context,
+      applicationName: 'Hookahub',
+      applicationVersion: '1.0.0',
+      applicationIcon: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).primaryColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.local_fire_department,
+          color: Colors.white,
+          size: 32,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _rateApp(BuildContext context) async {
+    const String androidPackageName = 'com.hookahub.app';
+    const String iosAppId = '000000000';
+
+    Uri? storeUrl;
+
+    if (Platform.isAndroid) {
+      storeUrl = Uri.parse('market://details?id=$androidPackageName');
+
+      if (!await canLaunchUrl(storeUrl)) {
+        storeUrl = Uri.parse(
+          'https://play.google.com/store/apps/details?id=$androidPackageName',
+        );
+      }
+    } else if (Platform.isIOS) {
+      storeUrl = Uri.parse(
+        'https://apps.apple.com/app/id$iosAppId?action=write-review',
+      );
+    }
+
+    if (storeUrl != null) {
+      try {
+        final canLaunch = await canLaunchUrl(storeUrl);
+        if (canLaunch) {
+          await launchUrl(storeUrl, mode: LaunchMode.externalApplication);
+        } else {
+          if (context.mounted) {
+            AppToast.showInfo(context, 'No se pudo abrir la tienda de aplicaciones');
+          }
+        }
+      } catch (e, stackTrace) {
+        AppLogger.error('Error al abrir la tienda de aplicaciones', error: e, stackTrace: stackTrace);
+        if (context.mounted) {
+          AppToast.showError(context, 'Error al abrir la tienda: $e');
+        }
+      }
+    } else {
+      if (context.mounted) {
+        AppToast.showInfo(context, 'Plataforma no soportada');
+      }
+    }
+  }
+
+  void _contactUs(BuildContext context) {
+    final nav = MainNavigationPage.of(context);
+    if (nav != null) {
+      nav.pushInCurrentTab('Contáctanos', const ContactPage());
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const ContactPage(),
+        ),
+      );
+    }
   }
 }
 

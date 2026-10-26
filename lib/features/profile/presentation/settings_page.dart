@@ -1,12 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants.dart';
 import '../../../core/theme_provider.dart';
-import '../../../core/utils/app_toast.dart';
-import '../../../widgets/main_navigation.dart';
-import '../../feedback/presentation/contact_page.dart';
 
 /// Página de configuración donde el usuario puede ajustar
 /// las preferencias de la aplicación
@@ -25,11 +20,6 @@ class SettingsPage extends StatelessWidget {
             _buildSectionTitle(context, 'Apariencia'),
             const SizedBox(height: 12),
             _buildThemeSection(context),
-
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Acerca de'),
-            const SizedBox(height: 12),
-            _buildAboutSettings(context),
           ],
         ),
       ),
@@ -217,182 +207,6 @@ class SettingsPage extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildAboutSettings(BuildContext context) {
-    return _buildSettingsCard(context, [
-      _buildSettingsTile(
-        context,
-        icon: Icons.info_outline,
-        title: 'Información de la app',
-        subtitle: 'Versión 1.0.0',
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          _showAboutDialog(context);
-        },
-      ),
-      _buildSettingsTile(
-        context,
-        icon: Icons.star_outline,
-        title: 'Calificar la app',
-        subtitle: 'Comparte tu experiencia',
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () => _rateApp(context),
-      ),
-      _buildSettingsTile(
-        context,
-        icon: Icons.contact_mail_outlined,
-        title: 'Contáctanos',
-        subtitle: 'Envía sugerencias, dudas o reporta un error',
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () => _contactUs(context),
-      ),
-    ]);
-  }
-
-  Widget _buildSettingsCard(BuildContext context, List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(children: children),
-    );
-  }
-
-  Widget _buildSettingsTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: Theme.of(context).primaryColor, size: 24),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Theme.of(context).textTheme.bodyLarge?.color,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(
-          color: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-        ),
-      ),
-      trailing: trailing,
-      onTap: onTap,
-    );
-  }
-
-  void _rateApp(BuildContext context) async {
-    // Cambia estos IDs por los reales de tu app cuando la publiques
-    const String androidPackageName =
-        'com.hookahub.app'; // Tu package name de Android
-    const String iosAppId = '000000000'; // Tu App Store ID (solo números)
-
-    Uri? storeUrl;
-
-    if (Platform.isAndroid) {
-      // Intenta abrir en Google Play Store app
-      storeUrl = Uri.parse('market://details?id=$androidPackageName');
-
-      if (!await canLaunchUrl(storeUrl)) {
-        // Si no puede abrir la app, usa el navegador
-        storeUrl = Uri.parse(
-          'https://play.google.com/store/apps/details?id=$androidPackageName',
-        );
-      }
-    } else if (Platform.isIOS) {
-      // Abre App Store
-      storeUrl = Uri.parse(
-        'https://apps.apple.com/app/id$iosAppId?action=write-review',
-      );
-    }
-
-    if (storeUrl != null) {
-      try {
-        final canLaunch = await canLaunchUrl(storeUrl);
-        if (canLaunch) {
-          await launchUrl(storeUrl, mode: LaunchMode.externalApplication);
-        } else {
-          if (context.mounted) {
-            AppToast.showInfo(context, 'No se pudo abrir la tienda de aplicaciones');
-          }
-        }
-      } catch (e) {
-        if (context.mounted) {
-          AppToast.showError(context, 'Error al abrir la tienda: $e');
-        }
-      }
-    } else {
-      if (context.mounted) {
-        AppToast.showInfo(context, 'Plataforma no soportada');
-      }
-    }
-  }
-
-  void _contactUs(BuildContext context) {
-    final nav = MainNavigationPage.of(context);
-    if (nav != null) {
-      nav.pushInCurrentTab('Contáctanos', const ContactPage());
-    } else {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const ContactPage(),
-        ),
-      );
-    }
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showAboutDialog(
-      context: context,
-      applicationName: 'Hookahub',
-      applicationVersion: '1.0.0',
-      applicationIcon: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(
-          Icons.local_fire_department,
-          color: Colors.white,
-          size: 32,
-        ),
-      ),
-      children: [
-        const Text('Tu comunidad de mezclas de tabaco'),
-        const SizedBox(height: 16),
-        const Text(
-          'Desarrollado con ❤️ para los amantes de la hookah',
-          style: TextStyle(fontSize: 14),
-        ),
-      ],
     );
   }
 }
