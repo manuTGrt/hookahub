@@ -15,6 +15,8 @@ import '../domain/mix_percentage_calculator.dart';
 import '../../../core/utils/app_error_mapper.dart';
 import '../../../core/utils/app_toast.dart';
 import '../../../core/services/interstitial_ad_manager.dart';
+import '../../profile/presentation/profile_provider.dart';
+import '../../mixes/presentation/user_mixes_provider.dart';
 
 // Utilidad: convierte cada palabra a "Title Case" (primera mayúscula, resto minúsculas).
 String titleCase(String input) {
@@ -327,6 +329,13 @@ class _CreateMixPageState extends State<CreateMixPage> {
       ).pop(); // Cerrar diálogo de carga
 
       if (resultMix != null) {
+        if (!_isEdit) {
+          final profileProvider = context.read<ProfileProvider>();
+          profileProvider.incrementMixesCount();
+          unawaited(profileProvider.refreshMixesCount());
+          context.read<UserMixesProvider>().refresh();
+        }
+
         // Mostrar anuncio intersticial precargado en la transición natural post-creación
         InterstitialAdManager.instance.show(
           onComplete: () {

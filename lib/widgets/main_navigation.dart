@@ -794,6 +794,9 @@ class MainNavigationPageState extends State<MainNavigationPage> {
         setState(() {
           _currentIndex = index;
         });
+        if (index == 3) {
+          unawaited(context.read<ProfileProvider>().refreshMixesCount());
+        }
         // Actualizar el estado de back/título según el stack del nuevo tab
         _updateBackAndTitle();
       },
@@ -866,6 +869,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
               unawaited(fav.load());
             }
           }
+          unawaited(profileProvider.refreshMixesCount());
           break;
         default:
           break;

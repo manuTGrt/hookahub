@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -7,6 +8,7 @@ import '../../community/presentation/mix_detail_page.dart';
 import '../../community/presentation/create_mix_page.dart';
 import '../../community/data/community_repository.dart';
 import 'user_mixes_provider.dart';
+import '../../profile/presentation/profile_provider.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/mix.dart';
 import '../../../core/services/deep_link_service.dart';
@@ -250,6 +252,9 @@ class _UserMixItem extends StatelessWidget {
           if (!context.mounted) return;
           if (success) {
             context.read<UserMixesProvider>().refresh();
+            final profileProvider = context.read<ProfileProvider>();
+            profileProvider.decrementMixesCount();
+            unawaited(profileProvider.refreshMixesCount());
             AppToast.showInfo(context, 'Mezcla eliminada');
           } else {
             AppToast.showInfo(context, 'No se pudo eliminar la mezcla');

@@ -102,6 +102,45 @@ class ProfileProvider extends ChangeNotifier {
       _state is ProfileLoaded ? (_state as ProfileLoaded).mixesCount : 0;
   bool get isLoaded => _state is ProfileLoaded;
 
+  /// Incrementa optimistamente el contador de mezclas del usuario autenticado sin parpadeo.
+  void incrementMixesCount() {
+    final current = _state;
+    if (current is ProfileLoaded) {
+      _state = current.copyWith(mixesCount: current.mixesCount + 1);
+      notifyListeners();
+    }
+  }
+
+  /// Decrementa optimistamente el contador de mezclas del usuario autenticado sin parpadeo.
+  void decrementMixesCount() {
+    final current = _state;
+    if (current is ProfileLoaded && current.mixesCount > 0) {
+      _state = current.copyWith(mixesCount: current.mixesCount - 1);
+      notifyListeners();
+    }
+  }
+
+  /// Sincroniza en background el conteo real de mezclas sin transicionar a [ProfileLoading].
+  Future<void> refreshMixesCount() async {
+    if (!_auth.isAuthenticated) return;
+    try {
+      final count = await _repo.countCurrentUserMixes();
+      final current = _state;
+      if (current is ProfileLoaded) {
+        if (current.mixesCount != count) {
+          _state = current.copyWith(mixesCount: count);
+          notifyListeners();
+        }
+      }
+    } catch (e, stackTrace) {
+      AppLogger.warning(
+        'Error al sincronizar contador de mezclas en segundo plano: $e',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   Future<void> load() async {
     if (!_auth.isAuthenticated) {
       _state = const ProfileError('No autenticado');

@@ -49,118 +49,127 @@ class _ProfilePageState extends State<ProfilePage> {
         : (profile?.username ?? 'Usuario');
 
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Header del perfil
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isDark
-                      ? [
-                          darkTurquoise.withValues(alpha: 0.2),
-                          darkNavy.withValues(alpha: 0.1),
-                        ]
-                      : [
-                          turquoise.withValues(alpha: 0.1),
-                          turquoiseDark.withValues(alpha: 0.05),
-                        ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await Future.wait([
+            context.read<ProfileProvider>().load(),
+            context.read<FavoritesProvider>().load(),
+          ]);
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              // Header del perfil
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [
+                            darkTurquoise.withValues(alpha: 0.2),
+                            darkNavy.withValues(alpha: 0.1),
+                          ]
+                        : [
+                            turquoise.withValues(alpha: 0.1),
+                            turquoiseDark.withValues(alpha: 0.05),
+                          ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark
+                        ? darkTurquoise.withValues(alpha: 0.3)
+                        : turquoise.withValues(alpha: 0.2),
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark
-                      ? darkTurquoise.withValues(alpha: 0.3)
-                      : turquoise.withValues(alpha: 0.2),
+                child: Column(
+                  children: [
+                    // Avatar
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: isDark ? darkTurquoise : turquoise,
+                      backgroundImage:
+                          hasPhoto ? CachedNetworkImageProvider(signedUrl) : null,
+                      child: hasPhoto
+                          ? null
+                          : Icon(
+                              iconIndex != null && iconIndex >= 0 && iconIndex < 8
+                                  ? _avatarIcons[iconIndex]
+                                  : Icons.person,
+                              size: 60,
+                              color: Colors.white,
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Nombre del usuario
+                    Text(
+                      displayName,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? darkNavy : navy,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      profileProvider.isLoading
+                          ? 'Cargando perfil...'
+                          : (profile != null ? '@${profile.username}' : ''),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark
+                            ? darkNavy.withValues(alpha: 0.7)
+                            : navy.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Column(
+
+              const SizedBox(height: 24),
+
+              // Estadísticas del usuario
+              Row(
                 children: [
-                  // Avatar
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: isDark ? darkTurquoise : turquoise,
-                    backgroundImage:
-                        hasPhoto ? CachedNetworkImageProvider(signedUrl) : null,
-                    child: hasPhoto
-                        ? null
-                        : Icon(
-                            iconIndex != null && iconIndex >= 0 && iconIndex < 8
-                                ? _avatarIcons[iconIndex]
-                                : Icons.person,
-                            size: 60,
-                            color: Colors.white,
-                          ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Nombre del usuario
-                  Text(
-                    displayName,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? darkNavy : navy,
+                  Expanded(
+                    child: _buildStatCard(
+                      profileProvider.mixesCount.toString(),
+                      'Mezclas',
+                      Theme.of(context).primaryColor,
+                      onTap: () {
+                        final nav = MainNavigationPage.of(context);
+                        nav?.pushInCurrentTab(
+                          'Mis mezclas',
+                          const UserMixesPage(),
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    profileProvider.isLoading
-                        ? 'Cargando perfil...'
-                        : (profile != null ? '@${profile.username}' : ''),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDark
-                          ? darkNavy.withValues(alpha: 0.7)
-                          : navy.withValues(alpha: 0.6),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      favoritesCount.toString(),
+                      'Favoritas',
+                      Theme.of(context).primaryColor,
+                      onTap: () {
+                        final nav = MainNavigationPage.of(context);
+                        nav?.pushInCurrentTab('Favoritas', const FavoritesPage());
+                      },
                     ),
                   ),
                 ],
               ),
-            ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Estadísticas del usuario
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    profileProvider.mixesCount.toString(),
-                    'Mezclas',
-                    Theme.of(context).primaryColor,
-                    onTap: () {
-                      final nav = MainNavigationPage.of(context);
-                      nav?.pushInCurrentTab(
-                        'Mis mezclas',
-                        const UserMixesPage(),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    favoritesCount.toString(),
-                    'Favoritas',
-                    Theme.of(context).primaryColor,
-                    onTap: () {
-                      final nav = MainNavigationPage.of(context);
-                      nav?.pushInCurrentTab('Favoritas', const FavoritesPage());
-                    },
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Opciones del perfil
-            _buildOptionsList(context),
-          ],
+              // Opciones del perfil
+              _buildOptionsList(context),
+            ],
+          ),
         ),
       ),
     );

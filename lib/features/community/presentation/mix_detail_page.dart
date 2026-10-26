@@ -22,6 +22,8 @@ import '../../catalog/data/tobacco_repository.dart';
 import '../data/community_repository.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../history/presentation/history_provider.dart';
+import '../../profile/presentation/profile_provider.dart';
+import '../../mixes/presentation/user_mixes_provider.dart';
 import '../../../core/providers/database_health_provider.dart';
 import '../../../core/utils/app_toast.dart';
 
@@ -531,6 +533,10 @@ class _MixDetailPageState extends State<MixDetailPage> {
       final ok = await provider.deleteMix(widget.mix.id);
       if (!mounted) return;
       if (ok) {
+        final profileProvider = context.read<ProfileProvider>();
+        profileProvider.decrementMixesCount();
+        unawaited(profileProvider.refreshMixesCount());
+        context.read<UserMixesProvider>().refresh();
         AppToast.showSuccess(context, 'Mezcla eliminada');
         Navigator.of(context).maybePop();
       } else {

@@ -136,7 +136,16 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
               (mixData['reviews'] as num?)?.toInt() ??
               0,
      ```
-     Esto garantiza que la interfaz muestre el conteo fidedigno de reseñas en vivo sin depender de columnas estáticas desincronizadas.
+      Esto garantiza que la interfaz muestre el conteo fidedigno de reseñas en vivo sin depender de columnas estáticas desincronizadas.
+
+### Sincronización Reactiva de Contadores en Perfil (Optimismo + Background Refresh)
+
+- **Problema**: Tras crear o eliminar mezclas (`mixes`), el contador de mezclas en la pantalla de perfil (`ProfilePage`) quedaba desactualizado porque solo se recalculaba al llamar a `load()`, método que transiciona a `ProfileLoading` causando parpadeos de pantalla completa. Además, la navegación por pestañas (`main_navigation.dart`) no refrescaba el perfil si ya estaba cargado (`isLoaded == true`).
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Actualización Optimista Inmediata**: En `ProfileProvider`, proveer `incrementMixesCount()` y `decrementMixesCount()` que actualizan inmutablemente `ProfileLoaded` vía `copyWith(mixesCount: ...)` y notifican inmediatamente a la UI sin emitir `ProfileLoading`.
+  2. **Sincronización Silenciosa en Segundo Plano**: Exponer `refreshMixesCount()`, que consulta `countCurrentUserMixes()` de forma asíncrona y sincroniza `ProfileLoaded` solo si el valor difiere, gestionando errores con `AppLogger.warning`.
+  3. **Notificación en Puntos de Mutación**: Tras la creación (`create_mix_page.dart`) o eliminación (`user_mixes_page.dart`, `mix_detail_page.dart`, `community_page.dart`, `favorites_page.dart`), ejecutar la actualización optimista, disparar `unawaited(profileProvider.refreshMixesCount())` y refrescar `UserMixesProvider`.
+  4. **Navegación y Pull-To-Refresh**: Al seleccionar la pestaña de Perfil en `main_navigation.dart` (`onTap` y `_onTabFirstEnter`), ejecutar `unawaited(profileProvider.refreshMixesCount())`. En `ProfilePage`, envolver el cuerpo en un `RefreshIndicator` (`onRefresh: () => Future.wait([profileProvider.load(), favoritesProvider.load()])`) con `AlwaysScrollableScrollPhysics` para permitir recarga manual completa.
 
 ## 📝 Logging Centralizado (AppLogger)
 

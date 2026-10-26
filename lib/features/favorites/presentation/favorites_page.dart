@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -6,6 +7,7 @@ import '../../../core/constants.dart';
 import '../../../core/models/mix.dart';
 import '../../../widgets/mix_card.dart';
 import '../../profile/presentation/profile_provider.dart';
+import '../../mixes/presentation/user_mixes_provider.dart';
 import '../../community/data/community_repository.dart';
 import '../../community/presentation/mix_detail_page.dart';
 import '../../community/presentation/create_mix_page.dart';
@@ -175,6 +177,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                       if (!context.mounted) return;
                                       if (success) {
                                         fav.removeFavorite(mix.id);
+                                        final profileProvider = context.read<ProfileProvider>();
+                                        profileProvider.decrementMixesCount();
+                                        unawaited(profileProvider.refreshMixesCount());
+                                        context.read<UserMixesProvider>().refresh();
                                         AppToast.showInfo(context, 'Mezcla eliminada');
                                       } else {
                                         AppToast.showError(context, 'No se pudo eliminar la mezcla');
@@ -340,6 +346,10 @@ class _Top5Section extends StatelessWidget {
                                       if (!context.mounted) return;
                                       if (success) {
                                         context.read<FavoritesProvider>().removeFavorite(mix.id);
+                                        final profileProvider = context.read<ProfileProvider>();
+                                        profileProvider.decrementMixesCount();
+                                        unawaited(profileProvider.refreshMixesCount());
+                                        context.read<UserMixesProvider>().refresh();
                                         AppToast.showInfo(context, 'Mezcla eliminada');
                                       } else {
                                         AppToast.showError(context, 'No se pudo eliminar la mezcla');

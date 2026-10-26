@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import '../../../core/models/mix.dart';
 import '../../../core/services/deep_link_service.dart';
 import '../../favorites/presentation/favorites_provider.dart';
 import '../../profile/presentation/profile_provider.dart';
+import '../../mixes/presentation/user_mixes_provider.dart';
 import '../data/community_repository.dart';
 import 'mix_detail_page.dart';
 import 'community_provider.dart';
@@ -628,6 +630,10 @@ class _CommunityMixItem extends StatelessWidget {
                 if (!context.mounted) return;
                 if (success) {
                   context.read<CommunityProvider>().refresh();
+                  final profileProvider = context.read<ProfileProvider>();
+                  profileProvider.decrementMixesCount();
+                  unawaited(profileProvider.refreshMixesCount());
+                  context.read<UserMixesProvider>().refresh();
                   AppToast.showInfo(context, 'Mezcla eliminada');
                 } else {
                   AppToast.showError(context, 'No se pudo eliminar la mezcla');

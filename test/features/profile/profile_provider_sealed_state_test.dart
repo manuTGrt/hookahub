@@ -241,5 +241,36 @@ void main() {
       expect(profileProvider.state, isA<ProfileLoaded>());
       expect(profileProvider.signedAvatarUrl, isNull);
     });
+
+    test('incrementMixesCount() y decrementMixesCount() actualizan optimista e inmutablemente ProfileLoaded sin ProfileLoading', () async {
+      await profileProvider.load();
+      expect(profileProvider.state, isA<ProfileLoaded>());
+      expect(profileProvider.mixesCount, 5);
+
+      profileProvider.incrementMixesCount();
+      expect(profileProvider.mixesCount, 6);
+      expect(profileProvider.state, isA<ProfileLoaded>());
+
+      profileProvider.decrementMixesCount();
+      expect(profileProvider.mixesCount, 5);
+      expect(profileProvider.state, isA<ProfileLoaded>());
+
+      // No debe decrementar por debajo de 0
+      for (var i = 0; i < 10; i++) {
+        profileProvider.decrementMixesCount();
+      }
+      expect(profileProvider.mixesCount, 0);
+    });
+
+    test('refreshMixesCount() sincroniza el contador en segundo plano sin emitir ProfileLoading', () async {
+      await profileProvider.load();
+      expect(profileProvider.mixesCount, 5);
+
+      fakeRepo.countMixes = 8;
+      await profileProvider.refreshMixesCount();
+
+      expect(profileProvider.mixesCount, 8);
+      expect(profileProvider.state, isA<ProfileLoaded>());
+    });
   });
 }
