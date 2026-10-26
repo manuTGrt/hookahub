@@ -118,6 +118,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       // ── Carrusel Principal (PageView) ──
                       Expanded(
                         child: PageView.builder(
+                          clipBehavior: Clip.none,
                           controller: _pageController,
                           itemCount: items.length,
                           onPageChanged: provider.setCurrentIndex,
@@ -217,12 +218,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
         : navy.withValues(alpha: 0.75);
 
     return SingleChildScrollView(
+      clipBehavior: Clip.none,
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(height: isCompact ? 8 : 16),
+          SizedBox(height: isCompact ? 42 : 48),
 
           // ── Contenedor Heroico / Ilustración ──
           Container(
@@ -251,7 +253,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
             ),
           ),
-          SizedBox(height: isCompact ? 16 : 24),
+          SizedBox(height: isCompact ? 14 : 22),
 
           // ── Badge de Categoría ──
           Container(
@@ -274,7 +276,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: isCompact ? 10 : 14),
 
           // ── Título Emocional ──
           Text(
@@ -287,7 +289,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               height: 1.2,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: isCompact ? 8 : 10),
 
           // ── Cuerpo de Texto (UX Copy) ──
           Text(
@@ -299,7 +301,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               height: 1.45,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isCompact ? 12 : 16),
 
           // ── Chips de Características Relevantes ──
           Wrap(
@@ -350,7 +352,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               );
             }).toList(),
           ),
-          SizedBox(height: isCompact ? 10 : 20),
+          SizedBox(height: isCompact ? 10 : 16),
         ],
       ),
     );
