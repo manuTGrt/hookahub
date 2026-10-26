@@ -70,7 +70,7 @@ class NotificationPresentationAdapter {
           title: notification.title,
           message: notification.message,
           categoryBadge: 'CATÁLOGO',
-          icon: Icons.inventory_2_rounded,
+          icon: Icons.local_fire_department,
           accentColor: const Color(0xFF4CAF50),
           backgroundColor: isDark ? fieldDark : const Color(0xFFE8F5E9),
         ),
