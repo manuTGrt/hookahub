@@ -105,9 +105,13 @@ class HistoryProvider extends ChangeNotifier {
     }
 
     try {
-      // Cargar historial de los últimos 2 días
-      final entries = await _repository.fetchRecentHistory(days: 2);
-      final uniqueCount = await _repository.getUniqueVisitedCount(days: 2);
+      // Cargar historial y conteo de los últimos 2 días en paralelo
+      final results = await Future.wait([
+        _repository.fetchRecentHistory(days: 2),
+        _repository.getUniqueVisitedCount(days: 2),
+      ]);
+      final entries = results[0] as List<VisitEntry>;
+      final uniqueCount = results[1] as int;
 
       AppLogger.info(
         '✅ HistoryProvider: Historial cargado - ${entries.length} entradas, $uniqueCount únicas',

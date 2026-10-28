@@ -100,13 +100,14 @@ class ProfileRepository {
     final fileName = 'avatar_current$ext';
     final storagePath = '${user.id}/$fileName';
 
+    final tmpFile = File(tmpPath);
     try {
       // Sube archivo
       await _client.storage
           .from(StorageConfig.avatarsBucket)
           .upload(
             storagePath,
-            File(tmpPath),
+            tmpFile,
             fileOptions: const FileOptions(
               contentType: 'image/jpeg',
               upsert: true,
@@ -117,6 +118,14 @@ class ProfileRepository {
       throw StorageException('Error al subir a Storage: ${e.message}');
     } catch (e) {
       rethrow;
+    } finally {
+      try {
+        if (await tmpFile.exists()) {
+          await tmpFile.delete();
+        }
+      } catch (e) {
+        AppLogger.debug('Aviso no bloqueante al borrar temporal de avatar: $e');
+      }
     }
 
     // Guarda en perfil el path (no URL). Con bucket privado usaremos Signed URLs al leer.

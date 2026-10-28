@@ -95,7 +95,7 @@ class NotificationsProvider extends ChangeNotifier {
   AppLifecycleListener? _lifecycleListener;
 
   NotificationsState _state = const NotificationsInitial();
-  StreamSubscription<AppNotification>? _realtimeSubscription;
+  StreamSubscription<List<AppNotification>>? _realtimeSubscription;
 
   static const int _pageSize = 50;
   int _currentOffset = 0;
@@ -166,12 +166,16 @@ class NotificationsProvider extends ChangeNotifier {
     }
 
     try {
-      final notifications = await _repository.fetchNotifications(
-        limit: _pageSize,
-        offset: 0,
-      );
+      final results = await Future.wait([
+        _repository.fetchNotifications(
+          limit: _pageSize,
+          offset: 0,
+        ),
+        _repository.getUnreadCount(),
+      ]);
 
-      final unreadCount = await _repository.getUnreadCount();
+      final notifications = results[0] as List<AppNotification>;
+      final unreadCount = results[1] as int;
       _currentOffset = notifications.length;
 
       _state = NotificationsLoaded(
@@ -337,7 +341,7 @@ class NotificationsProvider extends ChangeNotifier {
     _realtimeSubscription?.cancel();
 
     _realtimeSubscription = _repository.subscribeToNotifications().listen(
-      _onNewNotification,
+      _onRealtimeSnapshot,
       onError: (error, stackTrace) {
         final errorString = error.toString();
         if (errorString.contains('RealtimeSubscribeException') || 
@@ -351,33 +355,54 @@ class NotificationsProvider extends ChangeNotifier {
     );
   }
 
-  /// Callback cuando llega una nueva notificación
-  void _onNewNotification(AppNotification notification) {
+  /// Reconcilia atómicamente el lote de notificaciones emitido por Realtime
+  void _onRealtimeSnapshot(List<AppNotification> snapshot) {
     if (_state is NotificationsLoaded) {
+      if (snapshot.isEmpty) return;
       final current = _state as NotificationsLoaded;
-      final index = current.notifications.indexWhere((n) => n.id == notification.id);
-      if (index == -1) {
-        final updated = [notification, ...current.notifications];
-        final newUnread = notification.isRead ? current.unreadCount : current.unreadCount + 1;
-        _state = current.copyWith(
-          notifications: updated,
-          unreadCount: newUnread,
-        );
-        notifyListeners();
-        AppLogger.info('Nueva notificación recibida: ${notification.title}');
-      } else {
-        final existing = current.notifications[index];
-        if (existing.isRead != notification.isRead || existing.title != notification.title || existing.message != notification.message) {
-          final updated = List<AppNotification>.from(current.notifications);
-          updated[index] = notification;
-          final diff = (notification.isRead ? 0 : 1) - (existing.isRead ? 0 : 1);
-          _state = current.copyWith(
-            notifications: updated,
-            unreadCount: (current.unreadCount + diff).clamp(0, 999999),
-          );
-          notifyListeners();
+      final existingById = <String, int>{
+        for (var i = 0; i < current.notifications.length; i++)
+          current.notifications[i].id: i,
+      };
+
+      final newItems = <AppNotification>[];
+      List<AppNotification>? mutatedList;
+      int unreadDelta = 0;
+
+      for (final incoming in snapshot) {
+        final existingIdx = existingById[incoming.id];
+        if (existingIdx == null) {
+          newItems.add(incoming);
+          if (!incoming.isRead) {
+            unreadDelta++;
+          }
+        } else {
+          final existing = current.notifications[existingIdx];
+          if (existing.isRead != incoming.isRead ||
+              existing.title != incoming.title ||
+              existing.message != incoming.message) {
+            mutatedList ??= List<AppNotification>.from(current.notifications);
+            mutatedList[existingIdx] = incoming;
+            unreadDelta +=
+                (incoming.isRead ? 0 : 1) - (existing.isRead ? 0 : 1);
+          }
         }
       }
+
+      if (newItems.isEmpty && mutatedList == null) {
+        return;
+      }
+
+      final baseList = mutatedList ?? current.notifications;
+      final updated = newItems.isEmpty
+          ? baseList
+          : <AppNotification>[...newItems, ...baseList];
+
+      _state = current.copyWith(
+        notifications: updated,
+        unreadCount: (current.unreadCount + unreadDelta).clamp(0, 999999),
+      );
+      notifyListeners();
     } else if (_state is! NotificationsLoading) {
       unawaited(loadNotifications());
     }

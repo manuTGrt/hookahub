@@ -12,8 +12,8 @@ class FakeNotificationsRepository implements NotificationsRepository {
   bool activeUser = true;
   bool shouldThrow = false;
   int fetchCallCount = 0;
-  final StreamController<AppNotification> streamController =
-      StreamController<AppNotification>.broadcast();
+  final StreamController<List<AppNotification>> streamController =
+      StreamController<List<AppNotification>>.broadcast();
 
   @override
   bool get hasActiveUser => activeUser;
@@ -55,7 +55,7 @@ class FakeNotificationsRepository implements NotificationsRepository {
   Future<bool> deleteAllRead() async => true;
 
   @override
-  Stream<AppNotification> subscribeToNotifications() {
+  Stream<List<AppNotification>> subscribeToNotifications() {
     return streamController.stream;
   }
 }
@@ -210,6 +210,58 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       expect(fakeRepo.fetchCallCount, greaterThan(countBeforeResume));
+      provider.dispose();
+    });
+
+    test('reconcilia lotes Realtime atómicamente preservando el orden cronológico', () async {
+      fakeRepo.activeUser = true;
+      final provider = NotificationsProvider(fakeRepo);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      int listenerNotifications = 0;
+      provider.addListener(() {
+        listenerNotifications++;
+      });
+
+      final now = DateTime.now();
+      fakeRepo.streamController.add([
+        AppNotification(
+          id: 'notif-3',
+          userId: 'user-1',
+          type: NotificationType.mixTrending,
+          data: {'mix_id': '789'},
+          isRead: false,
+          createdAt: now.add(const Duration(minutes: 2)),
+        ),
+        AppNotification(
+          id: 'notif-2',
+          userId: 'user-1',
+          type: NotificationType.favoriteMyMix,
+          data: {'mix_id': '456'},
+          isRead: false,
+          createdAt: now.add(const Duration(minutes: 1)),
+        ),
+        AppNotification(
+          id: 'notif-1',
+          userId: 'user-1',
+          type: NotificationType.reviewOnMyMix,
+          data: {'mix_id': '123'},
+          isRead: true, // Marcada como leída en servidor
+          createdAt: now,
+        ),
+      ]);
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      // Un único notifyListeners() para todo el lote de 3 elementos
+      expect(listenerNotifications, 1);
+      expect(
+        provider.notifications.map((n) => n.id).toList(),
+        ['notif-3', 'notif-2', 'notif-1'],
+      );
+      // 1 inicial + 2 nuevas no leídas - 1 que pasó a leída = 2 no leídas
+      expect(provider.unreadCount, 2);
+
       provider.dispose();
     });
   });

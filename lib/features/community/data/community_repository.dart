@@ -1,9 +1,9 @@
 import 'package:hookahub/core/utils/app_logger.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../../core/models/mix.dart';
-// no-op
 
 /// Repositorio para gestionar las mezclas de la comunidad desde Supabase.
 class CommunityRepository {
@@ -417,49 +417,84 @@ class CommunityRepository {
         return null;
       }
 
-      // Actualizar cabecera de la mezcla
-      await _supabase.client
-          .from('mixes')
-          .update({
-            'name': name,
-            'description': description,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', mixId)
-          .timeout(supabaseWriteTimeout);
+      final normalizedComponents = components
+          .map(
+            (c) => {
+              'tobacco_name': c['tobacco_name'],
+              'brand': c['brand'],
+              'percentage': c['percentage'],
+              'color': c['color'],
+            },
+          )
+          .toList();
 
-      // Reemplazar componentes: borrar e insertar
-      await _supabase.client
-          .from('mix_components')
-          .delete()
-          .eq('mix_id', mixId)
-          .timeout(supabaseWriteTimeout);
-
-      if (components.isNotEmpty) {
-        final componentsData = components
-            .map(
-              (c) => {
-                'mix_id': mixId,
-                'tobacco_name': c['tobacco_name'],
-                'brand': c['brand'],
-                'percentage': c['percentage'],
-                'color': c['color'],
+      // Actualizar cabecera y componentes de forma atómica vía RPC transaccional
+      try {
+        await _supabase.client
+            .rpc(
+              'update_user_mix',
+              params: {
+                'p_mix_id': mixId,
+                'p_name': name,
+                'p_description': description,
+                'p_components': normalizedComponents,
               },
             )
-            .toList();
-        await _supabase.client
-            .from('mix_components')
-            .insert(componentsData)
             .timeout(supabaseWriteTimeout);
+      } on PostgrestException catch (e) {
+        // Fallback si la migración RPC aún no ha sido aplicada en el entorno
+        if (e.code == 'PGRST202' || e.code == '42883') {
+          AppLogger.warning(
+            'RPC update_user_mix no disponible (${e.code}), usando actualización secuencial',
+          );
+          await _supabase.client
+              .from('mixes')
+              .update({
+                'name': name,
+                'description': description,
+                'updated_at': DateTime.now().toIso8601String(),
+              })
+              .eq('id', mixId)
+              .timeout(supabaseWriteTimeout);
+
+          await _supabase.client
+              .from('mix_components')
+              .delete()
+              .eq('mix_id', mixId)
+              .timeout(supabaseWriteTimeout);
+
+          if (normalizedComponents.isNotEmpty) {
+            final componentsData = normalizedComponents
+                .map((c) => {'mix_id': mixId, ...c})
+                .toList();
+            await _supabase.client
+                .from('mix_components')
+                .insert(componentsData)
+                .timeout(supabaseWriteTimeout);
+          }
+        } else {
+          rethrow;
+        }
       }
 
-      // Obtener username y avatar_url del autor para regresar un Mix coherente
-      final profileResponse = await _supabase.client
-          .from('profiles')
-          .select('username, avatar_url')
-          .eq('id', user.id)
-          .single()
-          .timeout(supabaseReadTimeout);
+      // Obtener username/avatar_url del autor y rating/reviews actuales en paralelo
+      final metaResults = await Future.wait([
+        _supabase.client
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', user.id)
+            .single()
+            .timeout(supabaseReadTimeout),
+        _supabase.client
+            .from('mixes')
+            .select('rating, reviews, reviews_real:reviews(count)')
+            .eq('id', mixId)
+            .single()
+            .timeout(supabaseReadTimeout),
+      ]);
+
+      final profileResponse = metaResults[0];
+      final mixRow = metaResults[1];
       final authorName = profileResponse['username'] as String? ?? 'Anónimo';
       final authorAvatarUrl = profileResponse['avatar_url'] as String?;
 
@@ -476,14 +511,6 @@ class CommunityRepository {
           );
         }
       }
-
-      // Recuperar rating/reviews actuales
-      final mixRow = await _supabase.client
-          .from('mixes')
-          .select('rating, reviews, reviews_real:reviews(count)')
-          .eq('id', mixId)
-          .single()
-          .timeout(supabaseReadTimeout);
 
       return Mix(
         id: mixId,

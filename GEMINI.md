@@ -1010,7 +1010,16 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   2. Hacer que `_TabNavigatorObserver` mantenga la pila de `PageRoute<dynamic>` de cada pestaña (ignorando `PopupRoute` como diálogos o *bottom sheets*) y exponga `topPageRoute`.
   3. En `_updateBackAndTitle()`, evaluar `activeOverrideTitle = _routeOverrideTitles[topPageRoute]`: si `canPop` es `true` y `activeOverrideTitle == null`, activar `_hideTopBar = true` para ocultar la barra global mientras la vista de detalle esté en primer plano, restaurándola automáticamente al hacer `pop`.
 
-
-
+### 9. Blindaje de Producción: Idempotencia en `ensureProfile`, Reconciliación Atómica de Realtime y Actualización Transaccional de Mezclas
+- **Problema**:
+  1. En `SupabaseService.ensureProfile()`, invocar `.upsert()` sin `ignoreDuplicates: true` en cada evento `signedIn` o `userUpdated` sobreescribía el `username`, `display_name`, `is_public` y las preferencias guardadas en `user_settings` con los valores por defecto.
+  2. En `NotificationsRepository.subscribeToNotifications()`, encadenar `.stream(primaryKey: ['id']).limit(20)` con `.expand((notifications) => notifications)` emitía hasta 20 eventos individuales síncronos en cada cambio de socket, provocando múltiples `notifyListeners()` e invirtiendo el orden cronológico al llegar lotes nuevos.
+  3. En `CommunityRepository.updateMix()`, ejecutar `DELETE FROM mix_components` e `INSERT INTO mix_components` en llamadas HTTP separadas desde el cliente exponía a dejar mezclas con 0 ingredientes si ocurría un corte de red intermedio.
+  4. En `MainNavigationPage`, llamar a `setState(() {})` en `TextField.onChanged` para actualizar el `suffixIcon` reconstruía el árbol completo de navegación en cada pulsación de tecla, y `AdBannerCard` mostraba el contenedor `"Patrocinado / ANUNCIO"` vacío cuando el anuncio aún no había cargado o fallaba.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **Idempotencia en `ensureProfile`**: Pasar `ignoreDuplicates: true` siempre en `user_settings.upsert(..., onConflict: 'user_id', ignoreDuplicates: true)`, y usar `ignoreDuplicates: !hasExplicitProfileFields` en `profiles.upsert(...)` para no pisar perfiles existentes en inicios de sesión posteriores.
+  2. **Reconciliación por Lote en Realtime**: Mantener `Stream<List<AppNotification>>` sin `.expand()` y reconciliar el lote completo en `NotificationsProvider._onRealtimeSnapshot` con una única llamada a `notifyListeners()`.
+  3. **Atomicidad vía RPC (`update_user_mix`)**: Ejecutar la edición de cabecera y sustitución de componentes de una mezcla dentro de la función PostgreSQL `public.update_user_mix(p_mix_id, p_name, p_description, p_components)` en una sola transacción SQL.
+  4. **Aislamiento de Rebuilds y Contenedores Publicitarios**: Usar `ValueListenableBuilder<TextEditingValue>` sobre `_searchController` únicamente para el `suffixIcon` del buscador global, y envolver el marco visual de `AdBannerCard` mediante el parámetro `builder` de `AdBannerWidget` para que solo se pinte cuando `_isLoaded && _bannerAd != null`.
 
 

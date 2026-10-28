@@ -40,7 +40,7 @@ class NotificationsRepository {
           .toList();
     } catch (e, stackTrace) {
       AppLogger.error('Error al obtener notificaciones', error: e, stackTrace: stackTrace);
-      return [];
+      rethrow;
     }
   }
 
@@ -134,9 +134,9 @@ class NotificationsRepository {
     }
   }
 
-  /// Suscripción a notificaciones en tiempo real
-  /// Retorna un Stream que emite nuevas notificaciones
-  Stream<AppNotification> subscribeToNotifications() {
+  /// Suscripción a notificaciones en tiempo real.
+  /// Retorna un Stream con el lote actualizado de notificaciones recientes.
+  Stream<List<AppNotification>> subscribeToNotifications() {
     final user = _supabase.client.auth.currentUser;
     if (user == null) {
       AppLogger.info('Usuario no autenticado para suscripción');
@@ -150,9 +150,8 @@ class NotificationsRepository {
         .order('created_at', ascending: false)
         .limit(20)
         .map((data) {
-          if (data.isEmpty) return <AppNotification>[];
+          if (data.isEmpty) return const <AppNotification>[];
           return data.map((json) => AppNotification.fromJson(json)).toList();
-        })
-        .expand((notifications) => notifications);
+        });
   }
 }

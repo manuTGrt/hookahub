@@ -27,7 +27,6 @@ class PastelPasswordField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const turquoiseDark = Color(0xFF008080);
     return TextField(
       controller: controller,
       obscureText: obscureText,
@@ -80,6 +79,15 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  static final RegExp _usernameRegex = RegExp(r'^[a-zA-Z0-9_]+$');
+  static final RegExp _emailRegex = RegExp(
+    r'^[\w\.-]+@([\w-]+\.)+[a-zA-Z]{2,63}$',
+  );
+  static final RegExp _upperCaseRegex = RegExp(r'[A-Z]');
+  static final RegExp _lowerCaseRegex = RegExp(r'[a-z]');
+  static final RegExp _digitRegex = RegExp(r'[0-9]');
+  static final RegExp _specialCharRegex = RegExp(r'[!@#\$&*~_\-]');
+
   final _usernameFocus = FocusNode();
   final _firstNameFocus = FocusNode();
   final _lastNameFocus = FocusNode();
@@ -106,16 +114,16 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) return 'La contraseña es obligatoria';
     if (value.length < 8) return 'Debe tener al menos 8 caracteres';
-    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+    if (!_upperCaseRegex.hasMatch(value)) {
       return 'Debe contener al menos una mayúscula';
     }
-    if (!RegExp(r'[a-z]').hasMatch(value)) {
+    if (!_lowerCaseRegex.hasMatch(value)) {
       return 'Debe contener al menos una minúscula';
     }
-    if (!RegExp(r'[0-9]').hasMatch(value)) {
+    if (!_digitRegex.hasMatch(value)) {
       return 'Debe contener al menos un número';
     }
-    if (!RegExp(r'[!@#\$&*~_\-]').hasMatch(value)) {
+    if (!_specialCharRegex.hasMatch(value)) {
       return 'Debe contener un carácter especial (!@#\$&*~_- )';
     }
     return null;
@@ -208,7 +216,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       _usernameError =
                           value.isEmpty ||
                           value.length < 3 ||
-                          !RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value);
+                          !_usernameRegex.hasMatch(value);
                     });
                   }
                 },
@@ -370,10 +378,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   if (!hasFocus) {
                     final value = _emailController.text;
                     final hasError =
-                        value.isNotEmpty &&
-                        !RegExp(
-                          r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,4}$',
-                        ).hasMatch(value);
+                        value.isNotEmpty && !_emailRegex.hasMatch(value);
                     setState(() {
                       _emailError = hasError;
                       if (hasError) _showErrors = true;
@@ -507,13 +512,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   onPressed: _isLoading
                       ? null
                       : () async {
-                          setState(() {
-                            _showErrors = true;
-                            _triedRegister = true;
-                            _showAgeError = false;
-                          });
                           final birthDate = _selectedBirthDate;
-                          // Validación manual de campos (siempre mostrar todos los errores)
+                          // Validación manual de campos (siempre mostrar todos los errores en un único setState)
                           final username = _usernameController.text;
                           final firstName = _firstNameController.text;
                           final lastName = _lastNameController.text;
@@ -522,19 +522,18 @@ class _RegisterPageState extends State<RegisterPage> {
                           final confirmPassword =
                               _confirmPasswordController.text;
                           setState(() {
+                            _showErrors = true;
+                            _triedRegister = true;
                             _usernameError =
                                 username.isEmpty ||
                                 username.length < 3 ||
-                                !RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username);
+                                !_usernameRegex.hasMatch(username);
                             _firstNameError =
                                 firstName.isEmpty || firstName.length < 2;
                             _lastNameError =
                                 lastName.isEmpty || lastName.length < 2;
                             _emailError =
-                                email.isEmpty ||
-                                !RegExp(
-                                  r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,4}$',
-                                ).hasMatch(email);
+                                email.isEmpty || !_emailRegex.hasMatch(email);
                             _passwordError =
                                 _validatePassword(password) != null;
                             _confirmPasswordError =

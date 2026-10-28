@@ -100,7 +100,7 @@ class HistoryRepository {
       return entries;
     } catch (e, stackTrace) {
       AppLogger.error('Error al obtener historial', error: e, stackTrace: stackTrace);
-      return [];
+      rethrow;
     }
   }
 

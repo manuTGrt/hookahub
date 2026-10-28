@@ -32,7 +32,21 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        val admobAppId = System.getenv("ADMOB_ANDROID_APP_ID")
+        val dotenvFile = rootProject.projectDir.parentFile.resolve(".env")
+        val dotenvProperties = Properties().apply {
+            if (dotenvFile.exists()) {
+                dotenvFile.inputStream().use { load(it) }
+            }
+        }
+        val keyPropertiesFile = rootProject.file("key.properties")
+        val keyProps = Properties().apply {
+            if (keyPropertiesFile.exists()) {
+                keyPropertiesFile.inputStream().use { load(it) }
+            }
+        }
+        val admobAppId = System.getenv("ADMOB_ANDROID_APP_ID")?.takeIf { it.isNotBlank() }
+            ?: dotenvProperties.getProperty("ADMOB_ANDROID_APP_ID")?.trim()?.removeSurrounding("\"")?.takeIf { it.isNotBlank() }
+            ?: keyProps.getProperty("ADMOB_ANDROID_APP_ID")?.trim()?.takeIf { it.isNotBlank() }
             ?: "ca-app-pub-3940256099942544~3347511713"
         manifestPlaceholders["admobAppId"] = admobAppId
     }

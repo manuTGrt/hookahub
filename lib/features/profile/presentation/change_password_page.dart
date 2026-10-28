@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants.dart';
+import '../../../core/data/supabase_service.dart';
 import '../../../core/utils/app_error_mapper.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/app_toast.dart';
 
 class ChangePasswordPage extends StatefulWidget {
@@ -11,6 +14,10 @@ class ChangePasswordPage extends StatefulWidget {
 }
 
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
+  static final RegExp _passwordStrengthRegex = RegExp(
+    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)',
+  );
+
   final _formKey = GlobalKey<FormState>();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -35,8 +42,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     if (value.length < 8) {
       return 'La contraseña debe tener al menos 8 caracteres';
     }
-    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
+    if (!_passwordStrengthRegex.hasMatch(value)) {
       return 'La contraseña debe contener al menos una mayúscula, una minúscula y un número';
+    }
+    if (value == _currentPasswordController.text) {
+      return 'La nueva contraseña debe ser diferente a la actual';
     }
     return null;
   }
@@ -59,15 +69,51 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     });
 
     try {
-      // Simular cambio de contraseña
-      await Future.delayed(const Duration(seconds: 2));
+      final svc = SupabaseService();
+      final user = svc.client.auth.currentUser;
+      final email = user?.email;
+      if (user == null || email == null || email.isEmpty) {
+        throw StateError('No hay una sesión activa con correo electrónico');
+      }
+
+      // 1. Verificar contraseña actual re-autenticando al usuario
+      try {
+        await svc
+            .signInWithEmail(
+              email: email,
+              password: _currentPasswordController.text,
+            )
+            .timeout(supabaseWriteTimeout);
+      } on AuthException catch (e) {
+        final msg = e.message.toLowerCase();
+        if (msg.contains('invalid login credentials') ||
+            msg.contains('invalid_credentials')) {
+          if (mounted) {
+            AppToast.showError(
+              context,
+              'La contraseña actual introducida no es correcta',
+            );
+          }
+          return;
+        }
+        rethrow;
+      }
+
+      // 2. Actualizar a la nueva contraseña en Supabase Auth
+      await svc.client.auth
+          .updateUser(UserAttributes(password: _newPasswordController.text))
+          .timeout(supabaseWriteTimeout);
 
       if (mounted) {
         AppToast.showSuccess(context, 'Contraseña cambiada exitosamente');
-
         Navigator.of(context).pop();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Error al cambiar contraseña',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         AppToast.showError(
           context,

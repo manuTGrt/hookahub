@@ -9,6 +9,7 @@ import '../../community/presentation/mix_detail_page.dart';
 import '../../favorites/presentation/favorites_provider.dart';
 import '../../community/presentation/create_mix_page.dart';
 import '../../catalog/presentation/request_tobacco_page.dart';
+import '../../profile/presentation/profile_provider.dart';
 import '../../../core/data/supabase_service.dart';
 
 /// Página de resultados de búsqueda que muestra tabacos y mezclas
@@ -539,12 +540,24 @@ class SearchResultsPage extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: () {
-                  final userId =
-                      SupabaseService().client.auth.currentUser?.id ?? '';
-                  Navigator.of(context).push(
+                onPressed: () async {
+                  final profileUsername = context
+                      .read<ProfileProvider>()
+                      .profile
+                      ?.username;
+                  final fallbackAuthor =
+                      SupabaseService().client.auth.currentUser?.email
+                          ?.split('@')
+                          .first ??
+                      'Yo';
+                  final authorName =
+                      (profileUsername != null && profileUsername.isNotEmpty)
+                      ? profileUsername
+                      : fallbackAuthor;
+
+                  await Navigator.of(context).push<Mix>(
                     MaterialPageRoute(
-                      builder: (_) => CreateMixPage(currentUser: userId),
+                      builder: (_) => CreateMixPage(currentUser: authorName),
                     ),
                   );
                 },

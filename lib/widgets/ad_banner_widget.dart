@@ -8,7 +8,10 @@ import '../core/utils/app_logger.dart';
 /// Widget de Banner de AdMob reutilizable.
 /// Utiliza IDs productivos desde [Env] o los IDs oficiales de prueba en modo debug.
 class AdBannerWidget extends StatefulWidget {
-  const AdBannerWidget({super.key});
+  const AdBannerWidget({super.key, this.builder});
+
+  /// Constructor opcional para envolver el anuncio únicamente cuando se ha cargado con éxito.
+  final Widget Function(BuildContext context, Widget adChild)? builder;
 
   // IDs oficiales de pruebas de Google para Banner
   static const String testBannerAdUnitIdAndroid =
@@ -97,11 +100,17 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
       return const SizedBox.shrink();
     }
 
-    return Container(
+    final adChild = Container(
       alignment: Alignment.center,
       width: _bannerAd!.size.width.toDouble(),
       height: _bannerAd!.size.height.toDouble(),
       child: AdWidget(ad: _bannerAd!),
     );
+
+    if (widget.builder != null) {
+      return widget.builder!(context, adChild);
+    }
+
+    return adChild;
   }
 }

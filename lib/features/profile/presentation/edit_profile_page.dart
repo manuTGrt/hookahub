@@ -22,6 +22,11 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
+  static final RegExp _usernameRegex = RegExp(r'^[a-zA-Z0-9_]+$');
+  static final RegExp _emailRegex = RegExp(
+    r'^[\w-\.]+@([\w-]+\.)+[a-zA-Z]{2,63}$',
+  );
+
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _firstNameController = TextEditingController();
@@ -43,10 +48,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Cargar datos reales desde Supabase
+    // Usar perfil en memoria si ya está cargado; solo consultar Supabase si aún no se cargó
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
       final provider = context.read<ProfileProvider>();
-      await provider.load();
+      if (!provider.isLoaded || provider.profile == null) {
+        await provider.load();
+      }
       final p = provider.profile;
       if (p != null && mounted) {
         _populateFromProfile(p);
@@ -812,7 +820,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         if (value.length < 3) {
                           return 'El nombre de usuario debe tener al menos 3 caracteres';
                         }
-                        if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+                        if (!_usernameRegex.hasMatch(value)) {
                           return 'Solo se permiten letras, números y guiones bajos';
                         }
                         return null;
@@ -908,9 +916,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         if (value == null || value.isEmpty) {
                           return 'El correo electrónico es obligatorio';
                         }
-                        if (!RegExp(
-                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                        ).hasMatch(value)) {
+                        if (!_emailRegex.hasMatch(value)) {
                           return 'Introduce un correo electrónico válido';
                         }
                         return null;

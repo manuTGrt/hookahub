@@ -19,7 +19,6 @@ import '../../../widgets/user_avatar.dart';
 import 'community_provider.dart';
 import 'create_mix_page.dart';
 import '../../catalog/data/tobacco_repository.dart';
-import '../data/community_repository.dart';
 import '../../../core/data/supabase_service.dart';
 import '../../history/presentation/history_provider.dart';
 import '../../profile/presentation/profile_provider.dart';
@@ -108,13 +107,15 @@ class _MixDetailPageState extends State<MixDetailPage> {
     _initializeData();
   }
 
-  /// Inicializa todos los datos de la página
+  /// Inicializa todos los datos de la página en paralelo
   Future<void> _initializeData() async {
-    await _loadFullMixIfNeeded();
-    _loadMixDetails();
-    _loadReviews();
-    _checkOwnership();
     _recordVisit();
+    await Future.wait([
+      _loadFullMixIfNeeded(),
+      _loadMixDetails(),
+      _loadReviews(),
+      _checkOwnership(),
+    ]);
   }
 
   /// Recarga la mezcla completa si viene con datos incompletos (ej: desde notificaciones)
@@ -131,7 +132,11 @@ class _MixDetailPageState extends State<MixDetailPage> {
           });
         }
       } catch (e, stackTrace) {
-        AppLogger.error('Error al recargar mezcla completa', error: e, stackTrace: stackTrace);
+        AppLogger.error(
+          'Error al recargar mezcla completa',
+          error: e,
+          stackTrace: stackTrace,
+        );
       }
     }
   }
@@ -145,7 +150,11 @@ class _MixDetailPageState extends State<MixDetailPage> {
         historyProvider.recordView(widget.mix.id, silent: true);
       } catch (e, stackTrace) {
         // Ignorar si el provider no está disponible
-        AppLogger.error('No se pudo registrar visita en historial', error: e, stackTrace: stackTrace);
+        AppLogger.error(
+          'No se pudo registrar visita en historial',
+          error: e,
+          stackTrace: stackTrace,
+        );
       }
     });
   }
@@ -212,7 +221,11 @@ class _MixDetailPageState extends State<MixDetailPage> {
         _loadRelatedMixes();
       }
     } catch (e, stackTrace) {
-      AppLogger.warning('Fallo cargando detalles de mezcla', error: e, stackTrace: stackTrace);
+      AppLogger.warning(
+        'Fallo cargando detalles de mezcla',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         setState(() {
           _components = _buildComponentsFromIngredients(context, widget.mix);
@@ -249,7 +262,11 @@ class _MixDetailPageState extends State<MixDetailPage> {
         });
       }
     } catch (e, stackTrace) {
-      AppLogger.warning('Fallo cargando mezclas relacionadas', error: e, stackTrace: stackTrace);
+      AppLogger.warning(
+        'Fallo cargando mezclas relacionadas',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         setState(() => _loadingRelated = false);
       }
@@ -284,7 +301,11 @@ class _MixDetailPageState extends State<MixDetailPage> {
         });
       }
     } catch (e, stackTrace) {
-      AppLogger.warning('Fallo cargando reseñas de mezcla', error: e, stackTrace: stackTrace);
+      AppLogger.warning(
+        'Fallo cargando reseñas de mezcla',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         setState(() => _loadingReviews = false);
       }
@@ -556,7 +577,11 @@ class _MixDetailPageState extends State<MixDetailPage> {
         AppToast.showError(context, 'No se pudo eliminar la mezcla');
       }
     } catch (e, stackTrace) {
-      AppLogger.error('Error al eliminar la mezcla', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        'Error al eliminar la mezcla',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         AppToast.showError(context, 'Error al eliminar la mezcla');
       }
@@ -572,6 +597,8 @@ class _MixDetailPageState extends State<MixDetailPage> {
         ),
       );
     }
+
+    final currentUserId = SupabaseService().client.auth.currentUser?.id;
 
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -614,6 +641,8 @@ class _MixDetailPageState extends State<MixDetailPage> {
                 return _ReviewTile(
                   key: ValueKey(r.id),
                   review: r,
+                  isMyReview:
+                      currentUserId != null && currentUserId == r.authorId,
                   onDelete: () => _handleDeleteReview(r.id),
                   onEdit: () => _handleEditReview(r),
                 );
@@ -662,7 +691,11 @@ class _MixDetailPageState extends State<MixDetailPage> {
         AppToast.showError(context, 'Error al eliminar reseña');
       }
     } catch (e, stackTrace) {
-      AppLogger.error('Error al eliminar reseña de mezcla', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        'Error al eliminar reseña de mezcla',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted && context.mounted) {
         AppToast.showError(context, 'Error al eliminar reseña');
       }
@@ -670,13 +703,13 @@ class _MixDetailPageState extends State<MixDetailPage> {
   }
 
   void _handleEditReview(Review review) {
+    final repository = context.read<CommunityProvider>().repository;
     showDialog<bool>(
       context: context,
       builder: (context) => _EditReviewDialog(
         initialRating: review.rating,
         initialComment: review.comment,
         onSave: (rating, comment) async {
-          final repository = CommunityRepository(SupabaseService());
           final success = await repository.updateReview(
             mixId: widget.mix.id,
             reviewId: review.id,
@@ -741,7 +774,11 @@ class _MixDetailPageState extends State<MixDetailPage> {
         AppToast.showError(context, 'Error al publicar reseña');
       }
     } catch (e, stackTrace) {
-      AppLogger.error('Error al publicar reseña de mezcla', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        'Error al publicar reseña de mezcla',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted && context.mounted) {
         AppToast.showError(context, 'Error al publicar reseña');
       }
@@ -1451,22 +1488,18 @@ class _ReviewTile extends StatelessWidget {
   const _ReviewTile({
     super.key,
     required this.review,
+    required this.isMyReview,
     required this.onDelete,
     required this.onEdit,
   });
 
   final Review review;
+  final bool isMyReview;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
-    // Obtener el usuario actual para verificar si es el autor
-    final supabase = SupabaseService();
-    final currentUserId = supabase.client.auth.currentUser?.id;
-    final isMyReview =
-        currentUserId != null && currentUserId == review.authorId;
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),

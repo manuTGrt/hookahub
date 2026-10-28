@@ -369,7 +369,6 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                           context
                                               .read<SearchSuggestionsProvider>()
                                               .onQueryChanged(value);
-                                          setState(() {});
                                         },
                                         onSubmitted: (value) {
                                           _executeSearch(value);
@@ -390,21 +389,32 @@ class MainNavigationPageState extends State<MainNavigationPage> {
                                             ).colorScheme.primary,
                                           ),
                                           suffixIcon:
-                                              _searchController.text.isNotEmpty
-                                              ? IconButton(
-                                                  icon: const Icon(Icons.close),
-                                                  onPressed: () {
-                                                    setState(() {
+                                              ValueListenableBuilder<
+                                                TextEditingValue
+                                              >(
+                                                valueListenable:
+                                                    _searchController,
+                                                builder: (context, value, _) {
+                                                  if (value.text.isEmpty) {
+                                                    return const SizedBox.shrink();
+                                                  }
+                                                  return IconButton(
+                                                    icon: const Icon(
+                                                      Icons.close,
+                                                    ),
+                                                    onPressed: () {
                                                       _searchController.clear();
-                                                    });
-                                                    context
-                                                        .read<SearchSuggestionsProvider>()
-                                                        .onQueryChanged('');
-                                                    _searchFocusNode
-                                                        .requestFocus();
-                                                  },
-                                                )
-                                              : null,
+                                                      context
+                                                          .read<
+                                                            SearchSuggestionsProvider
+                                                          >()
+                                                          .onQueryChanged('');
+                                                      _searchFocusNode
+                                                          .requestFocus();
+                                                    },
+                                                  );
+                                                },
+                                              ),
                                           contentPadding:
                                               const EdgeInsets.symmetric(
                                                 horizontal: 12,

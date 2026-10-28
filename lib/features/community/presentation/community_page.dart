@@ -10,11 +10,9 @@ import '../../../core/services/deep_link_service.dart';
 import '../../favorites/presentation/favorites_provider.dart';
 import '../../profile/presentation/profile_provider.dart';
 import '../../mixes/presentation/user_mixes_provider.dart';
-import '../data/community_repository.dart';
 import 'mix_detail_page.dart';
 import 'community_provider.dart';
 import '../domain/community_filters.dart';
-import '../../../core/data/supabase_service.dart';
 import 'create_mix_page.dart';
 import '../../../core/utils/app_toast.dart';
 
@@ -62,9 +60,7 @@ class _CommunityPageState extends State<CommunityPage> {
       (p) => p.state is CommunityLoading || p.state is CommunityInitial,
     );
     if (isInitialLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final initialError = context.select<CommunityProvider, String?>(
@@ -129,16 +125,11 @@ class _CommunityPageState extends State<CommunityPage> {
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
-                          _buildSortDropdown(
-                            context,
-                            scaleFactor,
-                          ),
+                          _buildSortDropdown(context, scaleFactor),
                           const SizedBox(width: 8),
                           _buildFavoritesChip(context),
                           const SizedBox(width: 8),
-                          _TobaccoFilterDropdown(
-                            scaleFactor: scaleFactor,
-                          ),
+                          _TobaccoFilterDropdown(scaleFactor: scaleFactor),
                         ],
                       ),
                     ),
@@ -180,7 +171,9 @@ class _CommunityPageState extends State<CommunityPage> {
       labelStyle: TextStyle(
         color: isSelected
             ? Theme.of(context).primaryColor
-            : Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+            : Theme.of(
+                context,
+              ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
       side: BorderSide(
@@ -192,10 +185,7 @@ class _CommunityPageState extends State<CommunityPage> {
   }
 
   // Dropdown de ordenamiento (estética igual a catálogo)
-  Widget _buildSortDropdown(
-    BuildContext context,
-    double scaleFactor,
-  ) {
+  Widget _buildSortDropdown(BuildContext context, double scaleFactor) {
     final sort = context.select<CommunityProvider, CommunitySortOption>(
       (p) => p.filterState.sortOption,
     );
@@ -282,9 +272,8 @@ class _CommunityPageState extends State<CommunityPage> {
                           size: 20,
                           color: isSelected
                               ? Theme.of(context).primaryColor
-                              : Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.color?.withValues(alpha: 0.3),
+                              : Theme.of(context).textTheme.bodyMedium?.color
+                                    ?.withValues(alpha: 0.3),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -430,8 +419,8 @@ class _CommunityMixesSliver extends StatelessWidget {
                 Text(
                   'Sé el primero en crear una mezcla',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).textTheme.bodySmall?.color,
-                      ),
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
                 ),
               ],
             ),
@@ -458,17 +447,14 @@ class _CommunityMixesSliver extends StatelessWidget {
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final mix = chunk[index];
-                return _CommunityMixItem(
-                  key: ValueKey(mix.id),
-                  mix: mix,
-                  scaleFactor: scaleFactor,
-                );
-              },
-              childCount: chunk.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final mix = chunk[index];
+              return _CommunityMixItem(
+                key: ValueKey(mix.id),
+                mix: mix,
+                scaleFactor: scaleFactor,
+              );
+            }, childCount: chunk.length),
           ),
         ),
       );
@@ -531,12 +517,10 @@ class _CommunityFooter extends StatelessWidget {
             child: Text(
               'No hay más mezclas',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.color
-                        ?.withValues(alpha: 0.6),
-                  ),
+                color: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+              ),
             ),
           ),
         ),
@@ -625,11 +609,11 @@ class _CommunityMixItem extends StatelessWidget {
                 ),
               );
               if (confirmed == true && context.mounted) {
-                final repository = CommunityRepository(SupabaseService());
-                final success = await repository.deleteMix(mix.id);
+                final success = await context
+                    .read<CommunityProvider>()
+                    .deleteMix(mix.id);
                 if (!context.mounted) return;
                 if (success) {
-                  context.read<CommunityProvider>().refresh();
                   final profileProvider = context.read<ProfileProvider>();
                   profileProvider.decrementMixesCount();
                   unawaited(profileProvider.refreshMixesCount());
@@ -651,9 +635,7 @@ class _CommunityMixItem extends StatelessWidget {
 }
 
 class _TobaccoFilterDropdown extends StatefulWidget {
-  const _TobaccoFilterDropdown({
-    required this.scaleFactor,
-  });
+  const _TobaccoFilterDropdown({required this.scaleFactor});
   final double scaleFactor;
   @override
   State<_TobaccoFilterDropdown> createState() => _TobaccoFilterDropdownState();
@@ -725,10 +707,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                     if (!mounted || !context.mounted) return;
                     setMenuState(() => _loading = true);
                     final results = await communityProvider.repository
-                        .fetchAvailableTobaccos(
-                          query: queryText,
-                          limit: 50,
-                        );
+                        .fetchAvailableTobaccos(query: queryText, limit: 50);
                     if (!mounted || !context.mounted) return;
                     setMenuState(() {
                       _available = results;
@@ -753,13 +732,14 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                       },
                       decoration: InputDecoration(
                         hintText: 'Buscar tabaco...',
-                        hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.color
-                              ?.withValues(alpha: 0.5),
-                        ),
+                        hintStyle: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.color
+                                  ?.withValues(alpha: 0.5),
+                            ),
                         prefixIcon: Icon(
                           Icons.search,
                           size: 20,
@@ -1016,7 +996,8 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
               Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: InkWell(
-                  onTap: () => context.read<CommunityProvider>().clearTobaccoFilter(),
+                  onTap: () =>
+                      context.read<CommunityProvider>().clearTobaccoFilter(),
                   child: Icon(
                     Icons.clear,
                     size: 16,

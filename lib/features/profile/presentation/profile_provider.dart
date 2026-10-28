@@ -188,7 +188,7 @@ class ProfileProvider extends ChangeNotifier {
     } catch (e, stack) {
       AppLogger.error('Error guardando perfil', error: e, stackTrace: stack);
       DatabaseHealthProvider.reportFailure(e);
-      return 'Error guardando cambios';
+      return AppErrorMapper.toSpanish(e);
     }
   }
 

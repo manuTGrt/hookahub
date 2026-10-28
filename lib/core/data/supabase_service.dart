@@ -58,7 +58,15 @@ class SupabaseService {
     if (user == null) return;
     final uid = user.id;
     final email = user.email;
-    // Construir datos de perfil (idempotente vía upsert)
+    // Construir datos de perfil
+    final hasExplicitProfileFields =
+        username != null ||
+        displayName != null ||
+        firstName != null ||
+        lastName != null ||
+        birthdate != null ||
+        bio != null;
+
     final profileData = <String, dynamic>{
       'id': uid,
       'username':
@@ -69,27 +77,33 @@ class SupabaseService {
           displayName ?? firstName ?? email?.split('@').first ?? 'Usuario',
       'bio': bio,
       'birthdate': birthdate?.toIso8601String(),
-      // No forzamos is_public si ya existía; pero para primer insert irá true.
-      'is_public': true,
-      // updated_at será manejado por la DB si tienes trigger; si no, lo dejamos a la DB.
+      if (!hasExplicitProfileFields) 'is_public': true,
     }..removeWhere((key, value) => value == null);
 
-    // Crear/actualizar perfil. onConflict asegura que no se duplique.
+    // Crear perfil si no existe; solo actualizar si se pasaron campos explícitos (ej. registro).
     await client
         .from('profiles')
-        .upsert(profileData, onConflict: 'id')
+        .upsert(
+          profileData,
+          onConflict: 'id',
+          ignoreDuplicates: !hasExplicitProfileFields,
+        )
         .timeout(supabaseWriteTimeout);
 
-    // Crear/actualizar configuración por defecto sin sobreescribir elecciones existentes
+    // Crear configuración por defecto solo si no existe fila previa para el usuario
     await client
         .from('user_settings')
-        .upsert({
-          'user_id': uid,
-          'theme': 'system',
-          'push_notifications': true,
-          'email_notifications': false,
-          'analytics_opt_in': false,
-        }, onConflict: 'user_id')
+        .upsert(
+          {
+            'user_id': uid,
+            'theme': 'system',
+            'push_notifications': true,
+            'email_notifications': false,
+            'analytics_opt_in': false,
+          },
+          onConflict: 'user_id',
+          ignoreDuplicates: true,
+        )
         .timeout(supabaseWriteTimeout);
   }
 
