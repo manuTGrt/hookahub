@@ -70,7 +70,9 @@ enum LegacyCommunityFilter { popular, recent, topRated, favorites }
 class CommunityProvider extends ChangeNotifier {
   CommunityProvider(this._repository) {
     _reconnectedSub = DatabaseHealthProvider.instance.onReconnected.listen((_) {
-      unawaited(refresh());
+      if (_state is! CommunityInitial && !isLoading) {
+        unawaited(refresh());
+      }
     });
   }
 

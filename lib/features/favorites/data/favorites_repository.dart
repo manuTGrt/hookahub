@@ -42,7 +42,7 @@ class FavoritesRepository implements domain.FavoritesRepository {
   }
 
   @override
-  Future<List<Mix>> loadFavorites({String? userId}) async {
+  Future<List<Mix>> loadFavorites({String? userId, int limit = 100}) async {
     final effectiveUserId = _resolveUserId(userId);
 
     if (effectiveUserId != null && effectiveUserId.isNotEmpty) {
@@ -65,6 +65,7 @@ class FavoritesRepository implements domain.FavoritesRepository {
               )
             ''')
             .eq('user_id', effectiveUserId)
+            .limit(limit)
             .timeout(supabaseReadTimeout);
 
         final List<Mix> cloudFavorites = (response as List).map((favData) {

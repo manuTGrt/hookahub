@@ -35,7 +35,7 @@ class FakeSealedCommunityRepository implements CommunityRepository {
   }
 
   @override
-  Future<List<Mix>> fetchFavorites() async => mockMixes;
+  Future<List<Mix>> fetchFavorites({int limit = 100}) async => mockMixes;
 
   @override
   Future<Mix?> createMix({

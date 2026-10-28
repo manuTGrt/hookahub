@@ -1,3 +1,4 @@
+import '../../../core/constants.dart';
 import '../../../core/data/supabase_service.dart';
 import '../domain/home_stats.dart';
 
@@ -11,7 +12,8 @@ class HomeStatsRepository {
         .from('app_statistics')
         .select()
         .eq('id', 1)
-        .maybeSingle();
+        .maybeSingle()
+        .timeout(supabaseReadTimeout);
 
     if (response == null) return HomeStats.empty;
     return HomeStats(

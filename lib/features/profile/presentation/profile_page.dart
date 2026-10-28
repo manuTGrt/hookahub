@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/config/env.dart';
 import '../../../core/constants.dart';
+import '../../../widgets/user_avatar.dart';
 import 'settings_page.dart';
 import 'edit_profile_page.dart';
 import '../../favorites/presentation/favorites_page.dart';
@@ -41,10 +42,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final profile = profileProvider.profile;
     final signedUrl = profileProvider.signedAvatarUrl;
     final hasPhoto = signedUrl != null && signedUrl.isNotEmpty;
-    final iconIndex =
-        (profile?.avatarUrl != null && profile!.avatarUrl!.startsWith('icon:'))
-        ? int.tryParse(profile.avatarUrl!.substring(5))
-        : null;
     final displayName =
         (profile?.displayName != null &&
             profile!.displayName!.trim().isNotEmpty)
@@ -91,21 +88,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 child: Column(
                   children: [
-                    // Avatar
-                    CircleAvatar(
+                    // Avatar optimizado con control de memoria y resolución nativa
+                    UserAvatar(
+                      username: displayName,
+                      avatarUrl: hasPhoto ? signedUrl : profile?.avatarUrl,
                       radius: 50,
                       backgroundColor: isDark ? darkTurquoise : turquoise,
-                      backgroundImage:
-                          hasPhoto ? CachedNetworkImageProvider(signedUrl) : null,
-                      child: hasPhoto
-                          ? null
-                          : Icon(
-                              iconIndex != null && iconIndex >= 0 && iconIndex < 8
-                                  ? _avatarIcons[iconIndex]
-                                  : Icons.person,
-                              size: 60,
-                              color: Colors.white,
-                            ),
+                      fontSize: 36,
                     ),
                     const SizedBox(height: 16),
                     // Nombre del usuario
@@ -546,8 +535,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _rateApp(BuildContext context) async {
-    const String androidPackageName = 'com.hookahub.app';
-    const String iosAppId = '000000000';
+    const String androidPackageName = 'com.manutech.hookahub';
+    const String iosAppId = Env.appleAppStoreId;
 
     Uri? storeUrl;
 
@@ -560,6 +549,15 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     } else if (Platform.isIOS) {
+      if (iosAppId.isEmpty) {
+        if (context.mounted) {
+          AppToast.showInfo(
+            context,
+            'La valoración en App Store estará disponible próximamente',
+          );
+        }
+        return;
+      }
       storeUrl = Uri.parse(
         'https://apps.apple.com/app/id$iosAppId?action=write-review',
       );
@@ -601,6 +599,3 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 }
-
-// Conjunto de iconos posibles para avatares por icono
-const List<IconData> _avatarIcons = appAvatarIcons;

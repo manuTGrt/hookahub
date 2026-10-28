@@ -34,13 +34,12 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final historyProvider = context.watch<HistoryProvider>();
-    final favoritesProvider = context.watch<FavoritesProvider>();
 
     return Scaffold(
       // AppBar removida: título y navegación manejados por barra superior global
       body: RefreshIndicator(
         onRefresh: historyProvider.refresh,
-        child: _buildBody(context, historyProvider, favoritesProvider, isDark),
+        child: _buildBody(context, historyProvider, isDark),
       ),
     );
   }
@@ -48,7 +47,6 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _buildBody(
     BuildContext context,
     HistoryProvider historyProvider,
-    FavoritesProvider favoritesProvider,
     bool isDark,
   ) {
     // Evaluación exhaustiva de estado con Dart 3 pattern matching
@@ -128,7 +126,6 @@ class _HistoryPageState extends State<HistoryPage> {
       HistoryLoaded() => _buildLoadedList(
           context,
           historyProvider,
-          favoritesProvider,
           isDark,
         ),
     };
@@ -137,72 +134,75 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _buildLoadedList(
     BuildContext context,
     HistoryProvider historyProvider,
-    FavoritesProvider favoritesProvider,
     bool isDark,
   ) {
     // Lista de historial agrupada por día
     final groupedEntries = historyProvider.groupedByDay;
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Estadística de mezclas únicas visitadas
-        _buildStatsCard(context, historyProvider, isDark),
-        const SizedBox(height: 16),
-
-        // Grupos por día
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          sliver: SliverToBoxAdapter(
+            child: _buildStatsCard(context, historyProvider, isDark),
+          ),
+        ),
         ...groupedEntries.entries.map((group) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Cabecera del día
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(
-                      _getDayIcon(group.key),
-                      size: 20,
-                      color: isDark ? darkTurquoise : turquoise,
+          return SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverMainAxisGroup(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _getDayIcon(group.key),
+                          size: 20,
+                          color: isDark ? darkTurquoise : turquoise,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          group.key,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? darkNavy : navy,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '(${group.value.length})',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: isDark
+                                ? darkNavy.withValues(alpha: 0.6)
+                                : navy.withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      group.key,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? darkNavy : navy,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '(${group.value.length})',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? darkNavy.withValues(alpha: 0.6)
-                            : navy.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Lista de mezclas del día
-              ...group.value.map((entry) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildHistoryCard(
-                    context,
-                    entry,
-                    favoritesProvider,
-                    isDark,
                   ),
-                );
-              }),
-
-              const SizedBox(height: 8),
-            ],
+                ),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final entry = group.value[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _HistoryMixCard(
+                          key: ValueKey('${entry.mixId}_${entry.visitedAt.millisecondsSinceEpoch}'),
+                          entry: entry,
+                        ),
+                      );
+                    },
+                    childCount: group.value.length,
+                  ),
+                ),
+              ],
+            ),
           );
         }),
+        const SliverToBoxAdapter(child: SizedBox(height: 16)),
       ],
     );
   }
@@ -265,52 +265,6 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _buildHistoryCard(
-    BuildContext context,
-    VisitEntry entry,
-    FavoritesProvider favoritesProvider,
-    bool isDark,
-  ) {
-    // Convertir VisitEntry a Mix para usar MixCard
-    final mix = Mix(
-      id: entry.mixId,
-      name: entry.mixName,
-      author: entry.author,
-      rating: entry.rating,
-      reviews: entry.reviews,
-      ingredients: entry.ingredients,
-      color: entry.mixColor,
-      authorAvatarUrl: entry.authorAvatarUrl,
-    );
-
-    final isFavorite = favoritesProvider.favorites.any((f) => f.id == mix.id);
-    final timeFormat = DateFormat('HH:mm');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        MixCard(
-          mix: mix,
-          isFavorite: isFavorite,
-          onFavoriteTap: () {
-            if (isFavorite) {
-              favoritesProvider.removeFavorite(mix.id);
-            } else {
-              favoritesProvider.addFavorite(mix);
-            }
-          },
-          time: timeFormat.format(entry.visitedAt),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
   IconData _getDayIcon(String day) {
     switch (day) {
       case 'Hoy':
@@ -322,5 +276,50 @@ class _HistoryPageState extends State<HistoryPage> {
       default:
         return Icons.calendar_month;
     }
+  }
+}
+
+class _HistoryMixCard extends StatelessWidget {
+  const _HistoryMixCard({super.key, required this.entry});
+
+  final VisitEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final mix = Mix(
+      id: entry.mixId,
+      name: entry.mixName,
+      author: entry.author,
+      rating: entry.rating,
+      reviews: entry.reviews,
+      ingredients: entry.ingredients,
+      color: entry.mixColor,
+      authorAvatarUrl: entry.authorAvatarUrl,
+    );
+
+    final isFavorite = context.select<FavoritesProvider, bool>(
+      (fav) => fav.favorites.any((f) => f.id == mix.id),
+    );
+    final timeFormat = DateFormat('HH:mm');
+
+    return MixCard(
+      mix: mix,
+      isFavorite: isFavorite,
+      onFavoriteTap: () {
+        final favProvider = context.read<FavoritesProvider>();
+        if (isFavorite) {
+          favProvider.removeFavorite(mix.id);
+        } else {
+          favProvider.addFavorite(mix);
+        }
+      },
+      time: timeFormat.format(entry.visitedAt),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => MixDetailPage(mix: mix)),
+        );
+      },
+    );
   }
 }

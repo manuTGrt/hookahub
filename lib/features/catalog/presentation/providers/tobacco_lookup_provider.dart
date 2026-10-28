@@ -6,6 +6,66 @@ import '../../../../core/models/tobacco.dart';
 import '../../../../core/utils/app_error_mapper.dart';
 import '../../data/tobacco_repository.dart';
 
+// ---------------------------------------------------------------------------
+// Estados UI (sealed class — sin booleanos fragmentados)
+// ---------------------------------------------------------------------------
+
+sealed class TobaccoLookupState {
+  const TobaccoLookupState();
+}
+
+/// Estado inicial antes de comenzar la búsqueda o paginación.
+class TobaccoLookupInitial extends TobaccoLookupState {
+  const TobaccoLookupInitial();
+}
+
+/// Primera página cargándose.
+class TobaccoLookupLoading extends TobaccoLookupState {
+  const TobaccoLookupLoading();
+}
+
+/// Resultados cargados (incluye flag de paginación adicional en curso).
+class TobaccoLookupLoaded extends TobaccoLookupState {
+  const TobaccoLookupLoaded({
+    required this.items,
+    this.isLoadingMore = false,
+    this.hasMore = true,
+  });
+
+  final List<Tobacco> items;
+  final bool isLoadingMore;
+  final bool hasMore;
+
+  TobaccoLookupLoaded copyWith({
+    List<Tobacco>? items,
+    bool? isLoadingMore,
+    bool? hasMore,
+  }) {
+    return TobaccoLookupLoaded(
+      items: items ?? this.items,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMore: hasMore ?? this.hasMore,
+    );
+  }
+}
+
+/// Error al consultar el catálogo de tabacos.
+class TobaccoLookupError extends TobaccoLookupState {
+  const TobaccoLookupError(
+    this.message, {
+    this.previousItems = const [],
+    this.hasMore = true,
+  });
+
+  final String message;
+  final List<Tobacco> previousItems;
+  final bool hasMore;
+}
+
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
+
 /// Provider para búsquedas y listado paginado de tabacos en el desplegable
 class TobaccoLookupProvider extends ChangeNotifier {
   TobaccoLookupProvider(this._repository, {bool autoLoad = true}) {
@@ -17,17 +77,31 @@ class TobaccoLookupProvider extends ChangeNotifier {
 
   final TobaccoRepository _repository;
 
-  final List<Tobacco> _items = [];
-  List<Tobacco> get items => List.unmodifiable(_items);
+  TobaccoLookupState _state = const TobaccoLookupInitial();
+  TobaccoLookupState get state => _state;
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
+  List<Tobacco> get items => switch (_state) {
+    TobaccoLookupLoaded(items: final list) => List.unmodifiable(list),
+    TobaccoLookupError(previousItems: final list) => List.unmodifiable(list),
+    _ => const <Tobacco>[],
+  };
 
-  bool _hasMore = true;
-  bool get hasMore => _hasMore;
+  bool get isLoading => switch (_state) {
+    TobaccoLookupLoading() => true,
+    TobaccoLookupLoaded(isLoadingMore: final loadingMore) => loadingMore,
+    _ => false,
+  };
 
-  String? _error;
-  String? get error => _error;
+  bool get hasMore => switch (_state) {
+    TobaccoLookupLoaded(hasMore: final more) => more,
+    TobaccoLookupError(hasMore: final more) => more,
+    _ => true,
+  };
+
+  String? get error => switch (_state) {
+    TobaccoLookupError(message: final msg) => msg,
+    _ => null,
+  };
 
   static const int _pageSize = TobaccoRepository.defaultPageSize;
 
@@ -39,41 +113,54 @@ class TobaccoLookupProvider extends ChangeNotifier {
     final q = value.trim();
     if (q == _query) return;
     _query = q;
-    _items.clear();
-    _hasMore = true;
-    _error = null;
+    _state = const TobaccoLookupInitial();
     notifyListeners();
     await loadMore(resetCursor: true);
   }
 
   Future<void> refresh() async {
-    _items.clear();
-    _hasMore = true;
-    _error = null;
+    _state = const TobaccoLookupInitial();
     notifyListeners();
     await loadMore(resetCursor: true);
   }
 
   Future<void> loadMore({bool resetCursor = false}) async {
-    if (_isLoading || !_hasMore) return;
-    _isLoading = true;
-    _error = null;
+    if (isLoading || (!resetCursor && !hasMore)) return;
+
+    final currentItems = resetCursor ? const <Tobacco>[] : List<Tobacco>.of(items);
+    final previousHasMore = resetCursor ? true : hasMore;
+
+    if (currentItems.isEmpty) {
+      _state = const TobaccoLookupLoading();
+    } else {
+      _state = TobaccoLookupLoaded(
+        items: currentItems,
+        isLoadingMore: true,
+        hasMore: previousHasMore,
+      );
+    }
     notifyListeners();
+
     try {
-      final offset = resetCursor ? 0 : _items.length;
+      final offset = resetCursor ? 0 : currentItems.length;
       final newItems = await _repository.fetchTobaccos(
         offset: offset,
         limit: _pageSize,
         query: _query.isEmpty ? null : _query,
       );
-      _items.addAll(newItems);
-      if (newItems.length < _pageSize) {
-        _hasMore = false;
-      }
+      final merged = <Tobacco>[...currentItems, ...newItems];
+      _state = TobaccoLookupLoaded(
+        items: merged,
+        isLoadingMore: false,
+        hasMore: newItems.length >= _pageSize,
+      );
     } catch (e) {
-      _error = AppErrorMapper.toSpanish(e);
+      _state = TobaccoLookupError(
+        AppErrorMapper.toSpanish(e),
+        previousItems: currentItems,
+        hasMore: previousHasMore,
+      );
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }

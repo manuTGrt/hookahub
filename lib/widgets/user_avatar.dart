@@ -99,8 +99,10 @@ class UserAvatar extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.cover,
+          alignment: Alignment.center,
+          // Pasar solo memCacheWidth preserva el aspect ratio original durante la
+          // decodificación y permite que BoxFit.cover recorte sin achatar la foto.
           memCacheWidth: cacheDimension > 0 ? cacheDimension : 120,
-          memCacheHeight: cacheDimension > 0 ? cacheDimension : 120,
           fadeInDuration: const Duration(milliseconds: 200),
           fadeOutDuration: const Duration(milliseconds: 100),
           placeholder: (context, url) => _buildInitialContent(),

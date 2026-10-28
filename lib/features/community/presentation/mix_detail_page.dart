@@ -112,7 +112,6 @@ class _MixDetailPageState extends State<MixDetailPage> {
   Future<void> _initializeData() async {
     await _loadFullMixIfNeeded();
     _loadMixDetails();
-    _loadRelatedMixes();
     _loadReviews();
     _checkOwnership();
     _recordVisit();
@@ -171,17 +170,30 @@ class _MixDetailPageState extends State<MixDetailPage> {
       if (details != null && mounted) {
         _description = details['description'] as String;
         final componentsData = details['components'] as List;
-        final loaded = componentsData
-            .map(
-              (c) => MixComponent(
-                tobacco: c['tobacco_name'] as String,
-                brand: c['brand'] as String,
-                percentage: c['percentage'] as double,
-                color: c['color'] as Color,
-                description: (c['description'] as String?)?.trim(),
-              ),
-            )
-            .toList();
+        final loaded = componentsData.map((c) {
+          Tobacco? catalogItem;
+          final rawCatalog = c['catalog_item'];
+          if (rawCatalog is Map<String, dynamic>) {
+            catalogItem = Tobacco(
+              id: rawCatalog['id'] as String,
+              name: rawCatalog['name'] as String,
+              brand: rawCatalog['brand'] as String,
+              description: rawCatalog['description'] as String?,
+              flavors: const <String>[],
+              rating: (rawCatalog['rating'] as num?)?.toDouble() ?? 0.0,
+              reviews: (rawCatalog['reviews'] as int?) ?? 0,
+              imageUrl: rawCatalog['image_url'] as String?,
+            );
+          }
+          return MixComponent(
+            tobacco: c['tobacco_name'] as String,
+            brand: c['brand'] as String,
+            percentage: c['percentage'] as double,
+            color: c['color'] as Color,
+            description: (c['description'] as String?)?.trim(),
+            catalog: catalogItem,
+          );
+        }).toList();
         final distinct = _assignDistinctColors(loaded);
         final enriched = await _resolveCatalogForComponents(distinct);
         if (!mounted) return;
@@ -197,25 +209,26 @@ class _MixDetailPageState extends State<MixDetailPage> {
           _components = _buildComponentsFromIngredients(context, widget.mix);
           _isLoading = false;
         });
+        _loadRelatedMixes();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.warning('Fallo cargando detalles de mezcla', error: e, stackTrace: stackTrace);
       if (mounted) {
         setState(() {
           _components = _buildComponentsFromIngredients(context, widget.mix);
           _isLoading = false;
         });
+        _loadRelatedMixes();
       }
     }
   }
 
   Future<void> _loadRelatedMixes() async {
     if (_components.isEmpty) {
-      // Esperar a que se carguen los componentes primero
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (_components.isEmpty && mounted) {
+      if (mounted) {
         setState(() => _loadingRelated = false);
-        return;
       }
+      return;
     }
 
     try {
@@ -235,7 +248,8 @@ class _MixDetailPageState extends State<MixDetailPage> {
           _loadingRelated = false;
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.warning('Fallo cargando mezclas relacionadas', error: e, stackTrace: stackTrace);
       if (mounted) {
         setState(() => _loadingRelated = false);
       }
@@ -269,7 +283,8 @@ class _MixDetailPageState extends State<MixDetailPage> {
           _updateLocalMixRating();
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.warning('Fallo cargando reseñas de mezcla', error: e, stackTrace: stackTrace);
       if (mounted) {
         setState(() => _loadingReviews = false);
       }
@@ -452,32 +467,30 @@ class _MixDetailPageState extends State<MixDetailPage> {
               ),
             ),
 
-            // Selector dual + contenido
+            // Selector dual
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppSegmentedControl(
-                      segments: const ['Relacionadas', 'Reseñas'],
-                      currentIndex: _segment,
-                      onChanged: (i) => setState(() => _segment = i),
-                    ),
-                    const SizedBox(height: 12),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      child: _segment == 0
-                          ? _RelatedMixes(
-                              mixes: _relatedMixes,
-                              isLoading: _loadingRelated,
-                            )
-                          : _buildReviewsSection(context),
-                    ),
-                  ],
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                child: AppSegmentedControl(
+                  segments: const ['Relacionadas', 'Reseñas'],
+                  currentIndex: _segment,
+                  onChanged: (i) => setState(() => _segment = i),
                 ),
               ),
             ),
+
+            if (_segment == 0)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  child: _RelatedMixes(
+                    mixes: _relatedMixes,
+                    isLoading: _loadingRelated,
+                  ),
+                ),
+              )
+            else
+              _buildReviewsSliver(context),
           ],
         ),
       ), // Cierre de PopScope
@@ -542,55 +555,72 @@ class _MixDetailPageState extends State<MixDetailPage> {
       } else {
         AppToast.showError(context, 'No se pudo eliminar la mezcla');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al eliminar la mezcla', error: e, stackTrace: stackTrace);
       if (mounted) {
         AppToast.showError(context, 'Error al eliminar la mezcla');
       }
     }
   }
 
-  Widget _buildReviewsSection(BuildContext context) {
+  Widget _buildReviewsSliver(BuildContext context) {
     if (_loadingReviews) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(child: CircularProgressIndicator()),
+      return const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Center(child: CircularProgressIndicator()),
+        ),
       );
     }
 
-    return Column(
-      key: const ValueKey('mix-reviews'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _ReviewForm(
-          controller: _reviewController,
-          rating: _newRating,
-          onRatingChanged: (v) => setState(() => _newRating = v),
-          onSubmit: _handleSubmitReview,
-        ),
-        const SizedBox(height: 16),
-        if (_reviews.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Center(
-              child: Text(
-                'Sé el primero en reseñar esta mezcla',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      sliver: SliverMainAxisGroup(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Column(
+              key: const ValueKey('mix-reviews'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ReviewForm(
+                  controller: _reviewController,
+                  rating: _newRating,
+                  onRatingChanged: (v) => setState(() => _newRating = v),
+                  onSubmit: _handleSubmitReview,
                 ),
-              ),
-            ),
-          )
-        else
-          ..._reviews.map(
-            (r) => _ReviewTile(
-              review: r,
-              onDelete: () => _handleDeleteReview(r.id),
-              onEdit: () => _handleEditReview(r),
+                const SizedBox(height: 16),
+                if (_reviews.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text(
+                        'Sé el primero en reseñar esta mezcla',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-      ],
+          if (_reviews.isNotEmpty)
+            SliverList.builder(
+              itemCount: _reviews.length,
+              itemBuilder: (context, index) {
+                final r = _reviews[index];
+                return _ReviewTile(
+                  key: ValueKey(r.id),
+                  review: r,
+                  onDelete: () => _handleDeleteReview(r.id),
+                  onEdit: () => _handleEditReview(r),
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 
@@ -631,7 +661,8 @@ class _MixDetailPageState extends State<MixDetailPage> {
       } else {
         AppToast.showError(context, 'Error al eliminar reseña');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al eliminar reseña de mezcla', error: e, stackTrace: stackTrace);
       if (mounted && context.mounted) {
         AppToast.showError(context, 'Error al eliminar reseña');
       }
@@ -709,7 +740,8 @@ class _MixDetailPageState extends State<MixDetailPage> {
       } else {
         AppToast.showError(context, 'Error al publicar reseña');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.error('Error al publicar reseña de mezcla', error: e, stackTrace: stackTrace);
       if (mounted && context.mounted) {
         AppToast.showError(context, 'Error al publicar reseña');
       }
@@ -772,8 +804,14 @@ class _MixDetailPageState extends State<MixDetailPage> {
     List<MixComponent> comps,
   ) async {
     if (comps.isEmpty) return comps;
+    // Si todos los componentes ya traen su catálogo resuelto por lote desde fetchMixDetails,
+    // evitamos ejecutar consultas adicionales N+1.
+    if (comps.every((c) => c.catalog != null)) {
+      return comps;
+    }
     final repo = TobaccoRepository(SupabaseService());
     final futures = comps.map((c) async {
+      if (c.catalog != null) return c;
       try {
         final item = await repo.findByNameAndBrand(
           name: c.tobacco,
@@ -1411,6 +1449,7 @@ class _EditReviewDialogState extends State<_EditReviewDialog> {
 
 class _ReviewTile extends StatelessWidget {
   const _ReviewTile({
+    super.key,
     required this.review,
     required this.onDelete,
     required this.onEdit,

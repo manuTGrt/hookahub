@@ -77,132 +77,155 @@ class _FavoritesPageState extends State<FavoritesPage> {
           }
           final top5 = fav.top5;
           final rest = fav.favorites.where((m) => !fav.isTop5(m.id)).toList();
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _Top5Section(
-                  mixes: top5,
-                  onReorder: fav.reorderTop5,
-                  onToggle: (id) => fav.toggleTop5(id),
+          return CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Top5Section(
+                        mixes: top5,
+                        onReorder: fav.reorderTop5,
+                        onToggle: (id) => fav.toggleTop5(id),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Todas las favoritas',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Todas las favoritas',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                if (rest.isEmpty && top5.isEmpty)
-                  _EmptyState(isDark: isDark)
-                else ...[
-                  const SizedBox(height: 8),
-                  // Usamos MixCard para igualar estilo de Comunidad
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: rest.length,
-                    itemBuilder: (context, index) {
-                      final mix = rest[index];
-                      return Builder(
-                        builder: (context) {
-                          final isOwned = context.select<ProfileProvider, bool>(
-                            (p) =>
-                                p.profile?.username != null &&
-                                p.profile!.username == mix.author,
-                          );
+              ),
+              if (rest.isEmpty && top5.isEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: _EmptyState(isDark: isDark),
+                  ),
+                )
+              else if (rest.isEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: SliverToBoxAdapter(
+                    child: Center(
+                      child: Text(
+                        'Todas tus favoritas están fijadas en el Top 5.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final mix = rest[index];
+                        return Builder(
+                          builder: (context) {
+                            final isOwned = context.select<ProfileProvider, bool>(
+                              (p) =>
+                                  p.profile?.username != null &&
+                                  p.profile!.username == mix.author,
+                            );
 
-                          return MixCard(
-                            mix: mix,
-                            isFavorite: true, // siempre true en esta lista
-                            onFavoriteTap: () => fav.removeFavorite(mix.id),
-                            trailingIcon: Icons.push_pin_outlined,
-                            onTrailingTap: () => fav.toggleTop5(mix.id),
-                            onShare: () => SharePlus.instance.share(
-                              ShareParams(
-                                text:
-                                    '¡Descubre la mezcla "${mix.name}" por ${mix.author} en Hookahub!\n${DeepLinkService.buildMixShareUrl(mix.id)}',
+                            return MixCard(
+                              mix: mix,
+                              isFavorite: true, // siempre true en esta lista
+                              onFavoriteTap: () => fav.removeFavorite(mix.id),
+                              trailingIcon: Icons.push_pin_outlined,
+                              onTrailingTap: () => fav.toggleTop5(mix.id),
+                              onShare: () => SharePlus.instance.share(
+                                ShareParams(
+                                  text:
+                                      '¡Descubre la mezcla "${mix.name}" por ${mix.author} en Hookahub!\n${DeepLinkService.buildMixShareUrl(mix.id)}',
+                                ),
                               ),
-                            ),
-                            isOwned: isOwned,
-                            onEdit: isOwned
-                                ? () async {
-                                    final updated = await Navigator.of(context)
-                                        .push<Mix>(
-                                          MaterialPageRoute(
-                                            builder: (_) => CreateMixPage(
-                                              currentUser: mix.author,
-                                              mixToEdit: mix,
+                              isOwned: isOwned,
+                              onEdit: isOwned
+                                  ? () async {
+                                      final updated = await Navigator.of(context)
+                                          .push<Mix>(
+                                            MaterialPageRoute(
+                                              builder: (_) => CreateMixPage(
+                                                currentUser: mix.author,
+                                                mixToEdit: mix,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                    if (updated != null && context.mounted) {
-                                      fav.updateFavorite(updated);
-                                      AppToast.showInfo(context, 'Mezcla actualizada');
-                                    }
-                                  }
-                                : null,
-                            onDelete: isOwned
-                                ? () async {
-                                    final confirmed = await showDialog<bool>(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: const Text('Eliminar mezcla'),
-                                        content: const Text(
-                                          '¿Seguro que quieres eliminar esta mezcla? Esta acción no se puede deshacer.',
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.of(context).pop(false),
-                                            child: const Text('Cancelar'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.of(context).pop(true),
-                                            child: const Text('Eliminar'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                    if (confirmed == true && context.mounted) {
-                                      final repository = CommunityRepository(
-                                        SupabaseService(),
-                                      );
-                                      final success = await repository.deleteMix(
-                                        mix.id,
-                                      );
-                                      if (!context.mounted) return;
-                                      if (success) {
-                                        fav.removeFavorite(mix.id);
-                                        final profileProvider = context.read<ProfileProvider>();
-                                        profileProvider.decrementMixesCount();
-                                        unawaited(profileProvider.refreshMixesCount());
-                                        context.read<UserMixesProvider>().refresh();
-                                        AppToast.showInfo(context, 'Mezcla eliminada');
-                                      } else {
-                                        AppToast.showError(context, 'No se pudo eliminar la mezcla');
+                                          );
+                                      if (updated != null && context.mounted) {
+                                        fav.updateFavorite(updated);
+                                        AppToast.showInfo(context, 'Mezcla actualizada');
                                       }
                                     }
-                                  }
-                                : null,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => MixDetailPage(mix: mix),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
+                                  : null,
+                              onDelete: isOwned
+                                  ? () async {
+                                      final confirmed = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Eliminar mezcla'),
+                                          content: const Text(
+                                            '¿Seguro que quieres eliminar esta mezcla? Esta acción no se puede deshacer.',
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(false),
+                                              child: const Text('Cancelar'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(true),
+                                              child: const Text('Eliminar'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      if (confirmed == true && context.mounted) {
+                                        final repository = CommunityRepository(
+                                          SupabaseService(),
+                                        );
+                                        final success = await repository.deleteMix(
+                                          mix.id,
+                                        );
+                                        if (!context.mounted) return;
+                                        if (success) {
+                                          fav.removeFavorite(mix.id);
+                                          final profileProvider = context.read<ProfileProvider>();
+                                          profileProvider.decrementMixesCount();
+                                          unawaited(profileProvider.refreshMixesCount());
+                                          context.read<UserMixesProvider>().refresh();
+                                          AppToast.showInfo(context, 'Mezcla eliminada');
+                                        } else {
+                                          AppToast.showError(context, 'No se pudo eliminar la mezcla');
+                                        }
+                                      }
+                                    }
+                                  : null,
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => MixDetailPage(mix: mix),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                      childCount: rest.length,
+                    ),
                   ),
-                ],
-              ],
-            ),
+                ),
+            ],
           );
         },
       ),
@@ -262,10 +285,7 @@ class _Top5Section extends StatelessWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: mixes.length,
-                  onReorder: (oldIndex, newIndex) {
-                    if (newIndex > oldIndex) newIndex -= 1;
-                    onReorder(oldIndex, newIndex);
-                  },
+                  onReorderItem: onReorder,
                   itemBuilder: (context, index) {
                     final mix = mixes[index];
                     return Container(

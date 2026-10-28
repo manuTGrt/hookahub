@@ -257,6 +257,26 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
+  /// Elimina permanentemente la cuenta del usuario actual en Supabase y cierra la sesión local.
+  /// Devuelve `null` si se completó con éxito, o el mensaje de error en caso contrario.
+  Future<String?> deleteAccount() async {
+    if (!isAuthenticated) return 'No autenticado';
+    try {
+      await _repo.deleteCurrentUserAccount();
+      clear();
+      await _auth.signOut();
+      return null;
+    } catch (e, stack) {
+      AppLogger.error(
+        'Error eliminando cuenta de usuario',
+        error: e,
+        stackTrace: stack,
+      );
+      DatabaseHealthProvider.reportFailure(e);
+      return AppErrorMapper.toSpanish(e);
+    }
+  }
+
   @override
   void dispose() {
     _auth.removeSignOutListener(clear);

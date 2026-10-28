@@ -91,7 +91,7 @@ class AppLogger {
         'user_id': userId,
         'created_at': DateTime.now().toIso8601String(),
         'platform': defaultTargetPlatform.name,
-      });
+      }).timeout(const Duration(seconds: 4));
     } catch (e) {
       // Ignoramos silenciosamente si Supabase no está inicializado (ej. en tests)
       // o si falla el registro remoto en producción

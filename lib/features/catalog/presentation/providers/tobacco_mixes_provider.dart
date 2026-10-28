@@ -4,27 +4,94 @@ import '../../../../core/models/mix.dart';
 import '../../../../core/providers/database_health_provider.dart';
 import '../../../community/data/community_repository.dart';
 
+// ---------------------------------------------------------------------------
+// Estados UI (sealed class — sin booleanos fragmentados)
+// ---------------------------------------------------------------------------
+
+sealed class TobaccoMixesState {
+  const TobaccoMixesState();
+}
+
+/// Estado inicial previo a cargar las mezclas asociadas a un tabaco.
+class TobaccoMixesInitial extends TobaccoMixesState {
+  const TobaccoMixesInitial();
+}
+
+/// Carga inicial en progreso.
+class TobaccoMixesLoading extends TobaccoMixesState {
+  const TobaccoMixesLoading();
+}
+
+/// Mezclas cargadas con éxito (soporta paginación incremental).
+class TobaccoMixesLoaded extends TobaccoMixesState {
+  const TobaccoMixesLoaded({
+    required this.mixes,
+    this.isLoadingMore = false,
+    this.hasMoreData = true,
+  });
+
+  final List<Mix> mixes;
+  final bool isLoadingMore;
+  final bool hasMoreData;
+
+  TobaccoMixesLoaded copyWith({
+    List<Mix>? mixes,
+    bool? isLoadingMore,
+    bool? hasMoreData,
+  }) {
+    return TobaccoMixesLoaded(
+      mixes: mixes ?? this.mixes,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMoreData: hasMoreData ?? this.hasMoreData,
+    );
+  }
+}
+
+/// Ocurrió un error al cargar las mezclas del tabaco.
+class TobaccoMixesError extends TobaccoMixesState {
+  const TobaccoMixesError(this.message);
+  final String message;
+}
+
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
+
 class TobaccoMixesProvider extends ChangeNotifier {
   TobaccoMixesProvider(this._repository);
 
   final CommunityRepository _repository;
 
-  List<Mix> _mixes = [];
-  bool _isLoading = false;
-  bool _isLoadingMore = false;
-  bool _hasMoreData = true;
-  String? _error;
+  TobaccoMixesState _state = const TobaccoMixesInitial();
+  TobaccoMixesState get state => _state;
 
   static const int _pageSize = 10;
   int _currentOffset = 0;
   String? _tobaccoName;
   String? _tobaccoBrand;
 
-  List<Mix> get mixes => List.unmodifiable(_mixes);
-  bool get isLoading => _isLoading;
-  bool get isLoadingMore => _isLoadingMore;
-  bool get hasMoreData => _hasMoreData;
-  String? get error => _error;
+  List<Mix> get mixes => switch (_state) {
+    TobaccoMixesLoaded(mixes: final list) => List.unmodifiable(list),
+    _ => const <Mix>[],
+  };
+
+  bool get isLoading => _state is TobaccoMixesLoading;
+
+  bool get isLoadingMore => switch (_state) {
+    TobaccoMixesLoaded(isLoadingMore: final loadingMore) => loadingMore,
+    _ => false,
+  };
+
+  bool get hasMoreData => switch (_state) {
+    TobaccoMixesLoaded(hasMoreData: final more) => more,
+    TobaccoMixesError() => false,
+    _ => true,
+  };
+
+  String? get error => switch (_state) {
+    TobaccoMixesError(message: final msg) => msg,
+    _ => null,
+  };
 
   Future<void> loadMixes({
     required String tobaccoName,
@@ -33,15 +100,12 @@ class TobaccoMixesProvider extends ChangeNotifier {
     _tobaccoName = tobaccoName;
     _tobaccoBrand = tobaccoBrand;
 
-    _isLoading = true;
-    _error = null;
     _currentOffset = 0;
-    _hasMoreData = true;
-    _mixes = [];
+    _state = const TobaccoMixesLoading();
     notifyListeners();
 
     try {
-      _mixes = await _repository.fetchMixes(
+      final fetched = await _repository.fetchMixes(
         orderBy: 'recent',
         limit: _pageSize,
         offset: 0,
@@ -49,22 +113,37 @@ class TobaccoMixesProvider extends ChangeNotifier {
         tobaccoBrand: tobaccoBrand,
       );
 
-      _currentOffset = _mixes.length;
-      _hasMoreData = _mixes.length >= _pageSize;
+      _currentOffset = fetched.length;
+      _state = TobaccoMixesLoaded(
+        mixes: fetched,
+        isLoadingMore: false,
+        hasMoreData: fetched.length >= _pageSize,
+      );
     } catch (e, stackTrace) {
-      _error = 'Error al cargar las mezclas';
-      AppLogger.error('Error loading tobacco mixes', error: e, stackTrace: stackTrace);
+      _state = const TobaccoMixesError('Error al cargar las mezclas');
+      AppLogger.error(
+        'Error loading tobacco mixes',
+        error: e,
+        stackTrace: stackTrace,
+      );
       DatabaseHealthProvider.reportFailure(e);
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
 
   Future<void> loadMore() async {
-    if (_isLoadingMore || !_hasMoreData || _tobaccoName == null) return;
+    final currentLoaded = _state is TobaccoMixesLoaded
+        ? (_state as TobaccoMixesLoaded)
+        : null;
+    if (currentLoaded == null ||
+        currentLoaded.isLoadingMore ||
+        !currentLoaded.hasMoreData ||
+        _tobaccoName == null) {
+      return;
+    }
 
-    _isLoadingMore = true;
+    _state = currentLoaded.copyWith(isLoadingMore: true);
     notifyListeners();
 
     try {
@@ -77,18 +156,29 @@ class TobaccoMixesProvider extends ChangeNotifier {
       );
 
       if (newMixes.isNotEmpty) {
-        _mixes.addAll(newMixes);
+        final updatedList = <Mix>[...currentLoaded.mixes, ...newMixes];
         _currentOffset += newMixes.length;
-        _hasMoreData = newMixes.length >= _pageSize;
+        _state = TobaccoMixesLoaded(
+          mixes: updatedList,
+          isLoadingMore: false,
+          hasMoreData: newMixes.length >= _pageSize,
+        );
       } else {
-        _hasMoreData = false;
+        _state = currentLoaded.copyWith(
+          isLoadingMore: false,
+          hasMoreData: false,
+        );
       }
     } catch (e, stackTrace) {
-      AppLogger.error('Error loading more tobacco mixes', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        'Error loading more tobacco mixes',
+        error: e,
+        stackTrace: stackTrace,
+      );
       // No seteamos error principal para no bloquear la UI ya cargada
       DatabaseHealthProvider.reportFailure(e);
+      _state = currentLoaded.copyWith(isLoadingMore: false);
     } finally {
-      _isLoadingMore = false;
       notifyListeners();
     }
   }

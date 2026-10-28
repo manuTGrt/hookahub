@@ -143,7 +143,7 @@ class _CreateMixPageState extends State<CreateMixPage> {
         _descCtrl.text = desc ?? '';
       }
 
-      // Resolver cada componente a Tobacco (si existe en catálogo) o crear placeholder
+      // Resolver cada componente a Tobacco aprovechando catalog_item por lote o fallback puntual
       final tobRepo = TobaccoRepository(SupabaseService());
       final List<_SelectedIngredient> loaded = [];
 
@@ -153,10 +153,24 @@ class _CreateMixPageState extends State<CreateMixPage> {
         final percent = (c['percentage'] as num).toDouble();
 
         Tobacco? t;
-        try {
-          t = await tobRepo.findByNameAndBrand(name: name, brand: brand);
-        } catch (_) {
-          // Si no se encuentra en catálogo, crear placeholder
+        final rawCatalog = c['catalog_item'];
+        if (rawCatalog is Map<String, dynamic>) {
+          t = Tobacco(
+            id: rawCatalog['id'] as String,
+            name: rawCatalog['name'] as String,
+            brand: rawCatalog['brand'] as String,
+            description: rawCatalog['description'] as String?,
+            flavors: const [],
+            rating: (rawCatalog['rating'] as num?)?.toDouble() ?? 0,
+            reviews: (rawCatalog['reviews'] as int?) ?? 0,
+            imageUrl: rawCatalog['image_url'] as String?,
+          );
+        } else {
+          try {
+            t = await tobRepo.findByNameAndBrand(name: name, brand: brand);
+          } catch (_) {
+            // Si no se encuentra en catálogo, crear placeholder
+          }
         }
 
         t ??= Tobacco(
@@ -1302,6 +1316,8 @@ class _SlidableIngredientRowState extends State<_SlidableIngredientRow>
   late AnimationController _controller; // controla animación de arrastre
   late Animation<double> _animation;
   double _dragExtent = 0; // negativo hacia la izquierda
+  double _animStart = 0;
+  double _animDelta = 0;
   bool _closing = false;
   double _maxSlideWidth =
       0; // ancho total disponible para permitir swipe completo
@@ -1314,10 +1330,19 @@ class _SlidableIngredientRowState extends State<_SlidableIngredientRow>
       duration: const Duration(milliseconds: 180),
     );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _controller.addListener(_onAnimationTick);
+  }
+
+  void _onAnimationTick() {
+    if (!mounted) return;
+    setState(() {
+      _dragExtent = _animStart + _animDelta * _animation.value;
+    });
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onAnimationTick);
     _controller.dispose();
     super.dispose();
   }
@@ -1360,18 +1385,9 @@ class _SlidableIngredientRowState extends State<_SlidableIngredientRow>
     final start = _dragExtent;
     final delta = target - start;
     if (delta == 0) return;
-    _controller.reset();
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _controller.addListener(() {
-      setState(() {
-        _dragExtent = start + delta * _animation.value;
-      });
-    });
-    _controller.forward().whenComplete(() {
-      _controller.removeListener(
-        () {},
-      ); // listener anónimo no removible -> noop seguro
-    });
+    _animStart = start;
+    _animDelta = delta;
+    _controller.forward(from: 0);
   }
 
   void _triggerDelete() {

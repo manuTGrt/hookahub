@@ -937,3 +937,80 @@ Se ha migrado del sistema de `ScaffoldMessenger` a un sistema de notificaciones 
   5. **Manejador Desacoplado de Acciones (`NotificationActionHandler`)**:
      - Centralizar la pulsación: marcar como leída de forma optimista, navegar a rutas específicas si existen `mix_id` o `tobacco_id`, o desplegar un modal inferior accesible (`NotificationDetailSheet`) con diseño plano y scrollable para anuncios y soporte.
 
+## 🚀 Auditoría de Rendimiento, Seguridad y Preparación para Producción
+
+### 1. Hardening Nativo y Minificación R8 en Android (`build.gradle.kts`)
+- **Problema**: Declarar `proguardFiles(...)` en `buildTypes.release` sin habilitar `isMinifyEnabled = true` hace que el compilador R8 quede completamente desactivado por defecto en Kotlin DSL (AGP 8.x+). El APK o AAB resultante carece de ofuscación de código y *tree-shaking*, incrementando innecesariamente el tamaño del binario y dejando expuesta la lógica interna.
+- **Solución (Regla de Oro)**: En `android/app/build.gradle.kts`, siempre activar conjuntamente:
+  ```kotlin
+  buildTypes {
+      release {
+          signingConfig = signingConfigs.getByName("release")
+          isMinifyEnabled = true
+          isShrinkResources = true
+          proguardFiles(
+              getDefaultProguardFile("proguard-android-optimize.txt"),
+              "proguard-rules.pro"
+          )
+      }
+  }
+  ```
+
+### 2. Prohibición de Scroll Anidado con `shrinkWrap: true` y Virtualización con Slivers
+- **Problema**: Usar `SingleChildScrollView` + `Column` + `ListView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics())` destruye la virtualización nativa de Flutter. El framework se ve forzado a medir e instanciar en memoria todos los widgets de la lista a la vez, causando sobreconsumo de memoria y caídas severas de fotogramas (Jank a <30 FPS) en listados con decenas o cientos de elementos (ej. Favoritos o Historial).
+- **Solución (Regla de Oro)**:
+  1. Utilizar siempre `CustomScrollView`.
+  2. Alojar secciones estáticas o cabeceras en `SliverToBoxAdapter` o `SliverPadding`.
+  3. Renderizar listados con `SliverList(delegate: SliverChildBuilderDelegate(...))` para garantizar que únicamente los elementos visibles en el viewport sean evaluados y pintados por el pipeline de renderizado.
+  4. Para listas agrupadas por categoría o fecha (ej. Historial), agrupar slivers mediante `SliverMainAxisGroup(slivers: [SliverToBoxAdapter(...), SliverList(...)])`.
+  5. En `ReorderableListView.builder`, utilizar siempre el callback no deprecado `onReorderItem` en lugar de `onReorder` (Flutter 3.41+).
+
+### 3. Blindaje de Red, Timeouts y Límites Defensivos contra Overfetching
+- **Problema**: Consultas remotas a Supabase sin `.timeout(...)` quedan suspendidas de por vida ante micro-cortes o pérdida silenciosa de cobertura móvil, congelando loaders en la UI. Adicionalmente, consultar tablas relacionales con componentes embebidos sin `.limit()` descarga cargas masivas de datos innecesarias (*overfetching*).
+- **Solución (Regla de Oro)**:
+  1. Toda consulta de lectura debe incorporar `.timeout(supabaseReadTimeout)` y una cláusula `.limit(X)` defensiva (ej. `limit: 50` o `limit: 100`).
+  2. Toda mutación (`insert`, `update`, `delete`, `upsert`) debe incorporar `.timeout(supabaseWriteTimeout)`.
+  3. En `AppLogger._sendErrorToSupabase`, aplicar `.timeout(const Duration(seconds: 4))` en la inserción remota en `app_logs` para evitar que un reporte de fallo de red bloquee el event loop si el dispositivo no tiene salida a internet.
+
+### 4. Dimensionamiento Óptimo de Avatares en RAM y Almacenamiento
+- **Problema**: Renderizar fotos de perfil mediante `CircleAvatar(backgroundImage: CachedNetworkImageProvider(url))` sin limitar dimensiones en memoria decodifica la textura completa en la GPU (hasta 48-108 MP si el usuario tomó la foto con una cámara moderna), consumiendo cientos de megabytes de RAM.
+- **Solución (Regla de Oro)**:
+  1. En UI, consumir siempre el widget centralizado `UserAvatar(radius: X, avatarUrl: Y, username: Z)`, el cual calcula `memCacheWidth` y `memCacheHeight` proporcionales a los píxeles físicos del dispositivo (`size * pixelRatio`).
+  2. En subida (`ProfileRepository`), limitar la resolución antes de comprimir mediante `FlutterImageCompress.compressAndGetFile(..., minWidth: 512, minHeight: 512, quality: 82)`.
+
+### 5. Blindaje de Memoria RAM en `TobaccoImage` ante Dimensiones `double.infinity` y Preservación del Aspect Ratio (`BoxFit.cover`)
+- **Problema**:
+  1. Pasar `width: double.infinity` y `height: double.infinity` a `TobaccoImage` en cuadrículas (`CatalogPage`, `SearchResultsPage`) hacía que la comprobación `!width.isFinite` devolviera `null` para `memCacheWidth`, decodificando todas las fotos del catálogo a resolución completa en el `ImageCache` de Flutter.
+  2. Si se pasan **simultáneamente** `memCacheWidth` y `memCacheHeight` a `CachedNetworkImage`, `ResizeImage` decodifica el bitmap forzando exactamente ese ancho y alto (`ResizeImagePolicy.exact`), **destruyendo la relación de aspecto original** de la imagen y haciendo que se vea achatada/estirada sin que `BoxFit.cover` pueda recortarla.
+- **Solución (Regla de Oro)**:
+  1. Envolver `CachedNetworkImage` dentro de `TobaccoImage` en un `LayoutBuilder`.
+  2. Resolver la dimensión física mediante `TobaccoImage.resolveCacheDimension(explicitSize, constraintSize, devicePixelRatio)`, utilizando `constraints.maxWidth` / `constraints.maxHeight` cuando el tamaño explícito sea infinito o nulo y aplicando un tope máximo (`maxDefaultCacheDimension = 512` px físicos).
+  3. **Pasar exclusivamente `memCacheWidth: math.max(cacheWidth, cacheHeight)` (dejando `memCacheHeight: null`)**: De este modo, el codec nativo de Flutter escala la imagen en RAM manteniendo intacta su proporción original, y `fit: BoxFit.cover` rellena el contenedor recortando limpiamente el excedente sin achatar ni deformar la foto.
+
+### 6. Eliminación de Overfetching en Filtros de Comunidad, Marcas de Catálogo y Detalles de Mezcla
+- **Problema**:
+  1. El filtro de tabacos en Comunidad (`_TobaccoFilterDropdown`) descargaba hasta 5.000 registros en un bucle `while` y los renderizaba sin virtualizar en un `SingleChildScrollView` + `Column`.
+  2. `TobaccoRepository.fetchAvailableBrands()` descargaba todas las filas de `tobaccos` para deduplicar marcas en Dart (sujeto además al límite de 1.000 filas de PostgREST).
+  3. `CommunityRepository.fetchMixDetails()` y `MixDetailPage` ejecutaban bucles N+1 secuenciales y llamadas duplicadas para resolver los tabacos de cada componente.
+- **Solución (Regla de Oro)**:
+  1. Acotar `fetchAvailableTobaccos` a `limit: 50` con búsqueda delegada en servidor (con *debounce* de 300 ms) y virtualizar el menú con `ListView.builder`.
+  2. Obtener marcas únicas mediante la función RPC SQL `get_available_tobacco_brands()` (`SELECT DISTINCT brand FROM public.tobaccos`).
+  3. Resolver los componentes de una mezcla en una única consulta por lote (`.inFilter('name', uniqueNames)`) adjuntando `catalog_item` para evitar el doble bucle N+1 en `MixDetailPage`.
+
+### 7. Eliminación Completa de Cuenta de Usuario (App Store Guideline 5.1.1(v) / Google Play Data Safety)
+- **Problema**: Un cliente autenticado con la clave `anon` no tiene permisos directos en PostgREST para ejecutar `DELETE FROM auth.users`, por lo que dejar un aviso temporal o borrar únicamente `public.profiles` impide cumplir con las políticas de privacidad de Apple App Store y Google Play o deja la identidad de autenticación huérfana.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. **En Base de Datos**: Definir la función RPC `public.delete_user_account()` con `SECURITY DEFINER` y `SET search_path = public` (restringida con `REVOKE ALL FROM PUBLIC, anon` y `GRANT EXECUTE TO authenticated`), la cual obtiene `v_uid := (select auth.uid())`, elimina `public.profiles` (disparando `ON DELETE CASCADE` en datos privados y `ON DELETE SET NULL` en contenido comunitario) y elimina el registro en `auth.users`.
+  2. **En Cliente (`ProfileRepository.deleteCurrentUserAccount`)**: Limpiar primero en modo *best-effort* los archivos del usuario en el bucket `avatars` (`<uid>/*`), invocar `_client.rpc('delete_user_account').timeout(supabaseWriteTimeout)` y finalmente cerrar la sesión local mediante `AuthProvider.signOut()`.
+
+### 8. Sincronización de Barra Superior Global por Ruta Activa (`MainNavigationPage`)
+- **Problema**: Guardar un único título de sobreescritura por pestaña (`_overrideTitles[_currentIndex]`) hacía que, al abrir una subpágina con `pushInCurrentTab` (ej. `FavoritesPage`, `UserMixesPage`, `HistoryPage`) y luego navegar desde ella hacia una vista con cabecera propia (`MixDetailPage`, `TobaccoDetailPage`, `CreateMixPage`) mediante `Navigator.of(context).push(...)`, `_overrideTitles[_currentIndex]` siguiera siendo no nulo (`'Favoritas'`) y la barra superior global no se ocultase, mostrando **dos flechas de retroceso simultáneas**.
+- **Solución Arquitectónica (Regla de Oro)**:
+  1. Vincular el título de la barra global directamente a la instancia de `PageRoute` creada en `pushInCurrentTab` mediante un `Expando<String>` (`_routeOverrideTitles[route] = title`).
+  2. Hacer que `_TabNavigatorObserver` mantenga la pila de `PageRoute<dynamic>` de cada pestaña (ignorando `PopupRoute` como diálogos o *bottom sheets*) y exponga `topPageRoute`.
+  3. En `_updateBackAndTitle()`, evaluar `activeOverrideTitle = _routeOverrideTitles[topPageRoute]`: si `canPop` es `true` y `activeOverrideTitle == null`, activar `_hideTopBar = true` para ocultar la barra global mientras la vista de detalle esté en primer plano, restaurándola automáticamente al hacer `pop`.
+
+
+
+
+

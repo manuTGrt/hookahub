@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants.dart';
+import '../../../widgets/main_navigation.dart';
+import '../../../widgets/user_avatar.dart';
 import 'change_password_page.dart';
 import 'profile_provider.dart';
 import '../domain/profile.dart';
@@ -531,10 +533,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   void _showDeleteAccountDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+      builder: (dialogContext) {
+        final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
 
         return AlertDialog(
           backgroundColor: isDark ? darkBg : Colors.white,
@@ -558,7 +560,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(
                 'Cancelar',
                 style: TextStyle(
@@ -570,12 +572,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                // Aquí implementarías la lógica de eliminación
-                AppToast.showInfo(
-                  context,
-                  'Funcionalidad de eliminación próximamente',
-                );
+                Navigator.of(dialogContext).pop();
+                _confirmDeleteAccount();
               },
               child: const Text(
                 'Eliminar',
@@ -589,6 +587,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
       },
     );
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
+    final err = await context.read<ProfileProvider>().deleteAccount();
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+    if (err != null) {
+      AppToast.showError(context, err);
+    }
   }
 
   Widget _buildCustomTextField({
@@ -741,37 +752,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   width: 3,
                                 ),
                               ),
-                              child: CircleAvatar(
+                              child: UserAvatar(
+                                username: _usernameController.text.isNotEmpty
+                                    ? _usernameController.text
+                                    : (profileProvider.profile?.username ?? 'U'),
+                                avatarUrl: (profileProvider.signedAvatarUrl !=
+                                            null &&
+                                        profileProvider
+                                            .signedAvatarUrl!
+                                            .isNotEmpty)
+                                    ? profileProvider.signedAvatarUrl
+                                    : (_selectedAvatarType == 'avatar'
+                                          ? 'icon:$_selectedAvatarIndex'
+                                          : profileProvider.profile?.avatarUrl),
                                 radius: 50,
                                 backgroundColor: isDark
                                     ? darkTurquoise
                                     : turquoise,
-                                backgroundImage:
-                                    (profileProvider.signedAvatarUrl != null &&
-                                        profileProvider
-                                            .signedAvatarUrl!
-                                            .isNotEmpty)
-                                    ? NetworkImage(
-                                        profileProvider.signedAvatarUrl!,
-                                      )
-                                    : null,
-                                child:
-                                    (profileProvider.signedAvatarUrl == null ||
-                                        profileProvider
-                                            .signedAvatarUrl!
-                                            .isEmpty)
-                                    ? (_selectedAvatarType == 'avatar'
-                                          ? Icon(
-                                              _avatarIcons[_selectedAvatarIndex],
-                                              size: 60,
-                                              color: Colors.white,
-                                            )
-                                          : const Icon(
-                                              Icons.photo_camera,
-                                              size: 60,
-                                              color: Colors.white,
-                                            ))
-                                    : null,
+                                fontSize: 36,
                               ),
                             ),
                           ),
@@ -926,12 +924,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ChangePasswordPage(),
-                            ),
-                          );
+                          final nav = MainNavigationPage.of(context);
+                          if (nav != null) {
+                            nav.pushInCurrentTab(
+                              'Cambiar contraseña',
+                              const ChangePasswordPage(),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ChangePasswordPage(),
+                              ),
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isDark
@@ -998,7 +1005,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     // Delete account button
                     Center(
                       child: TextButton(
-                        onPressed: _showDeleteAccountDialog,
+                        onPressed: _isLoading ? null : _showDeleteAccountDialog,
                         child: const Text(
                           'Eliminar cuenta',
                           style: TextStyle(

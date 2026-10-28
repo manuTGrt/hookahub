@@ -75,16 +75,22 @@ class SupabaseService {
     }..removeWhere((key, value) => value == null);
 
     // Crear/actualizar perfil. onConflict asegura que no se duplique.
-    await client.from('profiles').upsert(profileData, onConflict: 'id');
+    await client
+        .from('profiles')
+        .upsert(profileData, onConflict: 'id')
+        .timeout(supabaseWriteTimeout);
 
     // Crear/actualizar configuración por defecto sin sobreescribir elecciones existentes
-    await client.from('user_settings').upsert({
-      'user_id': uid,
-      'theme': 'system',
-      'push_notifications': true,
-      'email_notifications': false,
-      'analytics_opt_in': false,
-    }, onConflict: 'user_id');
+    await client
+        .from('user_settings')
+        .upsert({
+          'user_id': uid,
+          'theme': 'system',
+          'push_notifications': true,
+          'email_notifications': false,
+          'analytics_opt_in': false,
+        }, onConflict: 'user_id')
+        .timeout(supabaseWriteTimeout);
   }
 
   // OAuth Google Nativo

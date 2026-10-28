@@ -14,7 +14,7 @@ class MockFavoritesRepository implements FavoritesRepository {
   bool shouldThrow = false;
 
   @override
-  Future<List<Mix>> loadFavorites({String? userId}) async {
+  Future<List<Mix>> loadFavorites({String? userId, int limit = 100}) async {
     if (shouldThrow) {
       throw Exception('Fallo al cargar favoritos');
     }

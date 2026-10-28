@@ -102,6 +102,7 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
   }
 
   void _onScroll() {
+    if (_segment != 0) return;
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       context.read<TobaccoMixesProvider>().loadMore();
@@ -343,22 +344,34 @@ class _TobaccoDetailViewState extends State<_TobaccoDetailView> {
 
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              _ReviewStats(
-                average: provider.averageRating,
-                total: provider.reviewCount,
+          sliver: SliverMainAxisGroup(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ReviewStats(
+                      average: provider.averageRating,
+                      total: provider.reviewCount,
+                    ),
+                    const SizedBox(height: 16),
+                    _ReviewForm(
+                      controller: _reviewController,
+                      rating: _newRating,
+                      onRatingChanged: (v) => setState(() => _newRating = v),
+                      onSubmit: _handleSubmitReview,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              _ReviewForm(
-                controller: _reviewController,
-                rating: _newRating,
-                onRatingChanged: (v) => setState(() => _newRating = v),
-                onSubmit: _handleSubmitReview,
+              SliverList.builder(
+                itemCount: reviews.length,
+                itemBuilder: (context, index) => _ReviewTile(
+                  review: reviews[index],
+                ),
               ),
-              const SizedBox(height: 16),
-              ...reviews.map((r) => _ReviewTile(review: r)),
-            ]),
+            ],
           ),
         );
       },

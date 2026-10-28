@@ -19,7 +19,7 @@ class FakeDatabaseHealthService implements DatabaseHealthService {
 
 class FakeFavoritesRepository implements FavoritesRepository {
   @override
-  Future<List<Mix>> loadFavorites({String? userId}) async => [];
+  Future<List<Mix>> loadFavorites({String? userId, int limit = 100}) async => [];
 
   @override
   Future<void> saveFavorites(List<Mix> mixes, {String? userId}) async {}

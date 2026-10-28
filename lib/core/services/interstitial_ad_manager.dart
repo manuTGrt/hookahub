@@ -1,10 +1,11 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../config/env.dart';
 import '../utils/app_logger.dart';
 
 /// Gestor singleton para la precarga y muestra de anuncios intersticiales de AdMob.
-/// Utiliza el ID de prueba oficial de Google para Android.
+/// Utiliza IDs productivos desde [Env] o los IDs oficiales de prueba en modo debug.
 class InterstitialAdManager {
   InterstitialAdManager._internal();
   static final InterstitialAdManager instance = InterstitialAdManager._internal();
@@ -21,6 +22,23 @@ class InterstitialAdManager {
     return '';
   }
 
+  /// Devuelve el Ad Unit ID activo según el entorno (Producción vs Debug).
+  static String get interstitialAdUnitId {
+    if (Platform.isAndroid) {
+      if (Env.admobInterstitialAndroidId.isNotEmpty) {
+        return Env.admobInterstitialAndroidId;
+      }
+      return kDebugMode ? testInterstitialAdUnitIdAndroid : '';
+    }
+    if (Platform.isIOS) {
+      if (Env.admobInterstitialIosId.isNotEmpty) {
+        return Env.admobInterstitialIosId;
+      }
+      return kDebugMode ? testInterstitialAdUnitIdIOS : '';
+    }
+    return '';
+  }
+
   InterstitialAd? _interstitialAd;
   bool _isLoading = false;
 
@@ -28,7 +46,7 @@ class InterstitialAdManager {
   void preload() {
     if ((!Platform.isAndroid && !Platform.isIOS) || _isLoading || _interstitialAd != null) return;
 
-    final adUnitId = testInterstitialAdUnitId;
+    final adUnitId = interstitialAdUnitId;
     if (adUnitId.isEmpty) return;
 
     _isLoading = true;

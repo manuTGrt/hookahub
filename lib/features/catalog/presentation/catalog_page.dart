@@ -823,35 +823,31 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                   const SizedBox(height: 8),
                   const Divider(height: 1),
                   const SizedBox(height: 8),
-                  // Lista de marcas filtradas
+                  // Lista de marcas filtradas virtualizada
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 300),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Opción "Todas las marcas"
-                          _buildBrandOption(
-                            context,
-                            allBrandsKey,
-                            'Todas las marcas',
-                            Icons.filter_list,
-                            currentSelectedBrand: currentSelectedBrand,
-                            isAllBrandsOption: true,
-                          ),
-                          // Marcas filtradas
-                          ...filteredBrands.map(
-                            (brand) => _buildBrandOption(
+                    child: SizedBox(
+                      width: 280,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount:
+                            1 +
+                            (filteredBrands.isEmpty
+                                ? 1
+                                : filteredBrands.length),
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return _buildBrandOption(
                               context,
-                              brand,
-                              brand,
-                              Icons.business,
+                              allBrandsKey,
+                              'Todas las marcas',
+                              Icons.filter_list,
                               currentSelectedBrand: currentSelectedBrand,
-                            ),
-                          ),
-                          // Mensaje cuando no hay resultados
-                          if (filteredBrands.isEmpty)
-                            Padding(
+                              isAllBrandsOption: true,
+                            );
+                          }
+                          if (filteredBrands.isEmpty) {
+                            return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               child: Text(
                                 'No se encontraron marcas',
@@ -865,8 +861,17 @@ class _BrandFilterDropdownState extends State<_BrandFilterDropdown> {
                                           ?.withValues(alpha: 0.5),
                                     ),
                               ),
-                            ),
-                        ],
+                            );
+                          }
+                          final brand = filteredBrands[index - 1];
+                          return _buildBrandOption(
+                            context,
+                            brand,
+                            brand,
+                            Icons.business,
+                            currentSelectedBrand: currentSelectedBrand,
+                          );
+                        },
                       ),
                     ),
                   ),

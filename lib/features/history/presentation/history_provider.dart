@@ -54,7 +54,9 @@ class HistoryProvider extends ChangeNotifier {
   HistoryProvider(this._repository, {AuthProvider? auth}) : _auth = auth {
     _auth?.addSignOutListener(clear);
     _reconnectedSub = DatabaseHealthProvider.instance.onReconnected.listen((_) {
-      unawaited(refresh());
+      if (_state is! HistoryInitial && !isLoading) {
+        unawaited(refresh());
+      }
     });
   }
 

@@ -107,17 +107,19 @@ class CommunityRepository {
 
       if (hasQuery) {
         final q = query.trim();
-        // 1. Resolver IDs en paralelo por nombre/descripción de mezcla y por componente
+        // 1. Resolver IDs en paralelo por nombre/descripción de mezcla y por componente (acotado para evitar URI Too Long)
         final idResults = await Future.wait([
           _supabase.client
               .from('mixes')
               .select('id')
               .or('name.ilike.%$q%,description.ilike.%$q%')
+              .limit(200)
               .timeout(supabaseReadTimeout),
           _supabase.client
               .from('mix_components')
               .select('mix_id')
               .ilike('tobacco_name', '%$q%')
+              .limit(200)
               .timeout(supabaseReadTimeout),
         ]);
 
@@ -365,7 +367,8 @@ class CommunityRepository {
     }
   }
 
-  /// Devuelve una lista de tabacos disponibles (name, brand) para el buscador.
+  /// Devuelve una lista acotada de tabacos disponibles (name, brand) para el buscador,
+  /// filtrando en el servidor para evitar overfetching masivo en memoria.
   Future<List<Map<String, String>>> fetchAvailableTobaccos({
     String? query,
     int? limit,
@@ -374,58 +377,27 @@ class CommunityRepository {
     final client = _supabase.client;
     final result = <Map<String, String>>[];
     final seen = <String>{};
+    final effectiveLimit = (limit ?? 50).clamp(1, 100);
 
-    // Búsqueda con query: filtrar en servidor y aplicar límite si se pasó
+    dynamic request = client.from('tobaccos').select('name, brand');
+
     if (q != null && q.isNotEmpty) {
-      dynamic request = client
-          .from('tobaccos')
-          .select('name, brand')
-          .or('name.ilike.%$q%,brand.ilike.%$q%')
-          .order('brand', ascending: true)
-          .order('name', ascending: true);
-
-      if (limit != null) {
-        request = request.limit(limit);
-      }
-
-      final List data = await request.timeout(supabaseReadTimeout);
-      for (final row in data) {
-        final name = (row['name'] as String?) ?? '';
-        final brand = (row['brand'] as String?) ?? '';
-        final key = '$brand::$name';
-        if (name.isEmpty || brand.isEmpty || seen.contains(key)) continue;
-        seen.add(key);
-        result.add({'name': name, 'brand': brand});
-      }
-      return result;
+      request = request.or('name.ilike.%$q%,brand.ilike.%$q%');
     }
 
-    // Sin query: traer todo con paginación amplia y filtrar localmente, como en catálogo
-    const pageSize = 1000; // tamaño de página grande para reducir rondas
-    final cap = limit ?? 5000; // tope de seguridad para no dispararse
-    var offset = 0;
-    while (offset < cap) {
-      final end = offset + pageSize - 1;
-      final List page = await client
-          .from('tobaccos')
-          .select('name, brand')
-          .order('brand', ascending: true)
-          .order('name', ascending: true)
-          .range(offset, end)
-          .timeout(supabaseReadTimeout);
+    final List data = await request
+        .order('brand', ascending: true)
+        .order('name', ascending: true)
+        .limit(effectiveLimit)
+        .timeout(supabaseReadTimeout);
 
-      if (page.isEmpty) break;
-      for (final row in page) {
-        final name = (row['name'] as String?) ?? '';
-        final brand = (row['brand'] as String?) ?? '';
-        final key = '$brand::$name';
-        if (name.isEmpty || brand.isEmpty || seen.contains(key)) continue;
-        seen.add(key);
-        result.add({'name': name, 'brand': brand});
-        if (result.length >= cap) break;
-      }
-      if (page.length < pageSize || result.length >= cap) break;
-      offset += pageSize;
+    for (final row in data) {
+      final name = (row['name'] as String?) ?? '';
+      final brand = (row['brand'] as String?) ?? '';
+      final key = '$brand::$name';
+      if (name.isEmpty || brand.isEmpty || seen.contains(key)) continue;
+      seen.add(key);
+      result.add({'name': name, 'brand': brand});
     }
 
     return result;
@@ -534,7 +506,7 @@ class CommunityRepository {
   }
 
   /// Obtiene las mezclas favoritas del usuario autenticado.
-  Future<List<Mix>> fetchFavorites() async {
+  Future<List<Mix>> fetchFavorites({int limit = 100}) async {
     try {
       final user = _supabase.client.auth.currentUser;
       if (user == null) return [];
@@ -556,6 +528,7 @@ class CommunityRepository {
             )
           ''')
           .eq('user_id', user.id)
+          .limit(limit)
           .timeout(supabaseReadTimeout);
 
       return (response as List).map((favData) {
@@ -740,21 +713,37 @@ class CommunityRepository {
         });
       }
 
-      // Enriquecer cada componente con su descripción desde la tabla tobaccos
-      for (final comp in components) {
+      // Enriquecer todos los componentes en una única consulta por lote (evita N+1 secuencial)
+      if (components.isNotEmpty) {
         try {
-          final List descRes = await _supabase.client
+          final uniqueNames = components
+              .map((c) => c['tobacco_name'] as String)
+              .toSet()
+              .toList();
+          final List catalogRows = await _supabase.client
               .from('tobaccos')
-              .select('description')
-              .eq('name', comp['tobacco_name'] as String)
-              .eq('brand', comp['brand'] as String)
-              .limit(1)
+              .select(
+                'id, name, brand, description, image_url, rating, reviews',
+              )
+              .inFilter('name', uniqueNames)
               .timeout(supabaseReadTimeout);
-          if (descRes.isNotEmpty) {
-            comp['description'] = descRes.first['description'];
+
+          for (final comp in components) {
+            final compName = (comp['tobacco_name'] as String).toLowerCase();
+            final compBrand = (comp['brand'] as String).toLowerCase();
+            for (final raw in catalogRows) {
+              final row = raw as Map<String, dynamic>;
+              final rowName = ((row['name'] as String?) ?? '').toLowerCase();
+              final rowBrand = ((row['brand'] as String?) ?? '').toLowerCase();
+              if (rowName == compName && rowBrand == compBrand) {
+                comp['description'] = row['description'];
+                comp['catalog_item'] = row;
+                break;
+              }
+            }
           }
         } catch (_) {
-          // Ignorar errores de descripción individual
+          // Ignorar errores de enriquecimiento de catálogo opcional
         }
       }
 
@@ -874,6 +863,7 @@ class CommunityRepository {
           ''')
           .eq('mix_id', mixId)
           .order('created_at', ascending: false)
+          .limit(100)
           .timeout(supabaseReadTimeout);
 
       return (response as List).map((reviewData) {
@@ -921,46 +911,12 @@ class CommunityRepository {
           })
           .timeout(supabaseWriteTimeout);
 
-      // Actualizar el rating promedio y el conteo de reviews de la mezcla
-      await _updateMixRating(mixId);
-
+      // El rating promedio y el conteo de reviews en `mixes` se actualizan
+      // automáticamente en PostgreSQL mediante el trigger SECURITY DEFINER.
       return true;
     } catch (e, stackTrace) {
       AppLogger.error('Error al crear reseña', error: e, stackTrace: stackTrace);
       return false;
-    }
-  }
-
-  /// Actualiza el rating promedio y el conteo de reviews de una mezcla.
-  Future<void> _updateMixRating(String mixId) async {
-    try {
-      final reviews = await _supabase.client
-          .from('reviews')
-          .select('rating')
-          .eq('mix_id', mixId)
-          .timeout(supabaseReadTimeout);
-
-      if (reviews.isEmpty) {
-        await _supabase.client
-            .from('mixes')
-            .update({'rating': 0.0, 'reviews': 0})
-            .eq('id', mixId)
-            .timeout(supabaseWriteTimeout);
-        return;
-      }
-
-      final ratings = (reviews as List)
-          .map((r) => (r['rating'] as num).toDouble())
-          .toList();
-      final avgRating = ratings.reduce((a, b) => a + b) / ratings.length;
-
-      await _supabase.client
-          .from('mixes')
-          .update({'rating': avgRating, 'reviews': ratings.length})
-          .eq('id', mixId)
-          .timeout(supabaseWriteTimeout);
-    } catch (e, stackTrace) {
-      AppLogger.error('Error al actualizar rating de mezcla', error: e, stackTrace: stackTrace);
     }
   }
 
@@ -972,9 +928,6 @@ class CommunityRepository {
           .delete()
           .eq('id', reviewId)
           .timeout(supabaseWriteTimeout);
-
-      // Actualizar el rating de la mezcla después de eliminar
-      await _updateMixRating(mixId);
 
       return true;
     } catch (e, stackTrace) {
@@ -996,9 +949,6 @@ class CommunityRepository {
           .update({'rating': rating, 'comment': comment})
           .eq('id', reviewId)
           .timeout(supabaseWriteTimeout);
-
-      // Actualizar el rating de la mezcla después de editar
-      await _updateMixRating(mixId);
 
       return true;
     } catch (e, stackTrace) {

@@ -43,6 +43,23 @@ class MainNavigationPageState extends State<MainNavigationPage> {
     4,
     (_) => GlobalKey<NavigatorState>(),
   );
+  late final List<_TabNavigatorObserver> _tabObservers = List.generate(
+    4,
+    (index) => _TabNavigatorObserver(
+      onNavigationChanged: () {
+        if (_currentIndex == index && mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _updateBackAndTitle();
+            }
+          });
+        }
+      },
+    ),
+  );
+  final Expando<String> _routeOverrideTitles = Expando<String>(
+    'routeOverrideTitles',
+  );
   final List<Widget?> _navigatorCache = List<Widget?>.filled(4, null);
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
@@ -723,21 +740,25 @@ class MainNavigationPageState extends State<MainNavigationPage> {
   @override
   void initState() {
     super.initState();
-    // Suscribirse a reconexión para refrescar la pestaña visible
+    // Suscribirse a reconexión para refrescar la pestaña visible sin duplicar listeners propios
     final health = context.read<DatabaseHealthProvider>();
     _reconnectedSub = health.onReconnected.listen((_) {
       if (!mounted) return;
       switch (_currentIndex) {
-        case 1: // Catálogo
+        case 1: // Catálogo (no tiene listener propio a onReconnected)
           unawaited(context.read<CatalogProvider>().refresh());
           break;
-        case 2: // Comunidad
-          unawaited(context.read<CommunityProvider>().refresh());
+        case 2: // Comunidad (solo si aún estaba en estado inicial al reconectar)
+          final community = context.read<CommunityProvider>();
+          if (community.state is CommunityInitial) {
+            unawaited(community.refresh());
+          }
           break;
-        case 3: // Perfil
-          // Si hay un provider de perfil con load(), refrescar aquí
+        case 3: // Perfil (ProfileProvider ya gestiona su propia reconexión)
           final maybeProfile = context.read<ProfileProvider?>();
-          if (maybeProfile != null) {
+          if (maybeProfile != null &&
+              !maybeProfile.isLoaded &&
+              !maybeProfile.isLoading) {
             unawaited(maybeProfile.load());
           }
           break;
@@ -880,22 +901,7 @@ class MainNavigationPageState extends State<MainNavigationPage> {
   Widget _buildTabNavigator(int index) {
     return Navigator(
       key: _navigatorKeys[index],
-      observers: [
-        // Observer para detectar cambios en el stack de navegación
-        _TabNavigatorObserver(
-          onNavigationChanged: () {
-            // Solo actualizar si este es el tab activo
-            if (_currentIndex == index && mounted) {
-              // Usar addPostFrameCallback para evitar llamar setState durante build
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  _updateBackAndTitle();
-                }
-              });
-            }
-          },
-        ),
-      ],
+      observers: [_tabObservers[index]],
       onGenerateInitialRoutes: (_, _) {
         // Primera vez que se construye este Navigator: disparar first-load
         _onTabFirstEnter(index);
@@ -907,21 +913,21 @@ class MainNavigationPageState extends State<MainNavigationPage> {
   void _updateBackAndTitle() {
     final nav = _navigatorKeys[_currentIndex].currentState;
     final canPop = nav?.canPop() ?? false;
+    final topPageRoute = _tabObservers[_currentIndex].topPageRoute;
+    final activeOverrideTitle =
+        (canPop && topPageRoute != null) ? _routeOverrideTitles[topPageRoute] : null;
 
-    // Detectar si estamos en una ruta que no debe mostrar la barra superior
-    // TobaccoDetailPage se abre directamente desde CatalogPage (push normal)
-    // por lo que no tendrá _overrideTitle establecido (solo lo usan pushInCurrentTab)
-    bool hideBar = false;
-    if (canPop && _overrideTitles[_currentIndex] == null) {
-      hideBar = true;
-    }
+    // Si estamos en una subruta que NO fue abierta mediante pushInCurrentTab
+    // (ej. MixDetailPage, TobaccoDetailPage o CreateMixPage abierta desde
+    // Favoritas, Mis Mezclas, Historial, Comunidad o Catálogo), ocultamos la
+    // barra superior global porque esa pantalla ya renderiza su propia cabecera
+    // y su propio botón de retroceso, evitando dobles flechas hacia atrás.
+    final bool hideBar = canPop && activeOverrideTitle == null;
 
     setState(() {
       _showBack = canPop;
       _hideTopBar = hideBar;
-      if (!canPop) {
-        _overrideTitles[_currentIndex] = null;
-      }
+      _overrideTitles[_currentIndex] = activeOverrideTitle;
     });
   }
 
@@ -932,45 +938,76 @@ class MainNavigationPageState extends State<MainNavigationPage> {
       _navigatorCache[_currentIndex] = _buildTabNavigator(_currentIndex);
     }
     final nav = _navigatorKeys[_currentIndex].currentState;
-    final previousTitle = _overrideTitles[_currentIndex];
+    final route = MaterialPageRoute<void>(
+      settings: RouteSettings(name: title),
+      builder: (_) => page,
+    );
+    _routeOverrideTitles[route] = title;
+
     setState(() {
       _overrideTitles[_currentIndex] = title;
       _showBack = true;
+      _hideTopBar = false;
     });
-    nav?.push(MaterialPageRoute(builder: (_) => page)).then((_) {
+
+    nav?.push(route).then((_) {
       if (mounted) {
-        setState(() {
-          _overrideTitles[_currentIndex] = previousTitle;
-        });
         _updateBackAndTitle();
       }
     });
   }
 }
 
-/// Observer para detectar cambios en la navegación
+/// Observer para detectar cambios en la pila de páginas (`PageRoute`) de cada pestaña
 class _TabNavigatorObserver extends NavigatorObserver {
-  final VoidCallback onNavigationChanged;
-
   _TabNavigatorObserver({required this.onNavigationChanged});
 
+  final VoidCallback onNavigationChanged;
+  final List<PageRoute<dynamic>> _pageRoutes = <PageRoute<dynamic>>[];
+
+  PageRoute<dynamic>? get topPageRoute =>
+      _pageRoutes.isNotEmpty ? _pageRoutes.last : null;
+
   @override
-  void didPush(Route route, Route? previousRoute) {
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PageRoute<dynamic>) {
+      _pageRoutes.add(route);
+    }
     onNavigationChanged();
   }
 
   @override
-  void didPop(Route route, Route? previousRoute) {
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PageRoute<dynamic>) {
+      _pageRoutes.remove(route);
+    }
     onNavigationChanged();
   }
 
   @override
-  void didRemove(Route route, Route? previousRoute) {
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PageRoute<dynamic>) {
+      _pageRoutes.remove(route);
+    }
     onNavigationChanged();
   }
 
   @override
-  void didReplace({Route? newRoute, Route? oldRoute}) {
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    if (oldRoute is PageRoute<dynamic>) {
+      final idx = _pageRoutes.indexOf(oldRoute);
+      if (idx != -1) {
+        if (newRoute is PageRoute<dynamic>) {
+          _pageRoutes[idx] = newRoute;
+        } else {
+          _pageRoutes.removeAt(idx);
+        }
+      } else if (newRoute is PageRoute<dynamic>) {
+        _pageRoutes.add(newRoute);
+      }
+    } else if (newRoute is PageRoute<dynamic>) {
+      _pageRoutes.add(newRoute);
+    }
     onNavigationChanged();
   }
 }

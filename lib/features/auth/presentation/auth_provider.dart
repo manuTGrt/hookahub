@@ -20,22 +20,30 @@ class AuthProvider extends ChangeNotifier {
         final user = _session!.user;
         final metadata = user.userMetadata;
 
-        await _svc.ensureProfile(
-          username: metadata?['username']?.toString(),
-          displayName:
-              metadata != null &&
-                  metadata['first_name'] != null &&
-                  metadata['last_name'] != null
-              ? '${metadata['first_name']} ${metadata['last_name']}'
-              : metadata?['first_name']?.toString() ??
-                    metadata?['last_name']?.toString(),
-          firstName: metadata?['first_name']?.toString(),
-          lastName: metadata?['last_name']?.toString(),
-          birthdate: metadata?['birthdate'] != null
-              ? DateTime.tryParse(metadata!['birthdate'].toString())
-              : null,
-          bio: metadata?['bio']?.toString(),
-        );
+        try {
+          await _svc.ensureProfile(
+            username: metadata?['username']?.toString(),
+            displayName:
+                metadata != null &&
+                    metadata['first_name'] != null &&
+                    metadata['last_name'] != null
+                ? '${metadata['first_name']} ${metadata['last_name']}'
+                : metadata?['first_name']?.toString() ??
+                      metadata?['last_name']?.toString(),
+            firstName: metadata?['first_name']?.toString(),
+            lastName: metadata?['last_name']?.toString(),
+            birthdate: metadata?['birthdate'] != null
+                ? DateTime.tryParse(metadata!['birthdate'].toString())
+                : null,
+            bio: metadata?['bio']?.toString(),
+          );
+        } catch (e, stack) {
+          AppLogger.warning(
+            'No se pudo sincronizar ensureProfile durante cambio de estado de sesión: $e',
+            error: e,
+            stackTrace: stack,
+          );
+        }
 
         if (ev == AuthChangeEvent.signedIn) {
           _notifySignIn();

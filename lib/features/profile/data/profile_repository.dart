@@ -158,6 +158,8 @@ class ProfileRepository {
     final result = await FlutterImageCompress.compressAndGetFile(
       inputPath,
       outPath,
+      minWidth: 512,
+      minHeight: 512,
       quality: 82, // equilibrio entre peso y calidad
       format: CompressFormat.jpeg,
       keepExif: false,
@@ -178,7 +180,8 @@ class ProfileRepository {
       final folderPath = userId; // estamos guardando como '<uid>/<filename>'
       final files = await _client.storage
           .from(StorageConfig.avatarsBucket)
-          .list(path: folderPath);
+          .list(path: folderPath)
+          .timeout(supabaseReadTimeout);
       if (files.isEmpty) return;
       final keepName = keepPath.split('/').last;
       // Mantener solo el archivo actual (avatar_current.*) y eliminar el resto
@@ -187,16 +190,30 @@ class ProfileRepository {
           .map((f) => '$folderPath/${f.name}')
           .toList();
       if (toRemove.isEmpty) return;
-      await _client.storage.from(StorageConfig.avatarsBucket).remove(toRemove);
+      await _client.storage
+          .from(StorageConfig.avatarsBucket)
+          .remove(toRemove)
+          .timeout(supabaseWriteTimeout);
     } catch (e) {
       AppLogger.debug('Aviso no bloqueante al limpiar ficheros de avatar: $e');
     }
   }
 
-  /// Genera una Signed URL temporal para un path dentro del bucket de avatares.
+  /// Resuelve la URL del avatar para un path dentro del bucket de avatares.
+  /// Si el bucket es público (`!StorageConfig.avatarsPrivate`), utiliza `getPublicUrl`
+  /// síncronamente sin realizar peticiones HTTP adicionales.
   Future<String?> createSignedAvatarUrl(String? storagePath) async {
     if (storagePath == null || storagePath.isEmpty) return null;
     if (storagePath.startsWith('icon:')) return null;
+    if (storagePath.startsWith('http://') || storagePath.startsWith('https://')) {
+      return storagePath;
+    }
+
+    if (!StorageConfig.avatarsPrivate) {
+      return _client.storage
+          .from(StorageConfig.avatarsBucket)
+          .getPublicUrl(storagePath);
+    }
 
     try {
       final url = await _client.storage
@@ -220,12 +237,14 @@ class ProfileRepository {
       final folderPath = user.id;
       final files = await _client.storage
           .from(StorageConfig.avatarsBucket)
-          .list(path: folderPath);
+          .list(path: folderPath)
+          .timeout(supabaseReadTimeout);
       if (files.isNotEmpty) {
         final toRemove = files.map((f) => '$folderPath/${f.name}').toList();
         await _client.storage
             .from(StorageConfig.avatarsBucket)
-            .remove(toRemove);
+            .remove(toRemove)
+            .timeout(supabaseWriteTimeout);
       }
     } catch (e) {
       AppLogger.debug('Aviso no bloqueante al remover avatares previos para icono: $e');
@@ -252,12 +271,14 @@ class ProfileRepository {
       final folderPath = user.id;
       final files = await _client.storage
           .from(StorageConfig.avatarsBucket)
-          .list(path: folderPath);
+          .list(path: folderPath)
+          .timeout(supabaseReadTimeout);
       if (files.isNotEmpty) {
         final toRemove = files.map((f) => '$folderPath/${f.name}').toList();
         await _client.storage
             .from(StorageConfig.avatarsBucket)
-            .remove(toRemove);
+            .remove(toRemove)
+            .timeout(supabaseWriteTimeout);
       }
     } catch (e) {
       AppLogger.debug('Aviso no bloqueante al vaciar carpeta de avatar: $e');
@@ -272,6 +293,56 @@ class ProfileRepository {
         })
         .eq('id', user.id)
         .timeout(supabaseWriteTimeout);
+  }
+
+  /// Elimina permanentemente la cuenta del usuario actual:
+  /// 1. Vacía su carpeta de avatares en Supabase Storage (best-effort).
+  /// 2. Invoca la función RPC `delete_user_account` (`SECURITY DEFINER`) que elimina
+  ///    el registro en `public.profiles` y `auth.users` con cascada en tablas dependientes.
+  Future<void> deleteCurrentUserAccount() async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw StateError('No hay usuario autenticado');
+
+    // 1. Limpieza de archivos en Storage (best-effort)
+    try {
+      final folderPath = user.id;
+      final files = await _client.storage
+          .from(StorageConfig.avatarsBucket)
+          .list(path: folderPath)
+          .timeout(supabaseReadTimeout);
+      if (files.isNotEmpty) {
+        final toRemove = files.map((f) => '$folderPath/${f.name}').toList();
+        await _client.storage
+            .from(StorageConfig.avatarsBucket)
+            .remove(toRemove)
+            .timeout(supabaseWriteTimeout);
+      }
+    } catch (e) {
+      AppLogger.debug(
+        'Aviso no bloqueante al limpiar avatares durante eliminación de cuenta: $e',
+      );
+    }
+
+    // 2. Eliminación de cuenta en base de datos y Auth vía RPC
+    try {
+      await _client
+          .rpc('delete_user_account')
+          .timeout(supabaseWriteTimeout);
+    } on PostgrestException catch (e) {
+      // Fallback si la migración RPC aún no ha sido aplicada en el entorno
+      if (e.code == 'PGRST202' || e.code == '42883') {
+        AppLogger.warning(
+          'RPC delete_user_account no disponible (${e.code}), aplicando borrado directo de perfil',
+        );
+        await _client
+            .from('profiles')
+            .delete()
+            .eq('id', user.id)
+            .timeout(supabaseWriteTimeout);
+      } else {
+        rethrow;
+      }
+    }
   }
 
   Profile _fromMap(Map<String, dynamic> map) {

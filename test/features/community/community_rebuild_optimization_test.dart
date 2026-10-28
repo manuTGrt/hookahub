@@ -12,7 +12,7 @@ class FakeFavoritesRepository implements FavoritesRepository {
   List<String> _storedTop5 = [];
 
   @override
-  Future<List<Mix>> loadFavorites({String? userId}) async => _storedFavorites;
+  Future<List<Mix>> loadFavorites({String? userId, int limit = 100}) async => _storedFavorites;
 
   @override
   Future<void> saveFavorites(List<Mix> mixes, {String? userId}) async {

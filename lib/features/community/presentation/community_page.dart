@@ -661,23 +661,15 @@ class _TobaccoFilterDropdown extends StatefulWidget {
 
 class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
   List<Map<String, String>> _available = [];
   bool _loading = false;
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
-  }
-
-  List<Map<String, String>> _filtered() {
-    final q = _searchController.text.toLowerCase();
-    if (q.isEmpty) return _available;
-    return _available.where((item) {
-      final name = item['name']!.toLowerCase();
-      final brand = item['brand']!.toLowerCase();
-      return name.contains(q) || brand.contains(q);
-    }).toList();
   }
 
   void _showTobaccoMenu() async {
@@ -699,7 +691,7 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
     final communityProvider = context.read<CommunityProvider>();
     setState(() => _loading = true);
     _available = await communityProvider.repository.fetchAvailableTobaccos(
-      limit: 5000,
+      limit: 50,
     );
     if (!mounted || !context.mounted) return;
     setState(() => _loading = false);
@@ -721,106 +713,127 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
           enabled: false,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              final list = _filtered();
+            builder: (BuildContext context, StateSetter setMenuState) {
+              final list = _available;
               final selectedName = communityProvider.filterState.tobaccoName;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: _searchController,
-                    autofocus: true,
-                    onChanged: (value) => setState(() {}),
-                    decoration: InputDecoration(
-                      hintText: 'Buscar tabaco...',
-                      hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.color
-                            ?.withValues(alpha: 0.5),
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        size: 20,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {});
-                              },
-                            )
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Theme.of(
-                            context,
-                          ).primaryColor.withValues(alpha: 0.3),
+
+              void triggerServerSearch(String queryText) {
+                _searchDebounce?.cancel();
+                _searchDebounce = Timer(
+                  const Duration(milliseconds: 300),
+                  () async {
+                    if (!mounted || !context.mounted) return;
+                    setMenuState(() => _loading = true);
+                    final results = await communityProvider.repository
+                        .fetchAvailableTobaccos(
+                          query: queryText,
+                          limit: 50,
+                        );
+                    if (!mounted || !context.mounted) return;
+                    setMenuState(() {
+                      _available = results;
+                      _loading = false;
+                    });
+                  },
+                );
+              }
+
+              return SizedBox(
+                width: 280,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _searchController,
+                      autofocus: true,
+                      onChanged: (value) {
+                        setMenuState(() {});
+                        triggerServerSearch(value);
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Buscar tabaco...',
+                        hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withValues(alpha: 0.5),
                         ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Theme.of(
-                            context,
-                          ).primaryColor.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
+                        prefixIcon: Icon(
+                          Icons.search,
+                          size: 20,
                           color: Theme.of(context).primaryColor,
-                          width: 2,
                         ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setMenuState(() {});
+                                  triggerServerSearch('');
+                                },
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).primaryColor,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        isDense: true,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                      isDense: true,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(height: 1),
-                  const SizedBox(height: 8),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 300),
-                    child: _loading
-                        ? const Center(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 24),
-                              child: CircularProgressIndicator(),
-                            ),
-                          )
-                        : SingleChildScrollView(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildTobaccoOption(
-                                  context,
-                                  allKey,
-                                  'Todos los tabacos',
-                                  Icons.filter_list,
-                                  selectedName: selectedName,
-                                  isAllOption: true,
-                                ),
-                                ...list.map(
-                                  (item) => _buildTobaccoOption(
+                    const SizedBox(height: 8),
+                    const Divider(height: 1),
+                    const SizedBox(height: 8),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 300),
+                      child: _loading
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 24),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: 1 + (list.isEmpty ? 1 : list.length),
+                              itemBuilder: (context, index) {
+                                if (index == 0) {
+                                  return _buildTobaccoOption(
                                     context,
-                                    '${item['name']}::${item['brand']}',
-                                    '${item['name']} • ${item['brand']}',
-                                    Icons.local_fire_department,
+                                    allKey,
+                                    'Todos los tabacos',
+                                    Icons.filter_list,
                                     selectedName: selectedName,
-                                  ),
-                                ),
-                                if (list.isEmpty && !_loading)
-                                  Padding(
+                                    isAllOption: true,
+                                  );
+                                }
+                                if (list.isEmpty) {
+                                  return Padding(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 16,
                                     ),
@@ -838,18 +851,28 @@ class _TobaccoFilterDropdownState extends State<_TobaccoFilterDropdown> {
                                                 ?.withValues(alpha: 0.5),
                                           ),
                                     ),
-                                  ),
-                              ],
+                                  );
+                                }
+                                final item = list[index - 1];
+                                return _buildTobaccoOption(
+                                  context,
+                                  '${item['name']}::${item['brand']}',
+                                  '${item['name']} • ${item['brand']}',
+                                  Icons.local_fire_department,
+                                  selectedName: selectedName,
+                                );
+                              },
                             ),
-                          ),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               );
             },
           ),
         ),
       ],
     ).then((value) {
+      _searchDebounce?.cancel();
       if (!mounted) return;
       if (value != null) {
         if (value == allKey) {

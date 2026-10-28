@@ -138,23 +138,38 @@ class TobaccoRepository {
   }
 
   /// Obtiene la lista de marcas únicas disponibles en el catálogo, ordenadas alfabéticamente.
+  /// Prioriza la función RPC `get_available_tobacco_brands` (`SELECT DISTINCT`) en PostgreSQL
+  /// para evitar overfetching, manteniendo fallback seguro si la migración aún no está aplicada.
   Future<List<String>> fetchAvailableBrands() async {
     final client = _supabase.client;
 
-    // Obtener marcas únicas y ordenarlas
-    final List<dynamic> rows = await client
-        .from('tobaccos')
-        .select('brand')
-        .order('brand', ascending: true)
-        .timeout(supabaseReadTimeout);
+    try {
+      final List<dynamic> rpcRows = await client
+          .rpc('get_available_tobacco_brands')
+          .timeout(supabaseReadTimeout);
 
-    // Extraer marcas únicas (por si Supabase no elimina duplicados)
-    final brands = rows
-        .map((r) => (r as Map<String, dynamic>)['brand'] as String)
-        .toSet()
-        .toList();
+      return rpcRows
+          .map((r) {
+            if (r is String) return r;
+            if (r is Map<String, dynamic>) return (r['brand'] as String?) ?? '';
+            return '';
+          })
+          .where((b) => b.isNotEmpty)
+          .toSet()
+          .toList();
+    } catch (_) {
+      // Fallback en caso de que la función RPC no exista aún en el entorno remoto
+      final List<dynamic> rows = await client
+          .from('tobaccos')
+          .select('brand')
+          .order('brand', ascending: true)
+          .timeout(supabaseReadTimeout);
 
-    return brands;
+      return rows
+          .map((r) => (r as Map<String, dynamic>)['brand'] as String)
+          .toSet()
+          .toList();
+    }
   }
 
   /// Envía una solicitud de nuevo tabaco al catálogo.
