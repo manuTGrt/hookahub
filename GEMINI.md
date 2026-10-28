@@ -91,6 +91,7 @@ Para que Google reconozca adecuadamente a la aplicación en Android durante el L
      - `icon:<index>`: Iconos predefinidos del sistema (`appAvatarIcons` en `constants.dart`).
      - Fotos (`storage path` o URL completa): Renderizado con caché de red y placeholders suaves.
      - Fallback / Error: Inicial del nombre de usuario en mayúscula sobre el color de la tarjeta/tema.
+  4. **Versionado de Archivo y Cache Busting**: Guardar fotos con un nombre estático (ej. `avatar_current.jpg`) provoca que `CachedNetworkImage` y la CDN devuelvan indefinidamente la imagen antigua desde la caché local del móvil. Toda nueva imagen de avatar debe nombrarse con un timestamp único (`avatar_${DateTime.now().millisecondsSinceEpoch}.jpg`). La función `_cleanupOldAvatars` elimina los ficheros obsoletos en el bucket del usuario en Supabase Storage tras subir el nuevo, y el provider debe desalojar la URL previa con `CachedNetworkImage.evictFromCache(oldUrl)`.
 
 
 ### Tablas Públicas y Logs: Vulnerabilidad "RLS Policy Always True"

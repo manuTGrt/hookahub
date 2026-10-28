@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/providers/database_health_provider.dart';
 import '../../../core/utils/app_error_mapper.dart';
@@ -195,16 +196,21 @@ class ProfileProvider extends ChangeNotifier {
   Future<String?> uploadAvatar(String filePath) async {
     if (!isAuthenticated) return 'No autenticado';
     try {
+      final oldUrl = signedAvatarUrl;
       final path = await _repo.uploadAvatarAndSave(filePath);
-      final signedAvatarUrl = await _repo.createSignedAvatarUrl(path);
+      final newSignedAvatarUrl = await _repo.createSignedAvatarUrl(path);
       final updatedProfile = await _repo.getCurrentUserProfile();
+
+      if (oldUrl != null && oldUrl.isNotEmpty) {
+        unawaited(CachedNetworkImage.evictFromCache(oldUrl));
+      }
 
       final currentLoaded =
           _state is ProfileLoaded ? (_state as ProfileLoaded) : null;
       _state = ProfileLoaded(
         profile: updatedProfile,
         mixesCount: currentLoaded?.mixesCount ?? 0,
-        signedAvatarUrl: signedAvatarUrl,
+        signedAvatarUrl: newSignedAvatarUrl,
       );
       notifyListeners();
       return null;
@@ -218,7 +224,11 @@ class ProfileProvider extends ChangeNotifier {
   Future<String?> clearAvatar() async {
     if (!isAuthenticated) return 'No autenticado';
     try {
+      final oldUrl = signedAvatarUrl;
       await _repo.clearAvatarForCurrentUser();
+      if (oldUrl != null && oldUrl.isNotEmpty) {
+        unawaited(CachedNetworkImage.evictFromCache(oldUrl));
+      }
       final updatedProfile = await _repo.getCurrentUserProfile();
       final currentLoaded =
           _state is ProfileLoaded ? (_state as ProfileLoaded) : null;
@@ -239,7 +249,11 @@ class ProfileProvider extends ChangeNotifier {
   Future<String?> setAvatarIcon(int index) async {
     if (!isAuthenticated) return 'No autenticado';
     try {
+      final oldUrl = signedAvatarUrl;
       await _repo.setAvatarIcon(index);
+      if (oldUrl != null && oldUrl.isNotEmpty) {
+        unawaited(CachedNetworkImage.evictFromCache(oldUrl));
+      }
       final updatedProfile = await _repo.getCurrentUserProfile();
       final currentLoaded =
           _state is ProfileLoaded ? (_state as ProfileLoaded) : null;

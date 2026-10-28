@@ -421,6 +421,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             if (err != null) {
                               AppToast.showInfo(context, err);
                             } else {
+                              if (mounted) {
+                                setState(() {
+                                  _selectedAvatarType = 'photo';
+                                });
+                              }
                               Navigator.of(context).pop();
                               AppToast.showInfo(context, 'Foto actualizada');
                             }

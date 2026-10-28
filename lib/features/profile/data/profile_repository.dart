@@ -97,7 +97,8 @@ class ProfileRepository {
     // Convertir a JPG comprimido para compatibilidad y peso
     final tmpPath = await _compressToJpg(filePath);
     final ext = '.jpg';
-    final fileName = 'avatar_current$ext';
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final fileName = 'avatar_$timestamp$ext';
     final storagePath = '${user.id}/$fileName';
 
     final tmpFile = File(tmpPath);
@@ -193,7 +194,7 @@ class ProfileRepository {
           .timeout(supabaseReadTimeout);
       if (files.isEmpty) return;
       final keepName = keepPath.split('/').last;
-      // Mantener solo el archivo actual (avatar_current.*) y eliminar el resto
+      // Mantener solo el archivo recién subido y eliminar versiones anteriores
       final toRemove = files
           .where((f) => f.name != keepName)
           .map((f) => '$folderPath/${f.name}')
