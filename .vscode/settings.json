@@ -1,6 +1,4 @@
 {
   "java.configuration.updateBuildConfiguration": "interactive",
-  "dart.flutterAdditionalArgs": [
-    "--dart-define-from-file=.env"
-  ]
+  "dart.flutterRunAdditionalArgs": ["--dart-define-from-file=.env"]
 }

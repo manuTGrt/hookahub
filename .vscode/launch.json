@@ -6,9 +6,7 @@
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      "args": [
-        "--dart-define-from-file=.env"
-      ]
+      "toolArgs": ["--dart-define-from-file=.env"]
     },
     {
       "name": "Hookahub (Profile)",
@@ -16,9 +14,7 @@
       "type": "dart",
       "flutterMode": "profile",
       "program": "lib/main.dart",
-      "args": [
-        "--dart-define-from-file=.env"
-      ]
+      "toolArgs": ["--dart-define-from-file=.env"]
     },
     {
       "name": "Hookahub (Release)",
@@ -26,9 +22,7 @@
       "type": "dart",
       "flutterMode": "release",
       "program": "lib/main.dart",
-      "args": [
-        "--dart-define-from-file=.env"
-      ]
+      "toolArgs": ["--dart-define-from-file=.env"]
     }
   ]
 }
